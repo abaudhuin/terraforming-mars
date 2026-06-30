@@ -19,6 +19,7 @@ pid
 .eslintcache
 tsconfig*.tsbuildinfo
 assets/locales
+visual-smoke-artifacts/
 
 # Local Packages
 node_modules/
