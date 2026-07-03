@@ -1,40 +1,23 @@
 <template>
-<section v-trim-whitespace>
-  <table class="payments_table">
-    <tbody>
-      <tr>
-        <td></td>
-        <td v-trim-whitespace><i class="resource_icon payments_type_smallicon resource_icon--megacredits"></i></td>
-      </tr>
-      <template v-for="unit of order" :key="unit">
-        <template v-if="ledger[unit]?.available > 0">
-          <tr>
-            <td>
-              <PaymentUnitComponent
-                v-model.number="payment[unit]"
-                :unit="unit"
-                :description="descriptions[unit]"
-                :rate="ledger[unit].rate"
-                @plus="addValue(unit)"
-                @minus="reduceValue(unit)"
-                @max="maxValue(unit)"/>
-              <div v-if="ledger[unit]?.reserved" class="card-warning" v-i18n="$t(unit)">
-              Some ${0} are reserved and unavailable here.</div>
-            </td>
-            <td class='payments_unit_subtotal' v-if="ledger[unit].rate !== undefined && payment[unit] !== 0" v-trim-whitespace>
-              {{ ledger[unit].rate * payment[unit] }}
-            </td>
-          </tr>
-        </template>
-      </template>
-    <tr :class="totalSpentClass()">
-      <td class="payments_total_heading"></td>
-      <td class="payments_total_value" :title="$t(totalSpentTitle())" :aria-label="$t(totalSpentTitle())" v-trim-whitespace>
-        {{ totalSpent() }}
-      </td>
-    </tr>
-    </tbody>
-  </table>
+<section class="tm-payment-form" v-trim-whitespace>
+  <div class="tm-payment-resource-list">
+    <template v-for="unit of order" :key="unit">
+      <div v-if="ledger[unit]?.available > 0" class="tm-payment-resource-row">
+        <PaymentUnitComponent
+          v-model.number="payment[unit]"
+          :unit="unit"
+          :description="descriptions[unit]"
+          :available="ledger[unit].available"
+          :rate="ledger[unit].rate"
+          @plus="addValue(unit)"
+          @minus="reduceValue(unit)"
+          @max="maxValue(unit)"/>
+        <div v-if="ledger[unit]?.reserved" class="card-warning" v-i18n="$t(unit)">
+          Some ${0} are reserved and unavailable here.
+        </div>
+      </div>
+    </template>
+  </div>
 
   <div v-if="warning !== undefined" class="tm-warning">
     <label class="label label-error">{{ $t(warning) }}</label>
@@ -185,6 +168,9 @@ export default defineComponent({
     },
     totalSpent(): number {
       return sum(this.order.map((unit) => this.payment[unit] * this.ledger[unit].rate));
+    },
+    remaining(): number {
+      return Math.max(this.cost - this.totalSpent(), 0);
     },
     handleSave(): void {
       this.warning = undefined;

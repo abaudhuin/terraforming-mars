@@ -1,14 +1,24 @@
 <template>
   <div class="payments_type input-group" :data-test="unit">
-    <i class="resource_icon payments_type_icon" :class="iconClass" @click="$emit('plus')" :title="$t('Pay with ' + description)"></i>
-    <AppButton type="minus" @click="$emit('minus')" />
-    <input
-      class="form-input form-inline payments_input"
-      :value="modelValue"
-      @input="onInput"
-    >
-    <AppButton type="plus" @click="$emit('plus')" />
-    <AppButton type="max" @click="$emit('max')" title="MAX" v-if="showMax" />
+    <button class="tm-payment-resource-button" type="button" @click="$emit('plus')" :title="$t('Pay with ' + description)">
+      <i class="resource_icon payments_type_icon" :class="iconClass"></i>
+    </button>
+    <div class="tm-payment-resource-copy">
+      <strong>{{ $t(description) }}</strong>
+      <span>{{ availableLabel }}</span>
+    </div>
+    <div class="tm-payment-stepper">
+      <AppButton type="minus" @click="$emit('minus')" />
+      <input
+        class="form-input form-inline payments_input"
+        type="number"
+        min="0"
+        :value="modelValue"
+        @input="onInput"
+      >
+      <AppButton type="plus" @click="$emit('plus')" />
+      <AppButton type="max" @click="$emit('max')" title="MAX" v-if="showMax" />
+    </div>
   </div>
 </template>
 
@@ -38,11 +48,26 @@ export default defineComponent({
       default: true,
       required: false,
     },
+    available: {
+      type: Number,
+      default: 0,
+    },
+    rate: {
+      type: Number,
+      default: 1,
+    },
   },
   components: {
     AppButton,
   },
   computed: {
+    availableLabel(): string {
+      const base = `${this.available} available`;
+      if (this.rate > 1) {
+        return `${base} · ${this.rate} M€ each`;
+      }
+      return base;
+    },
     iconClass(): string {
       switch (this.unit) {
       case 'kuiperAsteroids': return 'resource_icon--asteroid';

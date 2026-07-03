@@ -1,26 +1,44 @@
 <template>
-  <div class='wf-options'>
-    <label v-if="showtitle"><div>{{ $t(playerinput.title) }}</div></label>
-    <label v-if="playerinput.warning !== undefined" class="card-warning"><div>({{ $t(playerinput.warning) }})</div></label>
-    <div v-for="(option, idx) in displayedOptions" :key="idx">
-      <label class="form-radio" ref="optionLabels">
-        <input v-model="selectedOption" type="radio" :name="radioElementName" :value="option" >
-        <i class="form-icon" ></i>
-        <span>{{ $t(option.title) }}</span>
+  <div class="wf-options wf-options--command-board" :class="{'wf-options--simple-choices': isSimpleChoiceList}">
+    <div v-if="showtitle" class="wf-command-title">{{ $t(playerinput.title) }}</div>
+    <div v-if="playerinput.warning !== undefined" class="card-warning wf-command-warning">({{ $t(playerinput.warning) }})</div>
+
+    <div class="wf-command-grid">
+      <label
+        v-for="(option, idx) in displayedOptions"
+        :key="idx"
+        ref="optionLabels"
+        class="form-radio wf-command-tile"
+        :class="getCommandTileClass(option, idx)"
+        @click="selectOption(option, idx)">
+        <input v-model="selectedOption" class="wf-command-radio" type="radio" :value="option" :disabled="isDisabledOption(option)">
+        <span class="wf-command-icon" :class="getCommandIconClass(option)"></span>
+        <span class="wf-command-copy">
+          <span class="wf-command-option-title">{{ $t(option.title) }}</span>
+          <span v-if="getCommandMeta(option)" class="wf-command-option-meta">{{ getCommandMeta(option) }}</span>
+        </span>
+        <button
+          v-if="shouldShowInlineSubmit(option, idx)"
+          type="button"
+          class="wf-command-inline-submit"
+          @click.stop.prevent="saveOption(option, idx)">
+          {{ $t(inlineSubmitLabel(option)) }}
+        </button>
       </label>
-      <div v-if="selectedIdx === idx" style="margin-left: 30px">
-        <PlayerInputFactory ref="inputfactory"
-                              :playerView="playerView"
-                              :playerinput="option"
-                              :onsave="playerFactorySaved(idx)"
-                              :showsave="showsave && showChildSaveButton(option)"
-                              :showtitle="false" />
-      </div>
     </div>
-    <div v-if="showsave && selectedOption && !showChildSaveButton(selectedOption)">
-      <div style="margin: 5px 30px 10px" class="wf-action">
-        <AppButton :title="$t(selectedOption.buttonLabel)" type="submit" size="normal" @click="saveData" />
+
+    <div v-if="selectedOption && hasMeaningfulChildUi(selectedOption)" class="wf-command-detail">
+      <div class="wf-command-path">
+        <span v-i18n>Selected action</span>
+        <strong>{{ $t(selectedOption.title) }}</strong>
+        <span v-if="getCommandMeta(selectedOption)">{{ getCommandMeta(selectedOption) }}</span>
       </div>
+      <PlayerInputFactory ref="inputfactory"
+                            :playerView="playerView"
+                            :playerinput="selectedOption"
+                            :onsave="playerFactorySaved(selectedIdx)"
+                            :showsave="showsave"
+                            :showtitle="false" />
     </div>
   </div>
 </template>
@@ -28,14 +46,11 @@
 <script lang="ts">
 
 import {defineComponent} from 'vue';
-import AppButton from '@/client/components/common/AppButton.vue';
 import {isHTMLElement} from '@/client/utils/vueUtils';
 import {PlayerViewModel} from '@/common/models/PlayerModel';
 import {OrOptionsModel, PlayerInputModel} from '@/common/models/PlayerInputModel';
 import {getPreferences} from '@/client/utils/PreferencesManager';
 import {InputResponse, OrOptionsResponse} from '@/common/inputs/InputResponse';
-
-let unique = 0;
 
 export default defineComponent({
   name: 'OrOptions',
@@ -59,9 +74,6 @@ export default defineComponent({
       type: Boolean,
     },
   },
-  components: {
-    AppButton,
-  },
   data() {
     const displayedOptions: Array<PlayerInputModel> = [];
     const originalIndices: Array<number> = [];
@@ -83,7 +95,6 @@ export default defineComponent({
     return {
       displayedOptions,
       originalIndices,
-      radioElementName: 'selectOption' + unique++,
       selectedOption: displayedOptions[selectedIdx],
       selectedIdx,
     };
@@ -104,6 +115,11 @@ export default defineComponent({
           }
         }
       });
+    },
+  },
+  computed: {
+    isSimpleChoiceList(): boolean {
+      return this.displayedOptions.every((option: PlayerInputModel) => option.type === 'option');
     },
   },
   methods: {
@@ -131,10 +147,137 @@ export default defineComponent({
         });
       };
     },
-    // When the child component is a multi-select card, let it render its own save button.
-    // This allows the child to control the button label (e.g. "Sell 3 patents").
-    showChildSaveButton(option: PlayerInputModel): boolean {
-      return option.type === 'card' && !(option.max === 1 && option.min === 1);
+    selectOption(option: PlayerInputModel, idx: number) {
+      if (this.isDisabledOption(option)) {
+        return;
+      }
+      this.selectedOption = option;
+      this.selectedIdx = idx;
+    },
+    hasMeaningfulChildUi(option: PlayerInputModel): boolean {
+      return option.type !== 'option';
+    },
+    shouldShowInlineSubmit(option: PlayerInputModel, idx: number): boolean {
+      return this.showsave === true &&
+        this.selectedIdx === idx &&
+        !this.isDisabledOption(option) &&
+        !this.hasMeaningfulChildUi(option);
+    },
+    inlineSubmitLabel(option: PlayerInputModel): string {
+      if (this.optionTitle(this.playerinput).includes('award')) {
+        return 'Fund';
+      }
+      return option.buttonLabel;
+    },
+    saveOption(option: PlayerInputModel, displayedIdx: number) {
+      if (this.isDisabledOption(option) || option.type !== 'option') {
+        return;
+      }
+      if (this.selectedIdx !== displayedIdx) {
+        this.selectOption(option, displayedIdx);
+      }
+      const idx = this.originalIndices[displayedIdx];
+      this.onsave({
+        type: 'or',
+        index: idx,
+        response: {type: 'option'},
+      });
+    },
+    getCommandTileClass(option: PlayerInputModel, idx: number): Record<string, boolean> {
+      return {
+        'wf-command-tile--selected': this.selectedIdx === idx,
+        'wf-command-tile--pass': this.isPassOption(option),
+        'wf-command-tile--disabled': this.isDisabledOption(option),
+      };
+    },
+    getCommandIconClass(option: PlayerInputModel): string {
+      const title = this.optionTitle(option);
+      if (option.type === 'projectCard' || title.includes('play')) {
+        return 'wf-command-icon--play-card';
+      }
+      if (option.type === 'card' && option.selectBlueCardAction) {
+        return 'wf-command-icon--blue-action';
+      }
+      if (title.includes('standard') || title.includes('project')) {
+        return 'wf-command-icon--standard-project';
+      }
+      if (title.includes('plant') || title.includes('greenery')) {
+        return 'wf-command-icon--plant';
+      }
+      if (title.includes('heat') || title.includes('temperature')) {
+        return 'wf-command-icon--heat';
+      }
+      if (title.includes('milestone')) {
+        return 'wf-command-icon--milestone';
+      }
+      if (title.includes('award')) {
+        return 'wf-command-icon--award';
+      }
+      if (title.includes('colony') || option.type === 'colony') {
+        return 'wf-command-icon--colony';
+      }
+      if (title.includes('delegate') || title.includes('party') || option.type === 'delegate' || option.type === 'party') {
+        return 'wf-command-icon--turmoil';
+      }
+      if (title.includes('moon') || option.type === 'deltaProject') {
+        return 'wf-command-icon--track';
+      }
+      if (this.isPassOption(option)) {
+        return 'wf-command-icon--pass';
+      }
+      return 'wf-command-icon--generic';
+    },
+    getCommandMeta(option: PlayerInputModel): string {
+      if (option.type === 'projectCard') {
+        const playable = option.cards.filter((card) => card.isDisabled !== true).length;
+        return `${playable}/${option.cards.length} playable`;
+      }
+      if (option.type === 'card') {
+        if (option.selectBlueCardAction) {
+          return `${option.cards.length} action card(s)`;
+        }
+        if (option.min === option.max) {
+          return `choose ${option.min}`;
+        }
+        return `choose ${option.min}-${option.max}`;
+      }
+      if (option.type === 'space') {
+        return `${option.spaces.length} legal space(s)`;
+      }
+      if (option.type === 'colony') {
+        return `${option.coloniesModel.length} colony option(s)`;
+      }
+      if (option.type === 'party') {
+        return `${option.parties.length} party option(s)`;
+      }
+      if (option.type === 'delegate') {
+        return `${option.players.length} delegate option(s)`;
+      }
+      if (option.type === 'payment') {
+        return `${option.amount} MC ledger`;
+      }
+      if (option.type === 'amount') {
+        return `${option.min}-${option.max}`;
+      }
+      if (option.type === 'deltaProject') {
+        return `${option.validSteps.length} legal step(s)`;
+      }
+      if (this.isPassOption(option)) {
+        return '';
+      }
+      return option.optional ? 'optional' : '';
+    },
+    isPassOption(option: PlayerInputModel): boolean {
+      return this.optionTitle(option).includes('pass');
+    },
+    isDisabledOption(option: PlayerInputModel): boolean {
+      return option.type === 'projectCard' && option.cards.every((card) => card.isDisabled === true);
+    },
+    optionTitle(option: PlayerInputModel): string {
+      if (typeof option.title === 'string') {
+        return option.title.toLowerCase();
+      }
+      return option.title.message.toLowerCase();
     },
     saveData() {
       let ref = this.$refs['inputfactory'] as {saveData: () => void} | Array<{saveData: () => void}>;
@@ -147,4 +290,3 @@ export default defineComponent({
 });
 
 </script>
-

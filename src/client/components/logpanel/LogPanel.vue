@@ -1,5 +1,5 @@
 <template>
-  <div class="log-container">
+  <div class="log-container" :class="{'log-container--compact': compactHeader, 'log-container--filtered': playerFilter !== undefined, 'log-container--external-preview': cardPanelMode === 'emit'}">
     <div class="log-generations">
       <h2 :class="getTitleClasses()">
           <span v-i18n>Game log</span>
@@ -15,12 +15,12 @@
     <div class="panel log-panel">
       <div id="logpanel-scrollable" class="panel-body">
         <ul v-if="messages">
-          <LogMessageComponent v-for="(message, index) in messages" :key="index" :message="message" :viewModel="viewModel" @click="messageClicked(message)" @spaceClicked="spaceClicked"/>
+          <LogMessageComponent v-for="(message, index) in visibleMessages" :key="index" :message="message" :viewModel="viewModel" @click="messageClicked(message)" @spaceClicked="spaceClicked"/>
         </ul>
       </div>
       <div class='debugid'>(debugid {{step}})</div>
     </div>
-    <CardPanel v-if="selectedMessage !== undefined" :message="selectedMessage" :players="players" @hide="selectedMessage = undefined"/>
+    <CardPanel v-if="selectedMessage !== undefined && cardPanelMode === 'inline'" :message="selectedMessage" :players="players" @hide="selectedMessage = undefined"/>
   </div>
 </template>
 
@@ -29,6 +29,7 @@
 import {defineComponent} from 'vue';
 import {paths} from '@/common/app/paths';
 import {LogMessage} from '@/common/logs/LogMessage';
+import {LogMessageDataType} from '@/common/logs/LogMessageDataType';
 import {PublicPlayerModel, ViewModel} from '@/common/models/PlayerModel';
 import {playerColorClass} from '@/common/utils/utils';
 import {Color} from '@/common/Color';
@@ -47,6 +48,8 @@ type LogPanelModel = {
   selectedMessage: LogMessage | undefined,
 };
 
+type CardPanelMode = 'inline' | 'emit' | 'off';
+
 export default defineComponent({
   name: 'LogPanel',
   props: {
@@ -63,7 +66,23 @@ export default defineComponent({
       required: false,
       default: 0,
     },
+    playerFilter: {
+      type: String as () => Color | undefined,
+      required: false,
+      default: undefined,
+    },
+    compactHeader: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    cardPanelMode: {
+      type: String as () => CardPanelMode,
+      required: false,
+      default: 'inline',
+    },
   },
+  emits: ['preview-message'],
   data(): LogPanelModel {
     return {
       messages: [],
@@ -77,7 +96,24 @@ export default defineComponent({
   },
   methods: {
     messageClicked(message: LogMessage) {
+      if (!this.messageHasPreview(message)) {
+        return;
+      }
+      if (this.cardPanelMode === 'emit') {
+        this.$emit('preview-message', message);
+        return;
+      }
+      if (this.cardPanelMode === 'off') {
+        return;
+      }
       this.selectedMessage = message;
+    },
+    messageHasPreview(message: LogMessage): boolean {
+      return message.data.some((datum) =>
+        datum.type === LogMessageDataType.CARD ||
+        datum.type === LogMessageDataType.CARDS ||
+        datum.type === LogMessageDataType.GLOBAL_EVENT ||
+        datum.type === LogMessageDataType.COLONY);
     },
     spaceClicked(spaceId: SpaceId) {
       const id = isMarsSpace(spaceId) ? 'shortkey-board' : 'shortkey-moonBoard';
@@ -187,6 +223,19 @@ export default defineComponent({
     },
     players(): Array<PublicPlayerModel> {
       return this.viewModel.players;
+    },
+    visibleMessages(): Array<LogMessage> {
+      if (this.playerFilter === undefined) {
+        return this.messages;
+      }
+      const player = this.players.find((p) => p.color === this.playerFilter);
+      return this.messages.filter((message) => {
+        if (player?.id !== undefined && message.playerId === player.id) {
+          return true;
+        }
+        return message.data.some((entry) =>
+          entry.type === LogMessageDataType.PLAYER && entry.value === this.playerFilter);
+      });
     },
     id(): ParticipantId | undefined {
       return this.viewModel.id;

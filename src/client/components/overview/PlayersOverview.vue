@@ -12,7 +12,8 @@
               :playerView="playerView"
               :firstForGen="getIsFirstForGen(p)"
               :actionLabel="getActionLabel(p)"
-              :playerIndex="index"/>
+              :playerIndex="index"
+              @open-player="$emit('open-player', $event)"/>
             <div v-if="playerView.players.length > 1 && thisPlayer !== undefined" class="player-divider" ></div>
             <PlayerInfo
               v-if="thisPlayer !== undefined"
@@ -21,7 +22,8 @@
               :playerView="playerView"
               :firstForGen="getIsFirstForGen(thisPlayer)"
               :actionLabel="getActionLabel(thisPlayer)"
-              :playerIndex="-1"/>
+              :playerIndex="-1"
+              @open-player="$emit('open-player', $event)"/>
         </div>
 </template>
 
@@ -51,6 +53,7 @@ export const playerIndex = (
 
 export default defineComponent({
   name: 'PlayersOverview',
+  emits: ['open-player'],
   props: {
     playerView: {
       type: Object as () => ViewModel,

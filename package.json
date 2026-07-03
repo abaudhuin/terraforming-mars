@@ -103,7 +103,8 @@
     "dev:client": "cross-env NODE_ENV=development webpack --watch",
     "dev:server": "cross-env NODE_ENV=development tsx watch --clear-screen=false src/server/server.ts",
     "visual:install": "playwright install chromium",
-    "visual:smoke": "node scripts/visual-smoke.mjs"
+    "visual:smoke": "node scripts/visual-smoke.mjs",
+    "visual:scenarios": "node scripts/visual-scenarios.mjs"
   },
   "repository": {
     "type": "git",

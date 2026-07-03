@@ -4,6 +4,32 @@
       message="Continue without buying any project cards?"
       ref="confirmation"
       @accept="confirmSelection" />
+    <div class="select-initial-cards__summary">
+      <div class="select-initial-cards__summary-main">
+        <div>
+          <span v-i18n>Corporation</span>
+          <strong>{{ selectedCorporations.length }}/1</strong>
+        </div>
+        <div v-if="hasPrelude">
+          <span v-i18n>Preludes</span>
+          <strong>{{ selectedPreludes.length }}/2</strong>
+        </div>
+        <div v-if="hasCeo">
+          <span v-i18n>CEO</span>
+          <strong>{{ selectedCeos.length }}/1</strong>
+        </div>
+        <div>
+          <span v-i18n>Project cards</span>
+          <strong>{{ selectedCards.length }}</strong>
+        </div>
+        <div>
+          <span v-i18n>Starting Megacredits:</span>
+          <div class="megacredits">{{ startingMegacreditsLabel }}</div>
+        </div>
+      </div>
+      <label v-if="warning !== undefined" class="label label-error">{{ $t(warning) }}</label>
+      <AppButton :disabled="!valid" v-if="showsave" @click="saveIfConfirmed" type="submit" :title="playerinput.buttonLabel"/>
+    </div>
     <SelectCard :playerView="playerView" :playerinput="corpCardOption" :showtitle="true" :onsave="noop" @cardschanged="corporationChanged" />
     <div v-if="playerCanChooseAridor" class="player_home_colony_cont">
       <div v-i18n>These are the colony tiles Aridor may choose from:</div>
@@ -23,8 +49,6 @@
     <div v-if="warning !== undefined" class="tm-warning">
       <label class="label label-error">{{ $t(warning) }}</label>
     </div>
-    <!-- :key=warning is a way of validing that the state of the button should change. If the warning changes, or disappears, that's a signal that the button might change. -->
-    <AppButton :disabled="!valid" v-if="showsave" @click="saveIfConfirmed" type="submit" :title="playerinput.buttonLabel"/>
   </div>
 </template>
 
@@ -358,6 +382,12 @@ export default defineComponent({
     },
     projectCardOption() {
       return getOption(this.playerinput.options, titles.SELECT_PROJECTS_TITLE);
+    },
+    startingMegacreditsLabel(): string | number {
+      if (this.selectedCorporations.length !== 1) {
+        return '-';
+      }
+      return this.getStartingMegacredits();
     },
   },
   mounted() {

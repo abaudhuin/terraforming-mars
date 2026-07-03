@@ -9,6 +9,10 @@ const stamp = new Date().toISOString().replace(/[:.]/g, '-');
 const outputDir = path.resolve(process.env.TM_VISUAL_OUT ?? `visual-smoke-artifacts/${stamp}`);
 const headless = process.env.TM_HEADED !== '1';
 const slowMo = Number.parseInt(process.env.TM_SLOWMO ?? '0', 10) || 0;
+const viewport = {
+  width: Number.parseInt(process.env.TM_VIEWPORT_WIDTH ?? '1920', 10) || 1920,
+  height: Number.parseInt(process.env.TM_VIEWPORT_HEIGHT ?? '1080', 10) || 1080,
+};
 
 let screenshotIndex = 1;
 const screenshots = [];
@@ -170,9 +174,9 @@ async function clickCorporationFirstActionIfPresent(page) {
   const actions = page.locator('.player_home_block--actions');
   if (await actions.count() === 0) return false;
 
-  const buttons = actions.locator('button');
+  const buttons = actions.locator('button:not(.tm-hand-open-button):not(.tm-panel-icon-button):not(.tm-section-expand-button)');
   const labels = (await buttons.allTextContents()).map((text) => text.trim());
-  const actionIndex = labels.findIndex((text) => text.length > 0 && text !== 'Confirm');
+  const actionIndex = labels.findIndex((text) => text.length > 0 && text !== 'Confirm' && text !== 'Hand');
   if (actionIndex === -1) return false;
 
   await buttons.nth(actionIndex).click();
@@ -180,15 +184,48 @@ async function clickCorporationFirstActionIfPresent(page) {
   return true;
 }
 
+async function closeModalIfOpen(page) {
+  const close = page.locator('.tm-modal-close').first();
+  if (await close.count() === 0) return false;
+  await close.click();
+  await page.waitForTimeout(300);
+  return true;
+}
+
+async function resolveMapSelectionIfPresent(page) {
+  const text = await bodyText(page);
+  if (!text.includes('Select space')) return false;
+
+  const spaces = page.locator('.board-space--available');
+  if (await spaces.count() === 0) return false;
+
+  await spaces.first().click({force: true});
+  await page.waitForTimeout(250);
+
+  const confirm = page.getByRole('button', {name: 'Yes'});
+  if (await confirm.count() > 0) {
+    await confirm.click();
+  }
+  await page.waitForTimeout(1_000);
+  return true;
+}
+
 async function passForGeneration(page) {
+  await closeModalIfOpen(page);
   const actions = page.locator('.player_home_block--actions');
   if (await actions.count() === 0) return false;
   if (!(await bodyText(page)).includes('Pass for this generation')) return false;
 
-  await actions.locator('label.form-radio').filter({hasText: 'Pass for this generation'}).click();
-  const confirm = actions.locator('button.btn-submit');
+  const passTile = actions.locator('label.form-radio').filter({hasText: 'Pass for this generation'}).first();
+  await passTile.click();
+  const confirm = passTile.locator('.wf-command-inline-submit, button.btn-submit');
   if (await confirm.count() > 0) {
-    await confirm.click();
+    await confirm.first().click();
+  } else {
+    const legacyConfirm = actions.locator('button.btn-submit');
+    if (await legacyConfirm.count() > 0) {
+      await legacyConfirm.first().click();
+    }
   }
   await page.waitForTimeout(1_500);
   return true;
@@ -205,7 +242,7 @@ async function main() {
 
   const browser = await chromium.launch({headless, slowMo});
   const context = await browser.newContext({
-    viewport: {width: 1600, height: 1200},
+    viewport,
     deviceScaleFactor: 1,
   });
 
@@ -234,6 +271,9 @@ async function main() {
     const bobTookFirstAction = await clickCorporationFirstActionIfPresent(bobPage);
     if (bobTookFirstAction) {
       await screenshot(bobPage, 'bob-after-corporation-first-action');
+      if (await resolveMapSelectionIfPresent(bobPage)) {
+        await screenshot(bobPage, 'bob-after-map-selection');
+      }
     }
     const bobPassed = await passForGeneration(bobPage);
     await screenshot(bobPage, 'bob-after-pass');
@@ -244,6 +284,7 @@ async function main() {
     await screenshot(finalPage, 'alice-generation-two');
     const finalText = await bodyText(finalPage);
     await finalPage.close();
+    const reachedGenerationTwo = (text) => /\bGEN\s+2\b/.test(text) || /\bGeneration\s+2\b/.test(text);
 
     const summary = {
       baseURL,
@@ -261,7 +302,7 @@ async function main() {
         createdTwoPlayers: game.players.length === 2,
         hasSpectatorLink: game.spectators.length === 1,
         submittedBothSetups: setupResults.every((result) => result.setupSubmitted),
-        reachedGenerationTwo: finalText.includes('GEN\n2') || finalText.includes('Generation 2') || bobTextAfterPass.includes('GEN\n2'),
+        reachedGenerationTwo: reachedGenerationTwo(finalText) || reachedGenerationTwo(bobTextAfterPass),
       },
       diagnostics,
       screenshots,

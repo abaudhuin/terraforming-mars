@@ -2,7 +2,7 @@
       <div class="player-status">
         <div class="player-status-bottom">
           <div :class="getLabelAndTimerClasses()">
-            <div :class="getActionStatusClasses()"><span v-i18n>{{ actionLabel }}</span></div>
+            <div :class="getActionStatusClasses()"><span v-i18n>{{ actionLabelText }}</span></div>
             <div class="player-status-timer" v-if="showTimer"><PlayerTimer :timer="timer" :live="liveTimer"/></div>
           </div>
         </div>
@@ -37,6 +37,13 @@ export default defineComponent({
   components: {
     PlayerTimer,
   },
+  computed: {
+    actionLabelText(): string {
+      if (this.actionLabel === 'researching') return 'buy';
+      if (this.actionLabel === 'drafting') return 'draft';
+      return this.actionLabel;
+    },
+  },
   methods: {
     getLabelAndTimerClasses(): string {
       const classes = [];
@@ -63,4 +70,3 @@ export default defineComponent({
 });
 
 </script>
-
