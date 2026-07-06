@@ -1,10 +1,11 @@
 import {access, readdir, readFile, writeFile} from 'node:fs/promises';
 import path from 'node:path';
-import {brotliCompress, gzip} from 'node:zlib';
+import {brotliCompress, constants, gzip} from 'node:zlib';
 import {promisify} from 'node:util';
 
 const gzipAsync = promisify(gzip);
 const brotliCompressAsync = promisify(brotliCompress);
+const brotliQuality = Number(process.env.TM_BROTLI_QUALITY ?? 4);
 
 async function walk(directory) {
   const entries = await readdir(directory, {withFileTypes: true});
@@ -17,14 +18,11 @@ async function walk(directory) {
 
 const entryFiles = [
   'build/main.js',
-  'build/main.js.map',
   'build/vendors.js',
-  'build/vendors.js.map',
   'build/sw.js',
-  'build/sw.js.map',
 ];
 const chunkFiles = await walk('build/chunks').catch(() => []);
-const candidates = [...entryFiles, ...chunkFiles].filter((file) => file.endsWith('.js') || file.endsWith('.js.map'));
+const candidates = [...entryFiles, ...chunkFiles].filter((file) => file.endsWith('.js'));
 const files = [];
 
 for (const file of candidates) {
@@ -32,7 +30,7 @@ for (const file of candidates) {
     await access(file);
     files.push(file);
   } catch {
-    // Some entries, such as an empty service worker, may not emit a sourcemap.
+    // Some entries, such as an empty service worker, may not emit output.
   }
 }
 
@@ -40,7 +38,11 @@ await Promise.all(files.flatMap(async (file) => {
   const contents = await readFile(file);
   const [gz, br] = await Promise.all([
     gzipAsync(contents),
-    brotliCompressAsync(contents),
+    brotliCompressAsync(contents, {
+      params: {
+        [constants.BROTLI_PARAM_QUALITY]: brotliQuality,
+      },
+    }),
   ]);
   await Promise.all([
     writeFile(`${file}.gz`, gz),

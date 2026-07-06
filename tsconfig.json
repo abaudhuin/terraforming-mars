@@ -23,7 +23,7 @@
         "skipLibCheck": true,
         "target": "es2021",
         "types": ["node"],
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "ignoreDeprecations": "6.0",
         "rootDir": ".",
         "resolveJsonModule": true,

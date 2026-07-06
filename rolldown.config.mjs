@@ -7,6 +7,7 @@ import Vue from 'unplugin-vue/rolldown';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProduction = process.env.NODE_ENV === 'production';
+const sourceMap = process.env.TM_BUILD_SOURCEMAPS === '1' || !isProduction;
 
 function vueStyleInjectPlugin() {
   return {
@@ -60,7 +61,7 @@ export default defineConfig({
   plugins: [
     Vue({
       isProduction,
-      sourceMap: true,
+      sourceMap,
       features: {
         optionsAPI: true,
         prodDevtools: false,
@@ -88,7 +89,7 @@ export default defineConfig({
   output: {
     dir: './build',
     format: 'esm',
-    sourcemap: true,
+    sourcemap: sourceMap,
     entryFileNames: (chunk) => `${chunk.name}.js`,
     chunkFileNames: (chunk) => chunk.name === 'vendors' ? 'vendors.js' : 'chunks/[name].js',
     assetFileNames: 'assets/[name][extname]',

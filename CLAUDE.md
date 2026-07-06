@@ -5,19 +5,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Development Commands
 
 ```bash
-npm run build                # Full build: CSS + JSON static files, server (tsc), client (Rolldown)
-npm run build:server         # TypeScript compile server only: tsc --build src/tsconfig.json
+npm run build                # Fast full build: parallel CSS/JSON and server/cards, native tsc, Rolldown
+npm run build:server         # Native TypeScript compile server only: tsc --build src/tsconfig.json
 npm run build:client         # Rolldown production bundle, then gzip/brotli client assets
-npm run build:test           # Compile tests: tsc --build tests/tsconfig.json
-npm run lint                 # All lints: Oxlint/ESLint + i18n audit + vue-tsc + stylelint
+npm run build:test           # Native TypeScript compile tests: tsc --build tests/tsconfig.json
+npm run lint                 # All lints: Oxlint + i18n audit + stylelint
 npm run lint:oxc             # Fast Oxlint correctness preflight over src and tests
-npm run lint:client          # Vue type checking: vue-tsc --noEmit
-npm run lint:server          # Oxlint quiet preflight, then ESLint on src and tests
-npm run lint:fix             # ESLint autofix
+npm run lint:server          # Oxlint quiet correctness sweep over src and tests
+npm run lint:fix             # Oxlint autofix
 ```
 
 See `docs/build-test-workflow.md` for the full current build, dev, lint, test,
-and visual smoke workflow.
+and visual smoke workflow. TypeScript 7 RC provides the native `tsc` compiler
+used by the default server and test project builds. Production source maps are
+off by default for speed; use `TM_BUILD_SOURCEMAPS=1 npm run build` only when
+debugging production bundles.
 
 ### Running Tests
 

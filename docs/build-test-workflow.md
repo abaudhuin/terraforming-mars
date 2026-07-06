@@ -10,7 +10,9 @@ canonical developer interface.
   `vendors.js`, `sw.js`, and lazy chunks under `build/chunks/`.
 - OXC is used through Rolldown for fast JavaScript and TypeScript transforms and
   minification.
-- Oxlint runs as a fast correctness preflight before the existing ESLint rules.
+- Oxlint is the source lint engine for TypeScript, JavaScript, and Vue files.
+- TypeScript 7 RC is the default TypeScript package. Its Go-native `tsc` powers
+  server and test project builds.
 - Mocha remains the server test runner.
 - Vitest runs client component tests against Vue single-file components.
 
@@ -19,7 +21,7 @@ updates. Bun and Rsbuild/Rspack are not part of the default flow.
 
 ## Install
 
-Use Node 22, then install dependencies from the lockfile:
+Use Node 22 with npm, then install dependencies from the lockfile:
 
 ```bash
 npm install
@@ -32,25 +34,56 @@ npm run clean
 npm run build
 ```
 
-`npm run build` runs:
+`npm run build` runs `scripts/build.mjs`, which keeps independent work parallel:
 
-1. `npm run make:static`
-2. `npm run build:server`
-3. `npm run build:client`
+1. `npm run make:css` and `npm run make:json` run at the same time.
+2. `npm run build:server` and `npm run make:cards` run at the same time after
+   generated JSON exists.
+3. `npm run build:client:assets` removes stale client outputs, bundles with
+   Rolldown, and writes gzip/brotli sidecars.
 
-The client build runs `make:json`, `make:cards`, removes stale client outputs,
-bundles with Rolldown, then writes gzip and brotli sidecars for the client
-JavaScript outputs.
+Production builds do not emit source maps by default. This keeps the build fast
+and avoids spending time compressing large map files. Use
+`TM_BUILD_SOURCEMAPS=1 npm run build` when production source maps are worth the
+extra time.
+
+JavaScript and CSS outputs get gzip and brotli sidecars. Brotli defaults to
+quality `4` for fast local and CI builds; override with `TM_BROTLI_QUALITY=N`
+when a release process wants denser precompressed assets.
+
+The standalone `npm run build:client` target still runs generated JSON first, so
+it can be used without a preceding full build.
+
+The server build runs TypeScript 7 RC's Go-native `tsc --build
+src/tsconfig.json`, then `tsc-alias` rewrites compiled path aliases.
 
 Useful targeted builds:
 
 ```bash
 npm run build:server
 npm run build:client
+npm run build:client:bundle
+npm run build:client:assets
 npm run make:css
 npm run make:json
+npm run make:static
 npm run make:cards
 ```
+
+## TypeScript Native Compiler
+
+The project uses `typescript@rc`, which provides the Go-native TypeScript 7
+compiler as the normal `tsc` binary:
+
+```bash
+npm run build:server
+npm run build:test
+```
+
+The shared `tsconfig.json` uses `moduleResolution: "bundler"` because TypeScript
+7 rejects the old `node`/`node10` resolution mode, while switching this CommonJS
+server directly to `node16` exposes ESM interop work that should be handled as a
+separate module-system migration.
 
 ## Local Development
 
@@ -82,7 +115,7 @@ npm run watch:cards
 npm run lint
 ```
 
-`npm run lint` runs server linting, i18n audit, Vue type checking, and stylelint.
+`npm run lint` runs Oxlint, i18n audit, and stylelint.
 
 Targeted checks:
 
@@ -90,13 +123,11 @@ Targeted checks:
 npm run lint:server
 npm run lint:oxc
 npm run lint:i18n
-npm run lint:client
 npm run lint:css
 ```
 
-`lint:server` first runs `lint:oxc`, then the existing ESLint config. Oxlint is
-run with `--quiet` so warning-level migration noise does not flood normal lint
-output.
+`lint:server` delegates to `lint:oxc`. Oxlint is run with `--quiet` so
+warning-level migration noise does not flood normal lint output.
 
 ## Tests
 
@@ -162,6 +193,8 @@ The Rolldown client build owns these generated client files:
 - `build/vendors.js`
 - `build/sw.js`
 - `build/chunks/`
-- matching `.map`, `.gz`, and `.br` sidecars
+- matching `.gz` and `.br` sidecars
+
+Production source maps are opt-in with `TM_BUILD_SOURCEMAPS=1`.
 
 CSS is still built separately by `make:css` into `build/styles.css`.
