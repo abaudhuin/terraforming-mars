@@ -45,9 +45,8 @@
         </div>
 
         <div class="tm-top-tools">
-          <button type="button" @click="openOverlay('board')" v-i18n>Board</button>
-          <button type="button" @click="openOverlay('cards')" v-i18n>Cards</button>
-          <button type="button" @click="openPlayers" v-i18n>Players</button>
+          <button type="button" class="tm-control tm-control--review tm-control--board" @click="openOverlay('board')" v-i18n>Board</button>
+          <button type="button" class="tm-control tm-control--review tm-control--players" @click="openPlayers" v-i18n>Players</button>
         </div>
       </header>
 
@@ -57,7 +56,9 @@
         </aside>
 
         <section class="tm-board-stage">
-          <button type="button" class="tm-board-expand-button" @click="openOverlay('board')" v-i18n>Expand</button>
+          <button type="button" class="tm-board-expand-button tm-icon-control tm-icon-control--expand" @click="openOverlay('board')" :aria-label="$t('Expand board')">
+            <span aria-hidden="true"></span>
+          </button>
           <GameBoardView
             :game="game"
             :tileView="tileView"
@@ -92,7 +93,7 @@
             @pointerdown="startActivityResize"></button>
           <div class="tm-panel-heading">
             <span v-i18n>Activity</span>
-            <button type="button" class="tm-panel-icon-button" @click="openOverlay('log')" :aria-label="$t('Open game log')">
+            <button type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye" @click="openOverlay('log')" :aria-label="$t('Open game log')">
               <span aria-hidden="true"></span>
             </button>
           </div>
@@ -117,7 +118,7 @@
               <span v-i18n>Activity detail</span>
               <small v-i18n>from the game log</small>
             </div>
-            <button type="button" class="tm-log-preview-close" @click="closeActivityLogPreview" :aria-label="$t('Close activity detail')">
+            <button type="button" class="tm-log-preview-close tm-icon-control tm-icon-control--close" @click="closeActivityLogPreview" :aria-label="$t('Close activity detail')">
               <span aria-hidden="true"></span>
             </button>
           </header>
@@ -133,11 +134,6 @@
           <div class="tm-panel-heading">
             <span v-i18n>Actions</span>
             <span class="tm-compat-text">Actions</span>
-            <button v-if="isDecisionActive" type="button" class="tm-hand-open-button" @click="openCardsOverlay('hand')" :aria-label="$t('Open hand')">
-              <span class="tm-hand-open-button__icon" aria-hidden="true"></span>
-              <span v-i18n>Hand</span>
-              <strong>{{ cardsInHandCount }}</strong>
-            </button>
           </div>
           <WaitingFor v-if="game.phase !== 'end'" :playerView="playerView" :waitingfor="playerView.waitingFor"/>
         </section>
@@ -159,10 +155,15 @@
           <div class="tm-card-zone tm-card-zone--hand" v-if="cardsInHandCount > 0" id="shortkey-hand">
             <div class="tm-panel-heading tm-panel-heading--interactive">
               <span v-i18n>Hand</span>
-              <button type="button" :class="getHideButtonClass('HAND')" @click.prevent="toggle('HAND')">
-                <span class="played-cards-count">{{ cardsInHandCount.toString() }}</span>
-                <span class="played-cards-selection" v-i18n>{{ getToggleLabel('HAND') }}</span>
-              </button>
+              <div class="tm-card-heading-actions">
+                <button type="button" :class="getHideButtonClass('HAND')" @click.prevent="toggle('HAND')">
+                  <span class="played-cards-count">{{ cardsInHandCount.toString() }}</span>
+                  <span class="played-cards-selection" v-i18n>{{ getToggleLabel('HAND') }}</span>
+                </button>
+                <button type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye tm-hand-open-button" @click="openCardsOverlay('hand')" :aria-label="$t('Open cards')">
+                  <span aria-hidden="true"></span>
+                </button>
+              </div>
             </div>
             <div v-show="isVisible('HAND') || !isDecisionActive" class="tm-card-strip">
               <SortableCards :playerId="playerView.id" :cards="allCardsInHand"/>
@@ -172,7 +173,7 @@
           <div class="tm-card-zone tm-card-zone--engine">
             <div class="tm-panel-heading tm-panel-heading--interactive">
               <span v-i18n>Played cards</span>
-              <div class="played-cards-filters">
+              <div class="tm-card-heading-actions played-cards-filters">
                 <button type="button" :class="getHideButtonClass('ACTIVE')" @click.prevent="toggle('ACTIVE')">
                   <span class="played-cards-count">{{ activeTableauCount }}</span>
                   <span class="played-cards-selection" v-i18n>Blue</span>
@@ -184,6 +185,9 @@
                 <button type="button" :class="getHideButtonClass('EVENT')" @click.prevent="toggle('EVENT')">
                   <span class="played-cards-count">{{ eventTableauCount }}</span>
                   <span class="played-cards-selection" v-i18n>Events</span>
+                </button>
+                <button type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye tm-hand-open-button" @click="openCardsOverlay('played')" :aria-label="$t('Open cards')">
+                  <span aria-hidden="true"></span>
                 </button>
               </div>
             </div>
@@ -212,18 +216,6 @@
         </summary>
         <div class="tm-utility-panel">
           <div class="tm-tool-list">
-            <div class="tm-tool-row">
-              <span v-i18n>Cards</span>
-              <strong>{{ cardsInHandCount }}</strong>
-            </div>
-            <div class="tm-tool-row">
-              <span v-i18n>Blue actions</span>
-              <strong>{{ thisPlayer.availableBlueCardActionCount }}</strong>
-            </div>
-            <div class="tm-tool-row">
-              <span v-i18n>TR</span>
-              <strong>{{ thisPlayer.terraformRating }}</strong>
-            </div>
             <div v-if="game.spectatorId" class="tm-tool-row">
               <a :href="'/spectator?id=' + game.spectatorId" target="_blank" rel="noopener noreferrer" v-i18n>Spectator link</a>
             </div>
@@ -256,12 +248,25 @@
 
       <div v-if="activeOverlay !== 'none'" class="tm-modal-backdrop" @click.self="closeOverlay">
         <section class="tm-modal" :class="'tm-modal--' + activeOverlay">
-          <header class="tm-modal-header">
-            <div>
+          <header class="tm-modal-header" :class="{'tm-modal-header--player': activeOverlay === 'player'}">
+            <nav v-if="activeOverlay === 'player' && selectedPlayer" class="tm-player-tabs tm-player-tabs--header" aria-label="Players">
+              <button
+                v-for="player in playerView.players"
+                :key="player.color"
+                type="button"
+                :class="{'tm-player-tab--active': player.color === selectedPlayer.color}"
+                @click="openPlayerTab(player.color)">
+                <span class="tm-player-tab-name" :class="'player_bg_color_' + player.color">{{ player.name }}</span>
+                <small>{{ getPlayerPrimaryCardName(player) }}</small>
+              </button>
+            </nav>
+            <div v-else>
               <span v-if="modalKicker" class="tm-modal-kicker">{{ modalKicker }}</span>
               <h2>{{ modalTitle }}</h2>
             </div>
-            <button type="button" class="tm-modal-close" @click="closeOverlay" aria-label="Close">X</button>
+            <button type="button" class="tm-modal-close tm-icon-control tm-icon-control--close" @click="closeOverlay" aria-label="Close">
+              <span aria-hidden="true"></span>
+            </button>
           </header>
 
           <div class="tm-modal-body">
@@ -330,17 +335,6 @@
             </div>
 
             <div v-else-if="activeOverlay === 'player' && selectedPlayer" class="tm-player-modal-shell">
-              <nav class="tm-player-tabs" aria-label="Players">
-                <button
-                  v-for="player in playerView.players"
-                  :key="player.color"
-                  type="button"
-                  :class="{'tm-player-tab--active': player.color === selectedPlayer.color}"
-                  @click="openPlayerTab(player.color)">
-                  <span :class="'player_bg_color_' + player.color">{{ player.name }}</span>
-                </button>
-              </nav>
-
               <div class="tm-player-dossier">
                 <section class="tm-player-dossier-summary">
                   <div class="tm-player-dossier-stats">
@@ -352,7 +346,7 @@
                   <PlayerTags :player="selectedPlayer" :playerView="playerView" :hideZeroTags="false" :conciseTagsViewDefaultValue="false"/>
                 </section>
 
-                <section class="tm-player-dossier-cards">
+                <section class="tm-player-dossier-cards" :class="{'tm-player-dossier-cards--with-preview': playerLogPreviewMessage !== undefined}">
                   <header class="tm-modal-section-heading">
                     <h3 v-i18n>Played cards</h3>
                     <div class="played-cards-filters tm-modal-filters">
@@ -370,6 +364,20 @@
                       </button>
                     </div>
                   </header>
+                  <section v-if="playerLogPreviewMessage" class="tm-player-log-preview">
+                    <header class="tm-player-log-preview-header">
+                      <span v-i18n>Activity detail</span>
+                      <button type="button" class="tm-icon-control tm-icon-control--close" @click="closePlayerLogPreview" :aria-label="$t('Close activity detail')">
+                        <span aria-hidden="true"></span>
+                      </button>
+                    </header>
+                    <div class="tm-player-log-preview-body">
+                      <ul class="tm-player-log-preview-message">
+                        <LogMessageComponent :message="playerLogPreviewMessage" :viewModel="playerView"/>
+                      </ul>
+                      <CardPanel :message="playerLogPreviewMessage" :players="playerView.players" :showClose="false"/>
+                    </div>
+                  </section>
                   <div class="tm-card-gallery">
                     <div v-for="card in getCardsByType(selectedPlayer.tableau, [CardType.CORPORATION])" :key="card.name" class="cardbox">
                       <Card :card="card" :actionUsed="isCardActivated(card, selectedPlayer)" :cubeColor="selectedPlayer.color"/>
@@ -392,6 +400,10 @@
                     :color="selectedPlayer.color"
                     :step="game.step"
                     :playerFilter="selectedPlayer.color"
+                    :fallbackToAllWhenFilteredEmpty="true"
+                    :recentHistory="true"
+                    cardPanelMode="emit"
+                    @preview-message="openPlayerLogPreview"
                     :compactHeader="true"/>
                 </section>
               </div>
@@ -452,6 +464,7 @@ type PlayerHomeModel = {
   activityRailWidth: number | undefined;
   resizeTarget: ResizeTarget;
   activityPreviewMessage: LogMessage | undefined;
+  playerLogPreviewMessage: LogMessage | undefined;
 }
 
 type OverlayKind = 'none' | 'board' | 'cards' | 'log' | 'player';
@@ -485,6 +498,7 @@ export default defineComponent({
       activityRailWidth: undefined,
       resizeTarget: undefined,
       activityPreviewMessage: undefined,
+      playerLogPreviewMessage: undefined,
     };
   },
   watch: {
@@ -748,10 +762,15 @@ export default defineComponent({
     },
     closeOverlay(): void {
       this.activeOverlay = 'none';
+      this.playerLogPreviewMessage = undefined;
     },
     openActivityLogPreview(message: LogMessage): void {
       if (this.isDecisionActive) {
         this.openOverlay('log');
+        return;
+      }
+      if (this.activityPreviewMessage === message || this.isSameLogPreview(this.activityPreviewMessage, message)) {
+        this.closeActivityLogPreview();
         return;
       }
       this.activeOverlay = 'none';
@@ -760,16 +779,38 @@ export default defineComponent({
     closeActivityLogPreview(): void {
       this.activityPreviewMessage = undefined;
     },
+    openPlayerLogPreview(message: LogMessage): void {
+      if (this.playerLogPreviewMessage === message || this.isSameLogPreview(this.playerLogPreviewMessage, message)) {
+        this.closePlayerLogPreview();
+        return;
+      }
+      this.playerLogPreviewMessage = message;
+    },
+    closePlayerLogPreview(): void {
+      this.playerLogPreviewMessage = undefined;
+    },
     openPlayer(color: Color): void {
       this.selectedPlayerColor = color;
+      this.playerLogPreviewMessage = undefined;
       this.activeOverlay = 'player';
     },
     openPlayers(): void {
       this.selectedPlayerColor = this.playerView.players[0]?.color ?? this.thisPlayer.color;
+      this.playerLogPreviewMessage = undefined;
       this.activeOverlay = 'player';
     },
     openPlayerTab(color: Color): void {
       this.selectedPlayerColor = color;
+      this.playerLogPreviewMessage = undefined;
+    },
+    getPlayerPrimaryCardName(player: PublicPlayerModel): string {
+      return getCardsByType(player.tableau, [CardType.CORPORATION, CardType.CEO])[0]?.name ?? '';
+    },
+    isSameLogPreview(current: LogMessage | undefined, next: LogMessage): boolean {
+      return current !== undefined &&
+        current.message === next.message &&
+        current.timestamp === next.timestamp &&
+        JSON.stringify(current.data) === JSON.stringify(next.data);
     },
     toggleCardOverlayFocus(section: 'hand' | 'played'): void {
       this.cardOverlayFocus = this.cardOverlayFocus === section ? 'balanced' : section;

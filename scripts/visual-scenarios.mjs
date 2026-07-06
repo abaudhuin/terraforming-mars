@@ -1437,7 +1437,11 @@ async function clickTextIfPresent(page, text, selectors = ['button', 'label', '[
 
 async function openCardsOverlay(page) {
   if (await openModal(page, 'Cards')) return true;
-  return clickIfPresent(page, '.tm-card-desk .tm-panel-icon-button, .tm-hand-open-button');
+  if (await clickIfPresent(page, '.tm-card-desk .tm-panel-icon-button, .tm-hand-open-button')) return true;
+  if (await clickIfPresent(page, '.tm-utility-menu > summary')) {
+    return clickIfPresent(page, '.tm-utility-panel .tm-hand-open-button');
+  }
+  return false;
 }
 
 async function openLogOverlay(page) {

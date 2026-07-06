@@ -28,11 +28,6 @@
     </div>
 
     <div v-if="selectedOption && hasMeaningfulChildUi(selectedOption)" class="wf-command-detail">
-      <div class="wf-command-path">
-        <span v-i18n>Selected action</span>
-        <strong>{{ $t(selectedOption.title) }}</strong>
-        <span v-if="getCommandMeta(selectedOption)">{{ getCommandMeta(selectedOption) }}</span>
-      </div>
       <PlayerInputFactory ref="inputfactory"
                             :playerView="playerView"
                             :playerinput="selectedOption"
@@ -242,25 +237,25 @@ export default defineComponent({
         return `choose ${option.min}-${option.max}`;
       }
       if (option.type === 'space') {
-        return `${option.spaces.length} legal space(s)`;
+        return '';
       }
       if (option.type === 'colony') {
-        return `${option.coloniesModel.length} colony option(s)`;
+        return `${option.coloniesModel.length}`;
       }
       if (option.type === 'party') {
-        return `${option.parties.length} party option(s)`;
+        return `${option.parties.length}`;
       }
       if (option.type === 'delegate') {
-        return `${option.players.length} delegate option(s)`;
+        return `${option.players.length}`;
       }
       if (option.type === 'payment') {
-        return `${option.amount} MC ledger`;
+        return `${option.amount} M€`;
       }
       if (option.type === 'amount') {
         return `${option.min}-${option.max}`;
       }
       if (option.type === 'deltaProject') {
-        return `${option.validSteps.length} legal step(s)`;
+        return `${option.validSteps.length}`;
       }
       if (this.isPassOption(option)) {
         return '';

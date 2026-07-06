@@ -20,6 +20,7 @@
   <section v-if="card !== undefined" class="tm-project-payment-side">
     <header class="tm-project-payment-heading">
       <span v-i18n>Payment</span>
+      <strong>{{ cost }} M€</strong>
     </header>
 
     <div class="tm-project-payment-warnings">

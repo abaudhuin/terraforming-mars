@@ -11,7 +11,7 @@
                 </div>
               </span>
             </div>
-            <button type="button" class="tm-player-view-button" @click.stop="togglePlayerDetails" :aria-label="$t('View player details')">
+            <button type="button" class="tm-player-view-button tm-icon-control tm-icon-control--eye" @click.stop="togglePlayerDetails" :aria-label="$t('View player details')">
               <span aria-hidden="true"></span>
             </button>
           </div>

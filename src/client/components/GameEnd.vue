@@ -177,7 +177,7 @@
                   </tbody>
               </table>
           </div>
-          <div class="game-end-flexrow">
+          <div class="game-end-flexrow game-end-final-sections">
           <div class="game_end_block--board game-end-column">
               <VictoryPointChart
                 :datasets="globalsDataset"

@@ -1,10 +1,5 @@
 <template>
 <div>
-  <div v-if="experimentalUI()" v-i18n>
-    <label>
-      <input type="checkbox" v-model="showReorder" > Reorder Cards
-    </label>
-  </div>
   <div class="sortable-cards">
     <div ref="draggers" :class="{ 'dragging': Boolean(dragCard) }" v-for="(card, index) in getSortedCards()" :key="card.name" draggable="true" @dragend="onDragEnd()" @dragstart="onDragStart(card.name)">
       <div v-if="dragCard" ref="droppers" class="drop-target" @dragover="onDragOver(card.name)"></div>
@@ -27,7 +22,6 @@ import Card from '@/client/components/card/Card.vue';
 import {CardName} from '@/common/cards/CardName';
 import {CardModel} from '@/common/models/CardModel';
 import {CardOrderStorage} from '@/client/utils/CardOrderStorage';
-import {getPreferences} from '@/client/utils/PreferencesManager';
 
 type DataModel = {
   /** When true use the point-and-click reorder UI */
@@ -146,9 +140,6 @@ export default defineComponent({
           }
         }
       }
-    },
-    experimentalUI(): boolean {
-      return getPreferences().experimental_ui;
     },
   },
 });

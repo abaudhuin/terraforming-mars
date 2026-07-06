@@ -19,6 +19,7 @@
       <AppButton type="plus" @click="$emit('plus')" />
       <AppButton type="max" @click="$emit('max')" title="MAX" v-if="showMax" />
     </div>
+    <div class="tm-payment-resource-subtotal">{{ subtotalLabel }}</div>
   </div>
 </template>
 
@@ -67,6 +68,9 @@ export default defineComponent({
         return `${base} · ${this.rate} M€ each`;
       }
       return base;
+    },
+    subtotalLabel(): string {
+      return `${this.modelValue * this.rate} M€`;
     },
     iconClass(): string {
       switch (this.unit) {
