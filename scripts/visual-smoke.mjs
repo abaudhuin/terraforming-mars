@@ -218,13 +218,24 @@ async function passForGeneration(page) {
 
   const passTile = actions.locator('label.form-radio').filter({hasText: 'Pass for this generation'}).first();
   await passTile.click();
-  const confirm = passTile.locator('.wf-command-inline-submit, button.btn-submit');
+  await page.waitForTimeout(150);
+  const confirm = actions
+    .locator('.wf-command-submit--selected-option .wf-command-inline-submit')
+    .filter({hasText: /pass/i})
+    .first();
   if (await confirm.count() > 0) {
-    await confirm.first().click();
+    await confirm.click();
   } else {
-    const legacyConfirm = actions.locator('button.btn-submit');
+    const legacyConfirm = passTile.locator('.wf-command-inline-submit, button.btn-submit');
     if (await legacyConfirm.count() > 0) {
       await legacyConfirm.first().click();
+    } else {
+      const legacyActionConfirm = actions.locator('button.btn-submit').filter({hasText: /^pass$/i}).first();
+      if (await legacyActionConfirm.count() > 0) {
+        await legacyActionConfirm.click();
+      } else {
+        return false;
+      }
     }
   }
   await page.waitForTimeout(1_500);

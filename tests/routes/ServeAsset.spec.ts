@@ -63,6 +63,8 @@ describe('ServeAsset', () => {
     scaffolding.req.headers['accept-encoding'] = '';
     await scaffolding.get(instance, res);
     expect(res.content.startsWith('<!DOCTYPE html>'));
+    expect(res.headers.get('Cache-Control')).eq('private, no-store, no-cache, must-revalidate, max-age=0, s-maxage=0');
+    expect(res.headers.get('Pragma')).eq('no-cache');
   });
 
   it('styles.css', async () => {
@@ -71,6 +73,17 @@ describe('ServeAsset', () => {
     scaffolding.req.headers['accept-encoding'] = '';
     await scaffolding.get(instance, res);
     expect(res.content).eq('data: build/styles.css');
+    expect(res.headers.get('Cache-Control')).eq('public, max-age=14400, s-maxage=86400');
+    expect(res.headers.get('Vary')).eq('Accept-Encoding');
+  });
+
+  it('versioned styles.css uses a long immutable cache policy', async () => {
+    instance = new ServeAsset(undefined, false, fileApi);
+    scaffolding.url = '/styles.css?v=20260706-cache';
+    scaffolding.req.headers['accept-encoding'] = '';
+    await scaffolding.get(instance, res);
+    expect(res.content).eq('data: build/styles.css');
+    expect(res.headers.get('Cache-Control')).eq('public, max-age=31536000, immutable');
   });
 
   it('styles.css.gz', async () => {
@@ -79,6 +92,15 @@ describe('ServeAsset', () => {
     scaffolding.req.headers['accept-encoding'] = 'gzip';
     await scaffolding.get(instance, res);
     expect(res.content).eq('data: build/styles.css.gz');
+  });
+
+  it('styles.css.br with compact accept-encoding header', async () => {
+    instance = new ServeAsset(undefined, false, fileApi);
+    scaffolding.url = '/styles.css';
+    scaffolding.req.headers['accept-encoding'] = 'br,gzip';
+    await scaffolding.get(instance, res);
+    expect(res.content).eq('data: build/styles.css.br');
+    expect(res.headers.get('Content-Encoding')).eq('br');
   });
 
   it('styles.css: uncached', async () => {
@@ -146,11 +168,42 @@ describe('ServeAsset', () => {
     scaffolding.req.headers['accept-encoding'] = '';
     await scaffolding.get(instance, res);
     expect(res.content).eq('data: build/sw.js');
+    expect(res.headers.get('Cache-Control')).eq('private, no-store, no-cache, must-revalidate, max-age=0, s-maxage=0');
     expect(fileApi.counts).deep.eq({
       ...primedCache,
       readFile: 1,
       existsSync: 0,
     });
+  });
+
+  it('serves static assets with a balanced browser and edge cache policy', async () => {
+    instance = new ServeAsset(undefined, false, fileApi);
+    scaffolding.url = '/assets/tiles/city.png';
+    scaffolding.req.headers['accept-encoding'] = '';
+    await scaffolding.get(instance, res);
+    expect(res.content).contains('data: ');
+    expect(res.headers.get('Cache-Control')).eq('public, max-age=14400, s-maxage=86400');
+  });
+
+  it('returns cache headers and etag on not modified responses', async () => {
+    instance = new ServeAsset(undefined, true, fileApi);
+    scaffolding.url = '/styles.css?v=20260706-cache';
+    scaffolding.req.headers['accept-encoding'] = '';
+    await scaffolding.get(instance, res);
+
+    const etag = res.headers.get('ETag');
+    expect(etag).not.undefined;
+
+    const revalidation = new MockResponse();
+    const perScaffolding = new RouteTestScaffolding();
+    perScaffolding.url = '/styles.css?v=20260706-cache';
+    perScaffolding.req.headers['accept-encoding'] = '';
+    perScaffolding.req.headers['if-none-match'] = etag!;
+    await perScaffolding.get(instance, revalidation);
+
+    expect(revalidation.statusCode).eq(statusCode.notModified);
+    expect(revalidation.headers.get('Cache-Control')).eq('public, max-age=31536000, immutable');
+    expect(revalidation.headers.get('ETag')).eq(etag);
   });
 
   it('vendors.js', async () => {
@@ -187,7 +240,7 @@ describe('ServeAsset', () => {
 
   it('serves all script sources referenced in index.html', async () => {
     const html = fs.readFileSync('assets/index.html', 'utf8');
-    const srcs = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
+    const srcs = [...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1]);
     expect(srcs).to.not.be.empty;
     for (const src of srcs) {
       const perRes = new MockResponse();

@@ -7,6 +7,7 @@ const CONTENT_TYPES: Map<string /* file extension */, string /* content type*/> 
   ['ttf', 'font/ttf'],
   ['jpg', 'image/jpeg'],
   ['jpeg', 'image/jpeg'],
+  ['json', 'application/json'],
   ['png', 'image/png'],
 ]);
 

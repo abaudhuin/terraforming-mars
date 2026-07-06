@@ -1,5 +1,5 @@
 # Define the version once at the top
-ARG NODE_VERSION=22-alpine3.21
+ARG NODE_VERSION=22-alpine3.24
 
 # Intermediate image - base for building and installing dependencies
 FROM node:${NODE_VERSION} AS install
@@ -37,6 +37,8 @@ RUN npm ci --production --prefer-offline
 FROM node:${NODE_VERSION}
 
 WORKDIR /usr/src/app
+
+ENV NODE_ENV=production
 
 # Add user tfm
 RUN adduser -S -D -h /usr/src/app tfm \

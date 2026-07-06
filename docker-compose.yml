@@ -3,6 +3,8 @@ services:
     container_name: terraforming-mars
     build: ./
     restart: unless-stopped
+    environment:
+      NODE_ENV: production
     ports:
       - "127.0.0.1:${TM_PORT:-18080}:8080"
     security_opt:
@@ -12,7 +14,7 @@ services:
 
   cloudflared:
     container_name: terraforming-mars-cloudflared
-    image: cloudflare/cloudflared:2026.3.0
+    image: cloudflare/cloudflared:2026.6.1
     profiles:
       - cloudflare
     user: "${TM_CLOUDFLARED_UID:-1000}:${TM_CLOUDFLARED_GID:-1000}"

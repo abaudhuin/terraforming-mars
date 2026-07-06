@@ -12,6 +12,10 @@ import {Response} from '../Response';
 
 type Encoding = 'gzip' | 'br';
 
+const DEFAULT_ASSET_CACHE_MAX_AGE_SECONDS = 14400;
+const DEFAULT_EDGE_ASSET_CACHE_MAX_AGE_SECONDS = 86400;
+const VERSIONED_ASSET_CACHE_MAX_AGE_SECONDS = 31536000;
+
 export class FileAPI {
   public static readonly INSTANCE: FileAPI = new FileAPI();
 
@@ -40,10 +44,13 @@ export class ServeAsset extends Handler {
   private readonly cache = new BufferCache();
 
   // Public for tests
-  public constructor(_cacheAgeSeconds: string | number = process.env.ASSET_CACHE_MAX_AGE || 0,
+  public constructor(
+    private cacheAgeSeconds: string | number = process.env.ASSET_CACHE_MAX_AGE || DEFAULT_ASSET_CACHE_MAX_AGE_SECONDS,
     // only production caches resources
     private cacheAssets: boolean = isProduction(),
-    private fileApi: FileAPI = FileAPI.INSTANCE) {
+    private fileApi: FileAPI = FileAPI.INSTANCE,
+    private edgeCacheAgeSeconds: string | number = process.env.ASSET_EDGE_CACHE_MAX_AGE || DEFAULT_EDGE_ASSET_CACHE_MAX_AGE_SECONDS,
+    private versionedCacheAgeSeconds: string | number = process.env.ASSET_VERSIONED_CACHE_MAX_AGE || VERSIONED_ASSET_CACHE_MAX_AGE_SECONDS) {
     super();
     // prime the cache with styles.css and a compressed copy of it styles.css
     const styles = fileApi.readFileSync('build/styles.css');
@@ -60,8 +67,11 @@ export class ServeAsset extends Handler {
       return;
     }
 
-    // Remove leading slash.
-    const path = new URL(req.url, 'http://localhost').pathname.substring(1);
+    const url = new URL(req.url, 'http://localhost');
+
+    // Remove leading slash. Keep the raw path rather than URL.pathname so
+    // traversal attempts like /chunks/../main.js are still visible below.
+    const path = req.url.split(/[?#]/, 1)[0].replace(/^\/+/, '');
 
     const supportedEncodings = this.supportedEncodings(req);
     const toFile: {file?: string, encoding?: Encoding } = this.toFile(path, supportedEncodings);
@@ -71,16 +81,16 @@ export class ServeAsset extends Handler {
     }
 
     const file = toFile.file;
-    responses.setNoStoreHeaders(res);
+    this.setCacheHeaders(res, path, url);
 
     // asset caching
     const buffer = this.cacheAssets ? this.cache.get(file) : undefined;
     if (buffer !== undefined) {
+      res.setHeader('ETag', buffer.hash);
       if (req.headers['if-none-match'] === buffer.hash) {
         responses.notModified(res);
         return;
       }
-      res.setHeader('ETag', buffer.hash);
     }
 
     const contentType = ContentType.getContentType(file);
@@ -195,11 +205,28 @@ export class ServeAsset extends Handler {
     return {};
   }
 
+  private setCacheHeaders(res: Response, urlPath: string, url: URL): void {
+    res.setHeader('Vary', 'Accept-Encoding');
+
+    if (urlPath === 'assets/index.html' || urlPath === 'sw.js' || urlPath === '/sw.js') {
+      responses.setNoStoreHeaders(res);
+      return;
+    }
+
+    if (url.searchParams.has('v')) {
+      res.setHeader('Cache-Control', `public, max-age=${this.versionedCacheAgeSeconds}, immutable`);
+      return;
+    }
+
+    res.setHeader('Cache-Control', `public, max-age=${this.cacheAgeSeconds}, s-maxage=${this.edgeCacheAgeSeconds}`);
+  }
+
   private supportedEncodings(req: Request): Set<Encoding> {
     const result = new Set<Encoding>();
-    for (const header of String(req.headers['accept-encoding']).split(', ')) {
-      if (header === 'br' || header === 'gzip') {
-        result.add(header);
+    for (const header of String(req.headers['accept-encoding']).split(',')) {
+      const encoding = header.trim().split(';', 1)[0];
+      if (encoding === 'br' || encoding === 'gzip') {
+        result.add(encoding);
       }
     }
     return result;
