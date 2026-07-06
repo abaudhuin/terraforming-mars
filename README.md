@@ -71,7 +71,9 @@ The code for the Yunohost Terraforming-Mars package is in this [GitHub repo](htt
 Add it to our [issues tab](https://github.com/bafolts/terraforming-mars/issues/new).
 
 ## ⬤ I want to contribute to development
-See [contribution guide](https://github.com/terraforming-mars/terraforming-mars/blob/main/CONTRIBUTING.md) and [local development setup](https://github.com/terraforming-mars/terraforming-mars/wiki/Local-Setup).
+See [contribution guide](https://github.com/terraforming-mars/terraforming-mars/blob/main/CONTRIBUTING.md),
+[local development setup](https://github.com/terraforming-mars/terraforming-mars/wiki/Local-Setup),
+and [build/test workflow](docs/build-test-workflow.md).
 
 ## ⬤ I want to win!
 Me too, pal. Me too.

@@ -41,6 +41,11 @@ Once in a while the group will decide that it doesn’t make sense to include a 
 
 ## Technical Considerations
 
+### Local Build And Test Workflow
+
+For the current local build, development, lint, test, and visual smoke commands,
+see [Build And Test Workflow](docs/build-test-workflow.md).
+
 ### Technical Compatibility
 
 We endeavor to have this app run on home Windows, Linux, Mac computers, and support modern popular browsers (sorry, IE11) so any changes that might seem browser / platform specific may get extra scrutiny.

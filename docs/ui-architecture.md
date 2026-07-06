@@ -46,6 +46,9 @@ Runtime and build:
 
 Important scripts from `package.json`:
 
+See [Build And Test Workflow](build-test-workflow.md) for the complete local
+build, development, lint, test, and visual smoke flow.
+
 | Script | Purpose |
 | --- | --- |
 | `npm run dev` | Starts the local dev workflow through `scripts/dev.sh`. |
