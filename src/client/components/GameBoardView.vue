@@ -1,42 +1,59 @@
 <!-- Common widgets between player and spectator views -->
 <template>
-  <a name="board" class="player_home_anchor hotkey-target"></a>
-  <Board
-    :spaces="game.spaces"
-    :expansions="game.gameOptions.expansions"
-    :venusScaleLevel="game.venusScaleLevel"
-    :boardName ="game.gameOptions.boardName"
-    :oceans_count="game.oceans"
-    :oxygen_level="game.oxygenLevel"
-    :temperature="game.temperature"
-    :altVenusBoard="game.gameOptions.altVenusBoard"
-    :aresData="game.aresData"
-    :tileView="tileView"
-    @toggleTileView="$emit('toggleTileView')"
-    id="shortkey-board"
-  />
+  <div class="tm-game-board-view">
+    <div class="tm-mars-board-surface">
+      <a name="board" class="player_home_anchor hotkey-target"></a>
+      <Board
+        :spaces="game.spaces"
+        :expansions="game.gameOptions.expansions"
+        :venusScaleLevel="game.venusScaleLevel"
+        :boardName ="game.gameOptions.boardName"
+        :oceans_count="game.oceans"
+        :oxygen_level="game.oxygenLevel"
+        :temperature="game.temperature"
+        :altVenusBoard="game.gameOptions.altVenusBoard"
+        :aresData="game.aresData"
+        :tileView="tileView"
+        @toggleTileView="$emit('toggleTileView')"
+        id="shortkey-board"
+      />
+    </div>
 
-  <template v-if="game.turmoil">
-    <a class="hotkey-target"></a>
-    <Turmoil :turmoil="game.turmoil"/>
-  </template>
+    <div class="tm-board-modules">
+      <details v-if="game.turmoil" class="tm-extension-panel tm-extension-panel--turmoil">
+        <summary v-i18n>Turmoil</summary>
+        <a class="hotkey-target"></a>
+        <Turmoil :turmoil="game.turmoil"/>
+      </details>
 
-  <template v-if="game.moon">
-    <a class="hotkey-target"></a>
-    <MoonBoard :model="game.moon" :tileView="tileView" id="shortkey-moonBoard"/>
-  </template>
+      <details v-if="game.moon" class="tm-extension-panel tm-extension-panel--moon">
+        <summary v-i18n>Moon</summary>
+        <a class="hotkey-target"></a>
+        <MoonBoard :model="game.moon" :tileView="tileView" id="shortkey-moonBoard"/>
+      </details>
 
-  <template v-if="game.gameOptions.expansions.pathfinders">
-    <a class="hotkey-target"></a>
-    <PlanetaryTracks :tracks="game.pathfinders" :gameOptions="game.gameOptions"/>
-  </template>
+      <details v-if="game.gameOptions.expansions.pathfinders" class="tm-extension-panel tm-extension-panel--pathfinders">
+        <summary v-i18n>Tracks</summary>
+        <a class="hotkey-target"></a>
+        <PlanetaryTracks :tracks="game.pathfinders" :gameOptions="game.gameOptions"/>
+      </details>
 
-  <DeltaProjectBoard v-if="game.gameOptions.expansions.deltaProject" :players="players"/>
+      <details v-if="game.gameOptions.expansions.deltaProject" class="tm-extension-panel tm-extension-panel--delta">
+        <summary v-i18n>Delta</summary>
+        <DeltaProjectBoard :players="players"/>
+      </details>
+    </div>
 
-  <div v-if="players.length > 1" class="player_home_block--milestones-and-awards">
-    <a class="hotkey-target"></a>
-    <Milestones :milestones="game.milestones" />
-    <Awards :awards="game.awards" />
+    <details v-if="players.length > 1" class="player_home_block--milestones-and-awards tm-ma-panel">
+      <summary class="tm-ma-panel-summary">
+        <span v-i18n>Milestones & Awards</span>
+      </summary>
+      <a class="hotkey-target"></a>
+      <div class="tm-ma-panel-body">
+        <Milestones :milestones="game.milestones" />
+        <Awards :awards="game.awards" />
+      </div>
+    </details>
   </div>
 </template>
 

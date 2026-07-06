@@ -1,5 +1,5 @@
 <template>
-  <div class="log-container">
+  <div class="log-container" :class="{'log-container--compact': compactHeader, 'log-container--filtered': playerFilter !== undefined, 'log-container--external-preview': cardPanelMode === 'emit', 'log-container--has-preview': selectedMessage !== undefined && cardPanelMode === 'inline'}">
     <div class="log-generations">
       <h2 :class="getTitleClasses()">
           <span v-i18n>Game log</span>
@@ -15,12 +15,12 @@
     <div class="panel log-panel">
       <div id="logpanel-scrollable" class="panel-body">
         <ul v-if="messages">
-          <LogMessageComponent v-for="(message, index) in messages" :key="index" :message="message" :viewModel="viewModel" @click="messageClicked(message)" @spaceClicked="spaceClicked"/>
+          <LogMessageComponent v-for="(message, index) in visibleMessages" :key="index" :class="getLogMessageClasses(message)" :message="message" :viewModel="viewModel" @click="messageClicked(message)" @spaceClicked="spaceClicked"/>
         </ul>
       </div>
       <div class='debugid'>(debugid {{step}})</div>
     </div>
-    <CardPanel v-if="selectedMessage !== undefined" :message="selectedMessage" :players="players" @hide="selectedMessage = undefined"/>
+    <CardPanel v-if="selectedMessage !== undefined && cardPanelMode === 'inline'" :message="selectedMessage" :players="players" :showClose="false"/>
   </div>
 </template>
 
@@ -29,6 +29,7 @@
 import {defineComponent} from 'vue';
 import {paths} from '@/common/app/paths';
 import {LogMessage} from '@/common/logs/LogMessage';
+import {LogMessageDataType} from '@/common/logs/LogMessageDataType';
 import {PublicPlayerModel, ViewModel} from '@/common/models/PlayerModel';
 import {playerColorClass} from '@/common/utils/utils';
 import {Color} from '@/common/Color';
@@ -47,6 +48,8 @@ type LogPanelModel = {
   selectedMessage: LogMessage | undefined,
 };
 
+type CardPanelMode = 'inline' | 'emit' | 'off';
+
 export default defineComponent({
   name: 'LogPanel',
   props: {
@@ -63,7 +66,33 @@ export default defineComponent({
       required: false,
       default: 0,
     },
+    playerFilter: {
+      type: String as () => Color | undefined,
+      required: false,
+      default: undefined,
+    },
+    compactHeader: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    fallbackToAllWhenFilteredEmpty: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    recentHistory: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    cardPanelMode: {
+      type: String as () => CardPanelMode,
+      required: false,
+      default: 'inline',
+    },
   },
+  emits: ['preview-message'],
   data(): LogPanelModel {
     return {
       messages: [],
@@ -77,7 +106,31 @@ export default defineComponent({
   },
   methods: {
     messageClicked(message: LogMessage) {
-      this.selectedMessage = message;
+      if (!this.messageHasPreview(message)) {
+        return;
+      }
+      if (this.cardPanelMode === 'emit') {
+        this.$emit('preview-message', message);
+        return;
+      }
+      if (this.cardPanelMode === 'off') {
+        return;
+      }
+      this.selectedMessage = this.selectedMessage === message ? undefined : message;
+    },
+    messageHasPreview(message: LogMessage): boolean {
+      return message.data.some((datum) =>
+        datum.type === LogMessageDataType.CARD ||
+        datum.type === LogMessageDataType.CARDS ||
+        datum.type === LogMessageDataType.GLOBAL_EVENT ||
+        datum.type === LogMessageDataType.COLONY);
+    },
+    getLogMessageClasses(message: LogMessage): Record<string, boolean> {
+      const previewable = this.cardPanelMode !== 'off' && this.messageHasPreview(message);
+      return {
+        'log-message--previewable': previewable,
+        'log-message--selected': previewable && this.cardPanelMode === 'inline' && this.selectedMessage === message,
+      };
     },
     spaceClicked(spaceId: SpaceId) {
       const id = isMarsSpace(spaceId) ? 'shortkey-board' : 'shortkey-moonBoard';
@@ -104,11 +157,18 @@ export default defineComponent({
     },
     selectGeneration(gen: number): void {
       if (gen !== this.selectedGeneration) {
+        this.selectedMessage = undefined;
         this.getLogsForGeneration(gen);
       }
       this.selectedGeneration = gen;
     },
+    getLogsForRecentHistory(): void {
+      this.replaceMessages(`${paths.API_GAME_LOGS}?id=${this.id}`, this.selectedGeneration === this.generation);
+    },
     getLogsForGeneration(generation: number): void {
+      this.replaceMessages(`${paths.API_GAME_LOGS}?id=${this.id}&generation=${generation}`, generation === this.generation);
+    },
+    replaceMessages(url: string, scrollToEnd: boolean): void {
       const messages = this.messages;
       // abort any pending requests
       if (logAbortController) {
@@ -116,7 +176,6 @@ export default defineComponent({
         logAbortController = undefined;
       }
 
-      const url = `${paths.API_GAME_LOGS}?id=${this.id}&generation=${generation}`;
       const controller = new AbortController();
       logAbortController = controller;
 
@@ -137,7 +196,7 @@ export default defineComponent({
           if (getPreferences().enable_sounds && window.location.search.includes('experimental=1') ) {
             SoundManager.newLog();
           }
-          if (generation === this.generation) {
+          if (scrollToEnd) {
             this.$nextTick(this.scrollToEnd);
           }
         })
@@ -188,13 +247,34 @@ export default defineComponent({
     players(): Array<PublicPlayerModel> {
       return this.viewModel.players;
     },
+    visibleMessages(): Array<LogMessage> {
+      if (this.playerFilter === undefined) {
+        return this.messages;
+      }
+      const player = this.players.find((p) => p.color === this.playerFilter);
+      const filteredMessages = this.messages.filter((message) => {
+        if (player?.id !== undefined && message.playerId === player.id) {
+          return true;
+        }
+        return message.data.some((entry) =>
+          entry.type === LogMessageDataType.PLAYER && entry.value === this.playerFilter);
+      });
+      if (filteredMessages.length === 0 && this.fallbackToAllWhenFilteredEmpty) {
+        return this.messages;
+      }
+      return filteredMessages;
+    },
     id(): ParticipantId | undefined {
       return this.viewModel.id;
     },
   },
   mounted() {
     this.selectedGeneration = this.generation;
-    this.getLogsForGeneration(this.generation);
+    if (this.recentHistory) {
+      this.getLogsForRecentHistory();
+    } else {
+      this.getLogsForGeneration(this.generation);
+    }
   },
 });
 

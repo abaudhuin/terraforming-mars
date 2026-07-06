@@ -68,7 +68,7 @@
       </div>
     </div>
 
-    <details class="accordion board-accordion" open>
+    <details class="accordion board-accordion">
       <summary class="accordion-header">
         <div class="is-action">
           <i class="icon icon-arrow-right mr-1"></i>

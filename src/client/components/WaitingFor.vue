@@ -1,24 +1,12 @@
 <template>
   <div>
   <template v-if="waitingfor === undefined || waitingfor.optional">
-    <template v-if="waitingfor === undefined">
-      {{ $t('Not your turn to take any actions') }}
-    </template>
-    <template v-else>
-      {{ $t('Waiting for other players') }}
-    </template>
-    <template v-if="playersWaitingFor.length > 0">
-      (⌛ <span v-for="color in playersWaitingFor" class="log-player" :class="playerColorClass(color, 'bg')" :key="color">{{ getPlayerName(color) }}</span>)
-    </template>
+    <div class="tm-passive-waiting-message">
+      <span v-if="waitingfor === undefined">{{ $t('Not your turn') }}</span>
+      <span v-else>{{ $t('Waiting for other players') }}</span>
+    </div>
   </template>
   <div v-if="waitingfor !== undefined" class="wf-root">
-    <template v-if="preferences().experimental_ui && playerView.game.phase === Phase.ACTION">
-      <input type="checkbox" name="suspend" id="suspend-checkbox" v-model="suspend" @change="updateSuspend">
-      <label for="suspend-checkbox">
-        <span v-i18n>Suspend</span>
-      </label>
-      <div v-if="showRefresh()">Refresh<span class="reset"></span></div>
-    </template>
     <PlayerInputFactory :players="playerView.players"
                           :playerView="playerView"
                           :playerinput="waitingfor"
@@ -37,7 +25,6 @@ import * as constants from '@/common/constants';
 import raw_settings from '@/genfiles/settings.json';
 import {vueRoot} from '@/client/components/vueRoot';
 import {PlayerInputModel} from '@/common/models/PlayerInputModel';
-import {playerColorClass} from '@/common/utils/utils';
 import {PlayerViewModel, ViewModel} from '@/common/models/PlayerModel';
 import {getPreferences} from '@/client/utils/PreferencesManager';
 import {SoundManager} from '@/client/utils/SoundManager';
@@ -48,7 +35,6 @@ import {statusCode} from '@/common/http/statusCode';
 import {isPlayerId} from '@/common/Types';
 import {InputResponse} from '@/common/inputs/InputResponse';
 import {INVALID_RUN_ID, AppErrorResponse} from '@/common/app/AppErrorId';
-import {Color} from '@/common/Color';
 import {gameDocumentTitle} from '../utils/documentTitle';
 import {setFaviconStatus, setFaviconTurnFrame} from '@/client/utils/favicon';
 
@@ -67,7 +53,6 @@ function isDesktopBrowser(): boolean {
 }
 
 type DataModel = {
-  playersWaitingFor: Array<Color>
   suspend: boolean,
   savedPlayerView: PlayerViewModel | undefined;
 }
@@ -88,16 +73,11 @@ export default defineComponent({
   },
   data(): DataModel {
     return {
-      playersWaitingFor: [],
       suspend: false,
       savedPlayerView: undefined,
     };
   },
   methods: {
-    getPlayerName(color: Color): string {
-      const player = this.playerView.players.find((p) => p.color === color);
-      return player ? player.name : color;
-    },
     animateTitle() {
       if (!getPreferences().animated_title) {
         return;
@@ -194,7 +174,6 @@ export default defineComponent({
         xhr.onload = () => {
           if (xhr.status === statusCode.ok) {
             const result = xhr.response as WaitingForModel;
-            this.playersWaitingFor = result.waitingFor;
             if (result.result === 'GO') {
               // Will only apply to player, not spectator.
               root.updatePlayer();
@@ -259,10 +238,6 @@ export default defineComponent({
     showRefresh(): boolean {
       return this.suspend === true && this.savedPlayerView !== undefined;
     },
-    playerName(color: Color) {
-      const player = this.playerView.players.find((p) => p.color === color);
-      return player?.name ?? '';
-    },
   },
   mounted() {
     document.title = gameDocumentTitle(this.playerView.game);
@@ -284,11 +259,7 @@ export default defineComponent({
     preferences(): typeof getPreferences {
       return getPreferences;
     },
-    playerColorClass(): typeof playerColorClass {
-      return playerColorClass;
-    },
   },
 });
 
 </script>
-

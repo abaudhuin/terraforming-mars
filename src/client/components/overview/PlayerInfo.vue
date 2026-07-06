@@ -1,21 +1,39 @@
 <template>
-      <div :class="getClasses()">
+      <div :class="getClasses()" tabindex="0">
         <div class="player-status-and-res">
         <div class="player-status">
           <div class="player-info-details">
-            <div class="player-info-name" @click="togglePlayerDetails">{{ playerSymbol + player.name }}</div>
-            <span @click="togglePlayerDetails" v-for="(corporationName, index) in getCorporationName()" :key="index" v-i18n>
-              <div class="player-info-corp" :title="$t(corporationName)">
-                {{ corporationName }}
-              </div>
-            </span>
+            <div class="tm-player-identity-copy">
+              <div class="player-info-name">{{ player.name }}</div>
+              <span v-for="(corporationName, index) in getCorporationName()" :key="index" v-i18n>
+                <div class="player-info-corp" :title="$t(corporationName)">
+                  {{ corporationName }}
+                </div>
+              </span>
+            </div>
+            <button type="button" class="tm-player-view-button tm-icon-control tm-icon-control--eye" @click.stop="togglePlayerDetails" :aria-label="$t('View player details')">
+              <span aria-hidden="true"></span>
+            </button>
           </div>
           <div>
-            <div class="icon-first-player" v-if="firstForGen && playerView.players.length > 1" v-i18n>1st</div>
-            <PlayerStatus :timer="player.timer" :showTimer="playerView.game.gameOptions.showTimers" :liveTimer="playerView.game.phase !== Phase.END" :firstForGen="firstForGen" v-trim-whitespace :actionLabel="actionLabel"/>
+            <PlayerStatus :timer="player.timer" :showTimer="playerView.game.gameOptions.showTimers" :liveTimer="playerView.game.phase !== Phase.END" v-trim-whitespace :actionLabel="actionLabel"/>
           </div>
-        </div>
+          </div>
           <PlayerResources :player="player" v-trim-whitespace />
+          <div class="tm-rail-player-summary">
+            <div class="tm-rail-stat tm-rail-stat--vp">
+              <span>VP</span>
+              <strong>{{ player.victoryPointsBreakdown.total }}</strong>
+            </div>
+            <div class="tm-rail-stat tm-rail-stat--tr">
+              <span>TR</span>
+              <strong>{{ player.terraformRating }}</strong>
+            </div>
+            <div class="tm-rail-stat tm-rail-stat--cards">
+              <span v-i18n>Cards</span>
+              <strong>{{ player.cardsInHandNbr }}</strong>
+            </div>
+          </div>
           <div class="player-played-cards">
             <div class="player-played-cards-top">
               <div class="played-cards-elements">
@@ -48,17 +66,15 @@ import PlayerTags from '@/client/components/overview/PlayerTags.vue';
 import PlayerAlliedParty from '@/client/components/overview/PlayerAlliedParty.vue';
 import PlayerStatus from '@/client/components/overview/PlayerStatus.vue';
 import {playerColorClass} from '@/common/utils/utils';
-import {vueRoot} from '@/client/components/vueRoot';
-import {range} from '@/common/utils/utils';
 import AppButton from '@/client/components/common/AppButton.vue';
 import {CardType} from '@/common/cards/CardType';
 import {getCard} from '@/client/cards/ClientCardManifest';
 import {Phase} from '@/common/Phase';
 import {ActionLabel} from './ActionLabel';
-import {playerSymbol} from '@/client/utils/playerSymbol';
 
 export default defineComponent({
   name: 'PlayerInfo',
+  emits: ['open-player'],
   props: {
     player: {
       type: Object as () => PublicPlayerModel,
@@ -100,59 +116,30 @@ export default defineComponent({
     tooltipCss(): string {
       return 'tooltip tooltip-' + (this.isTopBar ? 'bottom' : 'top');
     },
-    playerSymbol(): string {
-      return playerSymbol(this.player.color, ' ');
-    },
     Phase(): typeof Phase {
       return Phase;
     },
   },
   methods: {
-    isPinned(playerIndex: number): boolean {
-      return vueRoot(this).getVisibilityState('pinned_player_' + playerIndex);
-    },
-    pin(playerIndex: number) {
-      return vueRoot(this).setVisibilityState('pinned_player_' + playerIndex, true);
-    },
-    unpin(playerIndex: number) {
-      return vueRoot(this).setVisibilityState('pinned_player_' + playerIndex, false);
-    },
-    pinPlayer() {
-      let hiddenPlayersIndexes = [];
-      const playerPinned = this.isPinned(this.playerIndex);
-
-      // if player is already pinned, add to hidden players (toggle)
-      hiddenPlayersIndexes = range(this.playerView.players.length - 1);
-      if (!playerPinned) {
-        this.pin(this.playerIndex);
-        hiddenPlayersIndexes = hiddenPlayersIndexes.filter(
-          (index) => index !== this.playerIndex,
-        );
-      }
-      for (let i = 0; i < hiddenPlayersIndexes.length; i++) {
-        if (hiddenPlayersIndexes.includes(i)) {
-          this.unpin(i);
-        }
-      }
-    },
     buttonLabel(): string {
-      return this.isPinned(this.playerIndex) ? 'hide' : 'show';
+      return 'details';
     },
     togglePlayerDetails() {
-      // for the player viewing this page => scroll to cards UI
-      if (this.player.color === this.playerView.thisPlayer?.color) {
-        const el = document.getElementsByClassName(
-          'sidebar_icon--cards',
-        )[0] as HTMLElement;
-        el.click();
-
-        return;
-      }
-      // any other player show cards container and hide all other
-      this.pinPlayer();
+      this.$emit('open-player', this.player.color);
     },
     getClasses(): string {
-      return `player-info ${playerColorClass(this.player.color, 'bg_transparent')}`;
+      const classes = [
+        'player-info',
+        playerColorClass(this.player.color, 'bg_transparent'),
+        this.player.color === this.playerView.thisPlayer?.color ? 'player-info--self' : 'player-info--opponent',
+      ];
+      if (this.player.isActive) {
+        classes.push('player-info--active');
+      }
+      if (this.actionLabel !== 'none') {
+        classes.push(`player-info--${this.actionLabel}`);
+      }
+      return classes.join(' ');
     },
     numberOfPlayedCards(): number {
       return this.player.tableau.length;
