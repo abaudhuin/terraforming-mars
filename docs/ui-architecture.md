@@ -37,7 +37,9 @@ Runtime and build:
 - Node 22
 - TypeScript
 - Vue 3, mostly Options API
-- Webpack 5
+- Rolldown for default client builds and dev watch
+- Oxlint as a fast OXC-family correctness preflight before ESLint
+- Webpack 5 retained for mochapack-based client tests and fallback builds
 - LESS
 - Spectre CSS imported globally
 - Mocha, mochapack, Vue Test Utils, jsdom
@@ -48,11 +50,13 @@ Important scripts from `package.json`:
 | --- | --- |
 | `npm run dev` | Starts the local dev workflow through `scripts/dev.sh`. |
 | `npm run dev:server` | Runs the TypeScript server with `tsx watch`. |
-| `npm run dev:client` | Runs Webpack in watch mode. |
+| `npm run dev:client` | Runs Rolldown in watch mode. |
 | `npm run build` | Builds static assets, server, and client. |
+| `npm run build:client:webpack` | Runs the legacy Webpack client build fallback. |
 | `npm run make:css` | Compiles `src/styles/common.less` to `build/styles.css`. |
 | `npm run make:cards` | Exports generated card rendering data. |
 | `npm run test:client` | Runs client component tests through mochapack. |
+| `npm run lint:oxc` | Runs Oxlint's quiet correctness sweep over `src` and `tests`. |
 | `npm run lint:client` | Runs `vue-tsc`. |
 | `npm run lint:css` | Runs stylelint over LESS and Vue files. |
 
@@ -447,8 +451,9 @@ Primary entrypoint: `src/styles/common.less`
 - Cards, board, player home, create game, preferences, payments, logs,
   expansions, help, and other feature styles
 
-`webpack.config.js` also injects `variables.less` and `mixins.less` into every
-Vue `<style lang="less">` block through `less-loader.additionalData`.
+`rolldown.config.mjs` also injects `variables.less` and `mixins.less` into every
+Vue `<style lang="less">` block through the Vue SFC LESS preprocessor's
+`additionalData` option.
 
 Current styling characteristics:
 

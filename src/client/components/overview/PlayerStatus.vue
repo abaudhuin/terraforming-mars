@@ -39,8 +39,12 @@ export default defineComponent({
   },
   computed: {
     actionLabelText(): string {
-      if (this.actionLabel === 'researching') return 'buy';
-      if (this.actionLabel === 'drafting') return 'draft';
+      if (this.actionLabel === 'researching') {
+        return 'buy';
+      }
+      if (this.actionLabel === 'drafting') {
+        return 'draft';
+      }
       return this.actionLabel;
     },
   },

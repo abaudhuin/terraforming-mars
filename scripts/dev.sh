@@ -16,6 +16,7 @@ cleanup() {
 }
 trap cleanup INT TERM
 
+npm run make:json
 npm run dev:server & pids+=($!)
 npm run dev:client & pids+=($!)
 npm run watch:less & pids+=($!)

@@ -602,6 +602,8 @@ export default defineComponent({
         return '';
       case 'none':
         return '';
+      default:
+        return '';
       }
     },
     modalTitle(): string {
@@ -615,6 +617,8 @@ export default defineComponent({
       case 'player':
         return this.selectedPlayer?.name ?? 'Player details';
       case 'none':
+        return '';
+      default:
         return '';
       }
     },

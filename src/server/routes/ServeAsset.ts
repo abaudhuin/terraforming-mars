@@ -172,7 +172,7 @@ export class ServeAsset extends Handler {
       return {file: 'assets/favicon.ico'};
 
     default:
-      // Serve JS chunks produced by webpack code splitting.
+      // Serve JS chunks produced by client-bundler code splitting.
       if (urlPath.startsWith('chunks/')) {
         const chunksRoot = path.resolve('./build/chunks');
         const resolvedFile = path.resolve(path.normalize('build/' + urlPath));
