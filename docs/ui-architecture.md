@@ -39,10 +39,9 @@ Runtime and build:
 - Vue 3, mostly Options API
 - Rolldown for default client builds and dev watch
 - Oxlint as a fast OXC-family correctness preflight before ESLint
-- Webpack 5 retained for mochapack-based client tests and fallback builds
 - LESS
 - Spectre CSS imported globally
-- Mocha, mochapack, Vue Test Utils, jsdom
+- Mocha, Vitest, Vue Test Utils, jsdom
 
 Important scripts from `package.json`:
 
@@ -55,10 +54,9 @@ build, development, lint, test, and visual smoke flow.
 | `npm run dev:server` | Runs the TypeScript server with `tsx watch`. |
 | `npm run dev:client` | Runs Rolldown in watch mode. |
 | `npm run build` | Builds static assets, server, and client. |
-| `npm run build:client:webpack` | Runs the legacy Webpack client build fallback. |
 | `npm run make:css` | Compiles `src/styles/common.less` to `build/styles.css`. |
 | `npm run make:cards` | Exports generated card rendering data. |
-| `npm run test:client` | Runs client component tests through mochapack. |
+| `npm run test:client` | Runs client component tests through Vitest. |
 | `npm run lint:oxc` | Runs Oxlint's quiet correctness sweep over `src` and `tests`. |
 | `npm run lint:client` | Runs `vue-tsc`. |
 | `npm run lint:css` | Runs stylelint over LESS and Vue files. |

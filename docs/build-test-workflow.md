@@ -11,13 +11,11 @@ canonical developer interface.
 - OXC is used through Rolldown for fast JavaScript and TypeScript transforms and
   minification.
 - Oxlint runs as a fast correctness preflight before the existing ESLint rules.
-- Webpack remains installed for mochapack client tests and as a fallback client
-  build path.
-- Mocha remains the server test runner. Mochapack remains the client component
-  test runner.
+- Mocha remains the server test runner.
+- Vitest runs client component tests against Vue single-file components.
 
 npm remains the expected package manager for repository scripts and lockfile
-updates. Bun, Vite, Vitest, and Rsbuild/Rspack are not part of the default flow.
+updates. Bun and Rsbuild/Rspack are not part of the default flow.
 
 ## Install
 
@@ -49,14 +47,10 @@ Useful targeted builds:
 ```bash
 npm run build:server
 npm run build:client
-npm run build:client:webpack
 npm run make:css
 npm run make:json
 npm run make:cards
 ```
-
-Use `build:client:webpack` only when comparing against the legacy Webpack build
-or debugging a Rolldown-specific issue.
 
 ## Local Development
 
@@ -76,13 +70,11 @@ Targeted watch commands:
 ```bash
 npm run dev:server
 npm run dev:client
-npm run dev:client:webpack
 npm run watch:less
 npm run watch:cards
 ```
 
-`dev:client` is the Rolldown watcher. `dev:client:webpack` is only the legacy
-fallback.
+`dev:client` is the Rolldown watcher.
 
 ## Linting
 
@@ -125,8 +117,8 @@ npm run test:postgresql
 npm run build:test
 ```
 
-Client tests still use mochapack, which means Webpack is still required for the
-test path even though Rolldown is the default application bundler.
+Client tests use Vitest with the same Vue SFC and LESS preprocessing conventions
+as the Rolldown application build.
 
 Single server test file:
 
@@ -137,7 +129,7 @@ npx mocha --import=tsx --require tests/testing/setup.ts "tests/cards/base/Algae.
 Single client test file:
 
 ```bash
-cross-env NODE_ENV=development mochapack --require tests/client/components/setup.ts "tests/client/components/Board.spec.ts"
+cross-env NODE_ENV=development vitest run -c vitest.config.mjs tests/client/components/Board.spec.ts
 ```
 
 ## Visual Smoke

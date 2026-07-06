@@ -8,7 +8,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run build                # Full build: CSS + JSON static files, server (tsc), client (Rolldown)
 npm run build:server         # TypeScript compile server only: tsc --build src/tsconfig.json
 npm run build:client         # Rolldown production bundle, then gzip/brotli client assets
-npm run build:client:webpack # Legacy Webpack fallback build
 npm run build:test           # Compile tests: tsc --build tests/tsconfig.json
 npm run lint                 # All lints: Oxlint/ESLint + i18n audit + vue-tsc + stylelint
 npm run lint:oxc             # Fast Oxlint correctness preflight over src and tests
@@ -25,13 +24,13 @@ and visual smoke workflow.
 ```bash
 npm run test                 # All tests (server + client)
 npm run test:server          # Mocha server tests (~6700 tests)
-npm run test:client          # Mochapack client component tests (still uses Webpack)
+npm run test:client          # Vitest client component tests
 
 # Single server test file
 npx mocha --import=tsx --require tests/testing/setup.ts "tests/cards/base/Algae.spec.ts"
 
 # Single client test file
-cross-env NODE_ENV=development mochapack --require tests/client/components/setup.ts "tests/client/components/Board.spec.ts"
+cross-env NODE_ENV=development vitest run -c vitest.config.mjs tests/client/components/Board.spec.ts
 ```
 
 ### Dev Servers
@@ -39,7 +38,6 @@ cross-env NODE_ENV=development mochapack --require tests/client/components/setup
 ```bash
 npm run dev:server           # Server with hot reload (tsx watch)
 npm run dev:client           # Rolldown watch mode
-npm run dev:client:webpack   # Legacy Webpack watch fallback
 npm run watch:less           # CSS rebuild on change
 ```
 
@@ -51,7 +49,7 @@ npm run watch:less           # CSS rebuild on change
 - **`src/client/`** - Vue 3 frontend (Options API, `defineComponent`). Bundled with Rolldown for app builds.
 - **`src/common/`** - Shared types, enums, and models used by both client and server. No runtime logic that depends on either side.
 
-The `@/` import alias maps to `./src/` (configured in tsconfig paths, Rolldown, and Webpack fallback paths).
+The `@/` import alias maps to `./src/` (configured in tsconfig paths, Rolldown, and Vitest).
 
 ### Card System
 
@@ -95,7 +93,7 @@ Pluggable backends in `src/server/database/`: `SQLite`, `PostgreSQL`, `LocalFile
 - **`TestPlayer`** - Extends `Player` with test utilities. Use static factories: `TestPlayer.BLUE`, `TestPlayer.RED`, etc.
 - Server card tests: instantiate the card, call `canPlay()`/`play()`/`action()`, assert state changes.
 - Client tests: use `@vue/test-utils` mount/shallowMount with JSDOM setup from `tests/client/components/setup.ts`.
-- Test framework: Mocha + Chai (expect style). Client tests use mochapack, so Webpack remains required for tests even though Rolldown is the default app bundler.
+- Test framework: Mocha + Chai for server tests. Client tests use Vitest with Chai-compatible assertions and Vue Test Utils.
 
 ### Internationalization
 
