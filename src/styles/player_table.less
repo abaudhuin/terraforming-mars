@@ -3418,7 +3418,8 @@
 
   .player_home_block--setup .board-accordion .board-cont {
     position: relative;
-    display: block;
+    // Preserve the board's fixed background-to-tile offsets by preventing child margin collapse.
+    display: flow-root;
     height: 573px;
     margin: 12px auto 0;
     overflow: visible;
