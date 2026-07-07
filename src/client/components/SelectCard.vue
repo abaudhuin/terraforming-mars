@@ -1,12 +1,12 @@
 <template>
-    <div class="wf-component wf-component--select-card">
+    <div class="wf-component wf-component--select-card" :class="{'wf-component--blue-card-action': playerinput.selectBlueCardAction === true}">
         <div v-if="showtitle === true" class="nofloat wf-component-title">{{ $t(playerinput.title) }}</div>
         <label v-for="card in getOrderedCards()" :key="card.name" :class="getCardBoxClass(card)">
             <template v-if="!card.isDisabled">
               <input v-if="selectOnlyOneCard" type="radio" v-model="cards" :value="card" >
               <input v-else type="checkbox" v-model="cards" :value="card" :disabled="playerinput.max !== undefined && Array.isArray(cards) && cards.length >= playerinput.max && cards.includes(card) === false" >
             </template>
-            <Card :card="card" :actionUsed="isCardActivated(card)" :robotCard="robotCard(card)">
+            <Card :card="card" :actionUsed="isCardVisuallyActionUsed(card)" :robotCard="robotCard(card)">
               <template v-if="playerinput.showOwner">
                 <div :class="'card-owner-label player_translucent_bg_color_'+ getOwner(card).color">
                   {{getOwner(card).name}}
@@ -180,6 +180,15 @@ export default defineComponent({
     isCardActivated(card: CardModel): boolean {
       // Copied from PlayerMixin.
       return this.playerView.thisPlayer.actionsThisGeneration.includes(card.name);
+    },
+    isSelectedCard(card: CardModel): boolean {
+      if (Array.isArray(this.cards)) {
+        return this.cards.some((selected) => selected.name === card.name);
+      }
+      return this.cards?.name === card.name;
+    },
+    isCardVisuallyActionUsed(card: CardModel): boolean {
+      return this.isCardActivated(card) && !this.isSelectedCard(card);
     },
     buttonLabel(): string | Message {
       if (this.selectOnlyOneCard) {

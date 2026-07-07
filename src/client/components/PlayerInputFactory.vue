@@ -1,6 +1,7 @@
 <template>
   <component :is="resolvedComponent"
     ref="childInput"
+    :key="inputComponentKey"
     :playerView="playerView"
     :playerinput="playerinput"
     :onsave="onsave"
@@ -75,6 +76,18 @@ const inputComponents = {
   'deltaProject': DeltaProjectInput,
 } satisfies InputComponentRegistry;
 
+let inputModelId = 0;
+const inputModelKeys = new WeakMap<object, number>();
+
+function inputModelKey(input: PlayerInputModel): string {
+  let id = inputModelKeys.get(input);
+  if (id === undefined) {
+    id = ++inputModelId;
+    inputModelKeys.set(input, id);
+  }
+  return `${input.type}:${id}`;
+}
+
 export default defineComponent({
   name: 'PlayerInputFactory',
   props: {
@@ -115,6 +128,9 @@ export default defineComponent({
     resolvedComponent(): Component {
       const input = this.playerinput;
       return inputComponents[input.type];
+    },
+    inputComponentKey(): string {
+      return inputModelKey(this.playerinput);
     },
   },
 });

@@ -181,6 +181,13 @@ export default defineComponent({
       tile.onclick = () => this.onTileSelected(tile);
     }
   },
+  beforeUnmount() {
+    const tiles = this.getSelectableSpaces();
+    tiles.forEach((tile) => {
+      tile.onclick = null;
+    });
+    this.disableAnimation();
+  },
 });
 
 </script>

@@ -21,9 +21,16 @@
 
     <div class="tm-board-modules">
       <details v-if="game.turmoil" class="tm-extension-panel tm-extension-panel--turmoil">
-        <summary v-i18n>Turmoil</summary>
+        <summary>
+          <span class="tm-extension-panel-title" v-i18n>Turmoil</span>
+          <span class="tm-extension-panel-close tm-icon-control tm-icon-control--close" aria-hidden="true">
+            <span></span>
+          </span>
+        </summary>
         <a class="hotkey-target"></a>
-        <Turmoil :turmoil="game.turmoil"/>
+        <div class="tm-extension-panel-body tm-extension-panel-body--turmoil">
+          <Turmoil :turmoil="game.turmoil"/>
+        </div>
       </details>
 
       <details v-if="game.moon" class="tm-extension-panel tm-extension-panel--moon">

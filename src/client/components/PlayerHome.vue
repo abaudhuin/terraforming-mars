@@ -105,8 +105,10 @@
 
           <details v-if="game.colonies.length > 0" class="tm-table-leaf tm-table-leaf--colonies" ref="colonies" id="shortkey-colonies">
             <summary class="tm-table-leaf-summary">
-              <span v-i18n>Colonies</span>
-              <small v-i18n>trade and build targets</small>
+              <span class="tm-table-leaf-title" v-i18n>Colonies</span>
+              <span class="tm-table-leaf-close tm-icon-control tm-icon-control--close" aria-hidden="true">
+                <span></span>
+              </span>
             </summary>
             <a name="colonies" class="player_home_anchor hotkey-target"></a>
             <div class="colonies-fleets-cont">
@@ -124,20 +126,32 @@
 
         <aside class="tm-activity-rail">
           <button
+            v-if="!isActivityRailCollapsed"
             type="button"
             class="tm-layout-resize-handle tm-layout-resize-handle--activity"
             :aria-label="$t('Resize activity log')"
             @pointerdown="startActivityResize"></button>
           <div class="tm-panel-heading">
             <span v-i18n>Activity</span>
-            <button type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye" @click="openOverlay('log')" :aria-label="$t('Open game log')">
+            <button v-if="!isActivityRailCollapsed" type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye" @click="openOverlay('log')" :aria-label="$t('Open game log')">
+              <span aria-hidden="true"></span>
+            </button>
+            <button
+              type="button"
+              class="tm-panel-icon-button tm-icon-control tm-icon-control--activity-toggle"
+              :class="{'tm-icon-control--activity-toggle-open': isActivityRailCollapsed}"
+              @click="toggleActivityRail"
+              :aria-expanded="!isActivityRailCollapsed"
+              :aria-label="isActivityRailCollapsed ? $t('Show activity') : $t('Hide activity')">
               <span aria-hidden="true"></span>
             </button>
           </div>
           <LogPanel
+            v-if="!isActivityRailCollapsed"
             :viewModel="playerView"
             :color="thisPlayer.color"
             :step="game.step"
+            :recentHistory="true"
             cardPanelMode="emit"
             @preview-message="openActivityLogPreview"/>
         </aside>
@@ -171,8 +185,34 @@
           <div class="tm-panel-heading">
             <span v-i18n>Actions</span>
             <span class="tm-compat-text">Actions</span>
+            <button
+              v-if="cardsInHandCount > 0"
+              type="button"
+              class="tm-action-hand-button"
+              :class="{'tm-action-hand-button--open': showActionHand}"
+              @click="toggleActionHand"
+              :aria-expanded="showActionHand">
+              <span v-i18n>Hand</span>
+              <small>{{ cardsInHandCount }}</small>
+            </button>
           </div>
           <WaitingFor v-if="game.phase !== 'end'" :playerView="playerView" :waitingfor="playerView.waitingFor"/>
+          <section v-if="showActionHand" class="tm-action-hand-drawer" aria-label="Hand">
+            <header class="tm-action-hand-header">
+              <div>
+                <span v-i18n>My hand</span>
+                <small>{{ cardsInHandCount }}</small>
+              </div>
+              <button type="button" class="tm-action-hand-close tm-icon-control tm-icon-control--close" @click="closeActionHand" :aria-label="$t('Close hand')">
+                <span aria-hidden="true"></span>
+              </button>
+            </header>
+            <div class="tm-action-hand-gallery">
+              <div v-for="card in allCardsInHand" :key="card.name" class="cardbox">
+                <Card :card="card"/>
+              </div>
+            </div>
+          </section>
         </section>
 
         <section class="tm-card-desk" :class="{'tm-card-desk--engine-only': cardsInHandCount === 0 && playerView.draftedCards.length === 0}">
@@ -320,9 +360,21 @@
               <div class="tm-player-dossier">
                 <section class="tm-player-dossier-summary">
                   <div class="tm-player-dossier-stats">
-                    <div><span>VP</span><strong>{{ selectedPlayer.victoryPointsBreakdown.total }}</strong></div>
-                    <div><span>TR</span><strong>{{ selectedPlayer.terraformRating }}</strong></div>
-                    <div><span v-i18n>Cards</span><strong>{{ selectedPlayer.cardsInHandNbr }}</strong></div>
+                    <div class="tm-player-dossier-stat" title="VP">
+                      <span class="tm-rail-stat-icon tm-rail-stat-icon--vp" aria-hidden="true"></span>
+                      <span class="tm-player-dossier-stat-label">VP</span>
+                      <strong>{{ selectedPlayer.victoryPointsBreakdown.total }}</strong>
+                    </div>
+                    <div class="tm-player-dossier-stat" title="TR">
+                      <span class="tm-rail-stat-icon tm-rail-stat-icon--tr" aria-hidden="true"></span>
+                      <span class="tm-player-dossier-stat-label">TR</span>
+                      <strong>{{ selectedPlayer.terraformRating }}</strong>
+                    </div>
+                    <div class="tm-player-dossier-stat" :title="$t('Cards')">
+                      <span class="tm-rail-stat-icon tm-rail-stat-icon--cards" aria-hidden="true"></span>
+                      <span class="tm-player-dossier-stat-label" v-i18n>Cards</span>
+                      <strong>{{ selectedPlayer.cardsInHandNbr }}</strong>
+                    </div>
                   </div>
                   <PlayerResources :player="selectedPlayer"/>
                   <PlayerTags :player="selectedPlayer" :playerView="playerView" :hideZeroTags="false" :conciseTagsViewDefaultValue="false"/>
@@ -439,6 +491,8 @@ type PlayerHomeModel = {
   showActiveCards: boolean;
   showAutomatedCards: boolean;
   showEventCards: boolean;
+  showActionHand: boolean;
+  isActivityRailCollapsed: boolean;
   activeOverlay: OverlayKind;
   selectedPlayerColor: Color | undefined;
   cardOverlayFocus: CardOverlayFocus;
@@ -466,6 +520,41 @@ type ResizeTarget = 'bottom' | 'activity' | undefined;
 type ToggleableCardType = 'HAND' | 'ACTIVE' | 'AUTOMATED' | 'EVENT';
 type ToggleStateKey = 'showHand' | 'showActiveCards' | 'showAutomatedCards' | 'showEventCards';
 
+const layoutStorageKeys = {
+  bottomTrayHeight: 'tm-player-table-bottom-tray-height',
+  activityRailWidth: 'tm-player-table-activity-rail-width',
+  activityRailCollapsed: 'tm-player-table-activity-rail-collapsed',
+} as const;
+
+function readStoredLayoutDimension(key: string): number | undefined {
+  if (typeof localStorage === 'undefined') {
+    return undefined;
+  }
+  const value = Number(localStorage.getItem(key));
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+function storeLayoutDimension(key: string, value: number | undefined): void {
+  if (typeof localStorage === 'undefined' || value === undefined) {
+    return;
+  }
+  localStorage.setItem(key, String(Math.round(value)));
+}
+
+function readStoredLayoutBoolean(key: string): boolean {
+  if (typeof localStorage === 'undefined') {
+    return false;
+  }
+  return localStorage.getItem(key) === 'true';
+}
+
+function storeLayoutBoolean(key: string, value: boolean): void {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
+  localStorage.setItem(key, String(value));
+}
+
 const typeToDataModel: Record<ToggleableCardType, {key: ToggleStateKey, preference: keyof Preferences}> = {
   HAND: {key: 'showHand', preference: 'hide_hand'},
   ACTIVE: {key: 'showActiveCards', preference: 'hide_active_cards'},
@@ -483,6 +572,8 @@ export default defineComponent({
       showActiveCards: !preferences.hide_active_cards,
       showAutomatedCards: !preferences.hide_automated_cards,
       showEventCards: !preferences.hide_event_cards,
+      showActionHand: false,
+      isActivityRailCollapsed: readStoredLayoutBoolean(layoutStorageKeys.activityRailCollapsed),
       activeOverlay: 'none',
       selectedPlayerColor: undefined,
       cardOverlayFocus: 'balanced',
@@ -490,8 +581,8 @@ export default defineComponent({
       cardOverlayFilter: 'all',
       cardOverlayGroup: 'none',
       cardOverlaySort: 'table',
-      bottomTrayHeight: undefined,
-      activityRailWidth: undefined,
+      bottomTrayHeight: readStoredLayoutDimension(layoutStorageKeys.bottomTrayHeight),
+      activityRailWidth: readStoredLayoutDimension(layoutStorageKeys.activityRailWidth),
       resizeTarget: undefined,
       boardFitZoom: undefined,
       boardFitYOffset: undefined,
@@ -545,6 +636,8 @@ export default defineComponent({
         'tm-player-table--with-turmoil': this.game.turmoil !== undefined,
         'tm-player-table--acting': this.isPlayerActing(this.playerView),
         'tm-player-table--passive': !this.isPlayerActing(this.playerView),
+        'tm-player-table--magnify-cards': getPreferences().magnify_cards,
+        'tm-player-table--activity-collapsed': this.isActivityRailCollapsed,
         [`tm-player-table--input-${this.inputKind}`]: true,
         'tm-player-table--setup': this.thisPlayer.tableau.length === 0,
       };
@@ -607,8 +700,6 @@ export default defineComponent({
         return '';
       case 'none':
         return '';
-      default:
-        return '';
       }
     },
     modalTitle(): string {
@@ -623,15 +714,13 @@ export default defineComponent({
         return this.selectedPlayer?.name ?? 'Player details';
       case 'none':
         return '';
-      default:
-        return '';
       }
     },
     phaseLabel(): string {
       return String(this.game.phase);
     },
     generationLabel(): string {
-      return `Gen ${this.game.generation}`;
+      return `GEN ${this.game.generation}`;
     },
     turnStatusLabel(): string {
       if (this.playerView.waitingFor !== undefined && !this.playerView.waitingFor.optional) {
@@ -771,6 +860,13 @@ export default defineComponent({
       }
     },
     stopLayoutResize(): void {
+      const target = this.resizeTarget;
+      if (target === 'bottom') {
+        storeLayoutDimension(layoutStorageKeys.bottomTrayHeight, this.bottomTrayHeight);
+      }
+      if (target === 'activity') {
+        storeLayoutDimension(layoutStorageKeys.activityRailWidth, this.activityRailWidth);
+      }
       this.resizeTarget = undefined;
       this.removeLayoutResizeListeners();
     },
@@ -807,9 +903,9 @@ export default defineComponent({
       }
 
       const boardNaturalWidth = 670;
-      const boardNaturalHeight = 573;
+      const boardNaturalHeight = 620;
       const horizontalPadding = 34;
-      const verticalPadding = 28;
+      const verticalPadding = 54;
       const fitByWidth = (rect.width - horizontalPadding) / boardNaturalWidth;
       const fitByHeight = (rect.height - verticalPadding) / boardNaturalHeight;
       const maxZoom = window.innerHeight < 820 ? 1.16 : 1.48;
@@ -839,6 +935,11 @@ export default defineComponent({
         this.closeActivityLogPreview();
         return;
       }
+      if (this.showActionHand) {
+        event.preventDefault();
+        this.closeActionHand();
+        return;
+      }
       if (this.playerLogPreviewMessage !== undefined) {
         event.preventDefault();
         this.closePlayerLogPreview();
@@ -853,6 +954,7 @@ export default defineComponent({
     },
     openOverlay(overlay: OverlayKind): void {
       this.activeOverlay = overlay;
+      this.closeActionHand();
       if (overlay === 'cards') {
         this.cardOverlayFocus = 'hand';
       }
@@ -860,6 +962,7 @@ export default defineComponent({
     openCardsOverlay(): void {
       this.cardOverlayFocus = 'hand';
       this.activeOverlay = 'cards';
+      this.closeActionHand();
     },
     closeOverlay(): void {
       this.activeOverlay = 'none';
@@ -889,6 +992,19 @@ export default defineComponent({
     },
     closePlayerLogPreview(): void {
       this.playerLogPreviewMessage = undefined;
+    },
+    toggleActionHand(): void {
+      this.showActionHand = !this.showActionHand;
+    },
+    closeActionHand(): void {
+      this.showActionHand = false;
+    },
+    toggleActivityRail(): void {
+      this.isActivityRailCollapsed = !this.isActivityRailCollapsed;
+      if (this.isActivityRailCollapsed) {
+        this.closeActivityLogPreview();
+      }
+      storeLayoutBoolean(layoutStorageKeys.activityRailCollapsed, this.isActivityRailCollapsed);
     },
     openPlayer(color: Color): void {
       this.selectedPlayerColor = color;

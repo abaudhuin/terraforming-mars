@@ -1,11 +1,9 @@
 <template>
-  <div>
-    <div v-if="showtitle === true">{{ $t(playerinput.title) }}</div>
-    <div class="flex">
+  <div class="wf-component wf-component--select-amount">
+    <div v-if="showtitle === true" class="wf-component-title">{{ $t(playerinput.title) }}</div>
+    <div class="wf-component-amount-row">
       <input type="number" class="nes-input" value="playerinput.min" :min="playerinput.min" :max="playerinput.max" v-model="amount" >
-      &nbsp;
       <AppButton size="big" type="max" @click="setMaxValue" title="MAX" />
-      &nbsp;
       <AppButton v-if="showsave === true" size="big" @click="saveData" :title="playerinput.buttonLabel" />
     </div>
   </div>

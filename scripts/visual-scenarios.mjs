@@ -2276,15 +2276,15 @@ function printableSummary(summary) {
 
 async function main() {
   await fs.mkdir(outputDir, {recursive: true});
-  const response = await fetch(pageURL('/'));
-  if (!response.ok) {
-    throw new Error(`Cannot reach ${baseURL}; got ${response.status}`);
-  }
-
   const configuredScenarios = await loadScenarioConfig();
   if (process.env.TM_LIST_SCENARIOS === '1') {
     console.log(configuredScenarios.map((scenario) => scenario.name).join('\n'));
     return;
+  }
+
+  const response = await fetch(pageURL('/'));
+  if (!response.ok) {
+    throw new Error(`Cannot reach ${baseURL}; got ${response.status}`);
   }
 
   const scenarios = configuredScenarios

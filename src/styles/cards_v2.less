@@ -15,21 +15,33 @@
   .project-icon-expansion-container {
     flex-direction: row;
     display: flex;
+    align-items: center;
+    gap: 3px;
     bottom: 5px;
     left: 5px;
+    height: 24px;
     position: absolute;
   }
   .resource-card-icon-expansion-container {
     flex-direction: row;
     display: flex;
+    align-items: center;
+    gap: 3px;
     bottom: 5px;
     left: 87px;
+    height: 24px;
     position: absolute;
+  }
+  .project-icon {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
   }
   .project-icon:after,
   .preludeCard-icon:after {
-    position: relative;
-    margin: 3px;
+    position: static;
+    margin: 0;
     display: block;
   }
   .card-superscript {

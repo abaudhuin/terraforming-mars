@@ -1,5 +1,5 @@
 <template>
-  <div class="wf-options wf-options--command-board" :class="{'wf-options--simple-choices': isSimpleChoiceList}">
+  <div class="wf-options wf-options--command-board" :class="{'wf-options--simple-choices': isSimpleChoiceList, 'wf-options--has-selected-submit': hasSelectedOptionSubmit}">
     <div v-if="showtitle" class="wf-command-title">{{ $t(playerinput.title) }}</div>
     <div v-if="playerinput.warning !== undefined" class="card-warning wf-command-warning">({{ $t(playerinput.warning) }})</div>
 
@@ -17,14 +17,16 @@
           <span class="wf-command-option-title">{{ $t(option.title) }}</span>
           <span v-if="getCommandMeta(option)" class="wf-command-option-meta">{{ getCommandMeta(option) }}</span>
         </span>
-        <button
-          v-if="shouldShowInlineSubmit(option, idx)"
-          type="button"
-          class="wf-command-inline-submit"
-          @click.stop.prevent="saveOption(option, idx)">
-          {{ $t(inlineSubmitLabel(option)) }}
-        </button>
       </label>
+    </div>
+
+    <div v-if="hasSelectedOptionSubmit" class="wf-command-submit wf-command-submit--selected-option">
+      <button
+        type="button"
+        class="wf-command-inline-submit"
+        @click.stop.prevent="saveSelectedOption">
+        {{ $t(selectedChoiceSubmitLabel) }}
+      </button>
     </div>
 
     <div v-if="shouldShowChoiceSubmit()" class="wf-command-submit">
@@ -52,6 +54,31 @@ import {OrOptionsModel, PlayerInputModel} from '@/common/models/PlayerInputModel
 import {getPreferences} from '@/client/utils/PreferencesManager';
 import {InputResponse, OrOptionsResponse} from '@/common/inputs/InputResponse';
 
+type DisplayedOption = {
+  option: PlayerInputModel;
+  originalIndex: number;
+}
+
+function optionTitle(option: PlayerInputModel): string {
+  if (typeof option.title === 'string') {
+    return option.title.toLowerCase();
+  }
+  return option.title.message.toLowerCase();
+}
+
+function reorderDisplayedOptions(entries: Array<DisplayedOption>): Array<DisplayedOption> {
+  const ceoIndex = entries.findIndex((entry) => optionTitle(entry.option).includes('use ceo once per game action'));
+  if (ceoIndex === -1) {
+    return entries;
+  }
+
+  const [ceoEntry] = entries.splice(ceoIndex, 1);
+  const playCardIndex = entries.findIndex((entry) => entry.option.type === 'projectCard' || optionTitle(entry.option).includes('play project card'));
+  const insertIndex = playCardIndex === -1 ? Math.min(1, entries.length) : playCardIndex + 1;
+  entries.splice(insertIndex, 0, ceoEntry);
+  return entries;
+}
+
 export default defineComponent({
   name: 'OrOptions',
   components: {
@@ -78,22 +105,25 @@ export default defineComponent({
     },
   },
   data() {
-    const displayedOptions: Array<PlayerInputModel> = [];
-    const originalIndices: Array<number> = [];
+    const entries: Array<DisplayedOption> = [];
     this.playerinput.options.forEach((option, i) => {
       if (option.type === 'card' && option.showOnlyInLearnerMode !== false && !getPreferences().learner_mode) {
         return;
       }
-      displayedOptions.push(option);
-      originalIndices.push(i);
+      entries.push({option, originalIndex: i});
     });
+
+    reorderDisplayedOptions(entries);
+    const displayedOptions = entries.map((entry) => entry.option);
+    const originalIndices = entries.map((entry) => entry.originalIndex);
     const initialIdx = this.playerinput.initialIdx ?? 0;
+    const displayedInitialIdx = Math.max(0, originalIndices.indexOf(initialIdx));
     // Special case: If the first recommended displayed option is SelectProjectCardToPlay, and none of them are enabled, skip it.
-    let selectedIdx = initialIdx;
+    let selectedIdx = displayedInitialIdx;
     if (displayedOptions.length > 1 &&
-      displayedOptions[initialIdx].type === 'projectCard' &&
-      !displayedOptions[initialIdx].cards.some((card) => card.isDisabled !== true)) {
-      selectedIdx = initialIdx + 1;
+      displayedOptions[displayedInitialIdx].type === 'projectCard' &&
+      !displayedOptions[displayedInitialIdx].cards.some((card) => card.isDisabled !== true)) {
+      selectedIdx = displayedInitialIdx + 1;
     }
     return {
       displayedOptions,
@@ -130,6 +160,13 @@ export default defineComponent({
       }
       return this.inlineSubmitLabel(this.selectedOption);
     },
+    hasSelectedOptionSubmit(): boolean {
+      return this.showsave === true &&
+        !this.isSimpleChoiceList &&
+        this.selectedOption !== undefined &&
+        !this.isDisabledOption(this.selectedOption) &&
+        !this.hasMeaningfulChildUi(this.selectedOption);
+    },
   },
   methods: {
     getSelectedOptionTop(): number | undefined {
@@ -165,13 +202,6 @@ export default defineComponent({
     },
     hasMeaningfulChildUi(option: PlayerInputModel): boolean {
       return option.type !== 'option';
-    },
-    shouldShowInlineSubmit(option: PlayerInputModel, idx: number): boolean {
-      return this.showsave === true &&
-        !this.isSimpleChoiceList &&
-        this.selectedIdx === idx &&
-        !this.isDisabledOption(option) &&
-        !this.hasMeaningfulChildUi(option);
     },
     shouldShowChoiceSubmit(): boolean {
       return this.showsave === true &&
@@ -215,6 +245,9 @@ export default defineComponent({
     },
     getCommandIconClass(option: PlayerInputModel): string {
       const title = this.optionTitle(option);
+      if (this.isPassOption(option)) {
+        return 'wf-command-icon--pass';
+      }
       if (option.type === 'projectCard' || title.includes('play')) {
         return 'wf-command-icon--play-card';
       }
@@ -224,11 +257,20 @@ export default defineComponent({
       if (title.includes('standard') || title.includes('project')) {
         return 'wf-command-icon--standard-project';
       }
+      if (title.includes('oxygen')) {
+        return 'wf-command-icon--oxygen';
+      }
+      if (title.includes('ocean')) {
+        return 'wf-command-icon--ocean';
+      }
+      if (title.includes('venus')) {
+        return 'wf-command-icon--venus';
+      }
       if (title.includes('plant') || title.includes('greenery')) {
         return 'wf-command-icon--plant';
       }
       if (title.includes('heat') || title.includes('temperature')) {
-        return 'wf-command-icon--heat';
+        return 'wf-command-icon--temperature';
       }
       if (title.includes('milestone')) {
         return 'wf-command-icon--milestone';
@@ -244,9 +286,6 @@ export default defineComponent({
       }
       if (title.includes('moon') || option.type === 'deltaProject') {
         return 'wf-command-icon--track';
-      }
-      if (this.isPassOption(option)) {
-        return 'wf-command-icon--pass';
       }
       return 'wf-command-icon--generic';
     },
@@ -297,12 +336,13 @@ export default defineComponent({
       return option.type === 'projectCard' && option.cards.every((card) => card.isDisabled === true);
     },
     optionTitle(option: PlayerInputModel): string {
-      if (typeof option.title === 'string') {
-        return option.title.toLowerCase();
-      }
-      return option.title.message.toLowerCase();
+      return optionTitle(option);
     },
     saveData() {
+      if (this.selectedOption !== undefined && !this.hasMeaningfulChildUi(this.selectedOption)) {
+        this.saveSelectedOption();
+        return;
+      }
       let ref = this.$refs['inputfactory'] as {saveData: () => void} | Array<{saveData: () => void}>;
       if (Array.isArray(ref)) {
         ref = ref[0];

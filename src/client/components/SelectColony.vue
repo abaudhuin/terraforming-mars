@@ -5,7 +5,7 @@
       <input type="radio" v-model="selectedColony" :value="colony.name" >
       <Colony :colony="colony"/>
     </label>
-    <div v-if="showsave === true" class="nofloat">
+    <div v-if="showsave === true" class="nofloat wf-component-actions">
       <AppButton @click="saveData" :title="playerinput.buttonLabel" :disabled="!canSave()"/>
     </div>
   </div>

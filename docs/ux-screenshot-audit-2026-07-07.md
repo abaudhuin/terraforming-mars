@@ -9,6 +9,11 @@ This audit uses raw screenshots and targeted reruns. Contact sheets were not use
 - `/tmp/tm-visual-verify-20260707-payment-final`: 1 screenshot, 0 skips, 0 failures, 0 page errors, 0 console errors.
 - `/tmp/tm-visual-missing-tail-20260707-final`: 180 screenshots, 0 skips, 0 failures, 0 page errors, 0 console errors.
 - `/tmp/tm-visual-verify-20260707-endgame-title-final`: 1 screenshot, 0 skips, 0 failures, 0 page errors, 0 console errors.
+- `/tmp/tm-fix-all-20260707-final-blue`: 20 screenshots, 0 skips, 0 failures, 0 page errors, 0 console errors.
+- `/tmp/tm-fix-all-20260707-final-cards`: 70 screenshots, 0 skips, 0 failures, 0 page errors, 0 console errors.
+- `/tmp/tm-fix-all-20260707-final-global`: 75 screenshots, 0 skips, 0 failures, 0 page errors, 0 console errors.
+- `/tmp/tm-fix-all-20260707-final-five-player`: 55 screenshots, 0 skips, 0 failures, 0 page errors, 0 console errors.
+- `/tmp/tm-fix-all-20260707-final-overlay-style`: 10 screenshots, 0 skips, 0 failures, 0 page errors, 0 console errors.
 
 ## Confirmed And Fixed
 
@@ -46,6 +51,16 @@ This audit uses raw screenshots and targeted reruns. Contact sheets were not use
 - Issue: at 3440x1440, the endgame content stack was centered but the page title was pinned to the far-left edge.
 - Fix: the endgame title now uses the same centered max-width as the result stack while reserving space for the navigation controls.
 - Current evidence: `/tmp/tm-visual-verify-20260707-endgame-title-final/endgame-all-scoring-3440x1440-post-setup-endgame-results.png`.
+
+### Follow-Up Action Card And Overlay Polish
+
+- Issue: after carrying forward the local action-hand/activity-rail work, the Cards overlay entry point and filter styling regressed, and action-card metrics still found content overflow in Robinson Industries, Pets, Fish, and Moon standard-project cards.
+- Fix: the Cards control and overlay filters were restored, modal controls were restyled for the dark overlay, action-card content was compacted for the specific overflowing cards, and the scenario list command no longer requires a running server.
+- Current evidence:
+  - `/tmp/tm-fix-all-20260707-final-blue/action-choice-stack-1440x900-post-setup-action-blue-card.png`
+  - `/tmp/tm-fix-all-20260707-final-cards/ux-cards-filter-matrix-1440x900-post-setup-cards-search-no-results.png`
+  - `/tmp/tm-fix-all-20260707-final-global/global-all-modules-wide-density-1440x900-post-setup-action-standard-projects.png`
+  - `/tmp/tm-fix-all-20260707-final-five-player/five-player-density-3440x1440-post-setup-player-rail-scrolled.png`
 
 ## Dismissed Or Reclassified
 
