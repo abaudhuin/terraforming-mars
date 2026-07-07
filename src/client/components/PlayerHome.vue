@@ -221,10 +221,67 @@
           <a name="cards" class="player_home_anchor"></a>
           <div class="tm-card-zone tm-card-zone--hand" v-if="playerView.draftedCards.length > 0">
             <div class="tm-panel-heading">
-              <span v-i18n>Actions</span>
-              <span class="tm-compat-text">Actions</span>
+              <span v-i18n>Drafted cards</span>
+              <small>{{ playerView.draftedCards.length }}</small>
             </div>
-            <WaitingFor v-if="game.phase !== 'end'" :playerView="playerView" :waitingfor="playerView.waitingFor"/>
+            <div class="tm-card-strip">
+              <div v-for="card in playerView.draftedCards" :key="card.name" class="cardbox">
+                <Card :card="card"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="tm-card-zone tm-card-zone--hand" v-if="cardsInHandCount > 0" id="shortkey-hand">
+            <div class="tm-panel-heading tm-panel-heading--interactive">
+              <span v-i18n>Hand</span>
+              <div class="tm-card-heading-actions">
+                <button type="button" :class="getHideButtonClass('HAND')" @click.prevent="toggle('HAND')">
+                  <span class="played-cards-count">{{ cardsInHandCount.toString() }}</span>
+                  <span class="played-cards-selection" v-i18n>{{ getToggleLabel('HAND') }}</span>
+                </button>
+                <button type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye tm-hand-open-button" @click="openCardsOverlay()" :aria-label="$t('Open hand')">
+                  <span aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+            <div v-show="isVisible('HAND') || !isDecisionActive" class="tm-card-strip">
+              <SortableCards :playerId="playerView.id" :cards="allCardsInHand"/>
+            </div>
+          </div>
+
+          <div class="tm-card-zone tm-card-zone--engine">
+            <div class="tm-panel-heading tm-panel-heading--interactive">
+              <span v-i18n>Played cards</span>
+              <div class="tm-card-heading-actions played-cards-filters">
+                <button type="button" :class="getHideButtonClass('ACTIVE')" @click.prevent="toggle('ACTIVE')">
+                  <span class="played-cards-count">{{ activeTableauCount }}</span>
+                  <span class="played-cards-selection" v-i18n>Blue</span>
+                </button>
+                <button type="button" :class="getHideButtonClass('AUTOMATED')" @click.prevent="toggle('AUTOMATED')">
+                  <span class="played-cards-count">{{ automatedTableauCount }}</span>
+                  <span class="played-cards-selection" v-i18n>Green</span>
+                </button>
+                <button type="button" :class="getHideButtonClass('EVENT')" @click.prevent="toggle('EVENT')">
+                  <span class="played-cards-count">{{ eventTableauCount }}</span>
+                  <span class="played-cards-selection" v-i18n>Events</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="tm-card-strip">
+              <div v-for="card in getCardsByType(thisPlayer.tableau, [CardType.CORPORATION])" :key="card.name" class="cardbox">
+                <Card :card="card" :actionUsed="isCardActivated(card, thisPlayer)" :cubeColor="thisPlayer.color"/>
+              </div>
+              <div v-for="card in getCardsByType(thisPlayer.tableau, [CardType.CEO])" :key="card.name" class="cardbox">
+                <Card :card="card" :actionUsed="isCardActivated(card, thisPlayer)" :cubeColor="thisPlayer.color"/>
+              </div>
+              <div v-show="isVisible('ACTIVE')" v-for="card in activeTableauCards" :key="card.name" class="cardbox">
+                <Card :card="card" :actionUsed="isCardActivated(card, thisPlayer)" :cubeColor="thisPlayer.color"/>
+              </div>
+              <StackedCards v-show="isVisible('AUTOMATED')" :cards="automatedTableauCards" />
+              <StackedCards v-show="isVisible('EVENT')" :cards="eventTableauCards" />
+            </div>
+          </div>
           </section>
         </template>
       </section>
@@ -411,6 +468,7 @@ import PlayerSetupView from '@/client/components/PlayerSetupView.vue';
 import PlayerResources from '@/client/components/overview/PlayerResources.vue';
 import PlayerTags from '@/client/components/overview/PlayerTags.vue';
 import DynamicTitle from '@/client/components/common/DynamicTitle.vue';
+import SortableCards from '@/client/components/SortableCards.vue';
 import StackedCards from '@/client/components/StackedCards.vue';
 import PurgeWarning from '@/client/components/common/PurgeWarning.vue';
 import UndergroundTokens from '@/client/components/underworld/UndergroundTokens.vue';
@@ -431,6 +489,7 @@ import {Color} from '@/common/Color';
 import {LogMessage} from '@/common/logs/LogMessage';
 
 type PlayerHomeModel = {
+  showHand: boolean;
   showActiveCards: boolean;
   showAutomatedCards: boolean;
   showEventCards: boolean;
@@ -460,8 +519,8 @@ type CardOverlayGroup = 'none' | 'type' | 'tag';
 type CardOverlaySort = 'table' | 'cost';
 type ResizeTarget = 'bottom' | 'activity' | undefined;
 
-type ToggleableCardType = 'ACTIVE' | 'AUTOMATED' | 'EVENT';
-type ToggleStateKey = 'showActiveCards' | 'showAutomatedCards' | 'showEventCards';
+type ToggleableCardType = 'HAND' | 'ACTIVE' | 'AUTOMATED' | 'EVENT';
+type ToggleStateKey = 'showHand' | 'showActiveCards' | 'showAutomatedCards' | 'showEventCards';
 
 const layoutStorageKeys = {
   bottomTrayHeight: 'tm-player-table-bottom-tray-height',
@@ -500,6 +559,7 @@ function storeLayoutBoolean(key: string, value: boolean): void {
 }
 
 const typeToDataModel: Record<ToggleableCardType, {key: ToggleStateKey, preference: keyof Preferences}> = {
+  HAND: {key: 'showHand', preference: 'hide_hand'},
   ACTIVE: {key: 'showActiveCards', preference: 'hide_active_cards'},
   AUTOMATED: {key: 'showAutomatedCards', preference: 'hide_automated_cards'},
   EVENT: {key: 'showEventCards', preference: 'hide_event_cards'},
@@ -511,6 +571,7 @@ export default defineComponent({
   data(): PlayerHomeModel {
     const preferences = getPreferences();
     return {
+      showHand: !preferences.hide_hand,
       showActiveCards: !preferences.hide_active_cards,
       showAutomatedCards: !preferences.hide_automated_cards,
       showEventCards: !preferences.hide_event_cards,
@@ -534,6 +595,9 @@ export default defineComponent({
     };
   },
   watch: {
+    showHand: function hide_hand() {
+      PreferencesManager.INSTANCE.set('hide_hand', !this.showHand);
+    },
     showActiveCards: function toggle_active_cards() {
       PreferencesManager.INSTANCE.set('hide_active_cards', !this.showActiveCards);
     },
@@ -743,6 +807,7 @@ export default defineComponent({
     PlayerSetupView,
     PlayerResources,
     PlayerTags,
+    SortableCards,
     StackedCards,
     PurgeWarning,
     UndergroundTokens,
@@ -1063,9 +1128,15 @@ export default defineComponent({
     isVisible(type: ToggleableCardType): boolean {
       return this[typeToDataModel[type].key];
     },
+    getToggleLabel(hideType: ToggleableCardType): string {
+      const val = this[typeToDataModel[hideType].key];
+      return val ? 'on' : '';
+    },
     getHideButtonClass(hideType: ToggleableCardType): string {
       const prefix = 'hiding-card-button ';
       switch (hideType) {
+      case 'HAND':
+        return prefix + (this.showHand ? 'hand-toggle' : 'hand-toggle-transparent');
       case 'ACTIVE':
         return prefix + (this.showActiveCards ? 'active' : 'active-transparent');
       case 'AUTOMATED':
