@@ -53,9 +53,9 @@ COPY ["package.json", "package-lock.json", "./"]
 COPY --from=installprod /usr/src/app/node_modules ./node_modules
 
 # Copy built app from intermediate image
-COPY --from=builder /usr/src/app/build ./build
+COPY --from=builder --chown=tfm:nogroup /usr/src/app/build ./build
 
-COPY --from=builder /usr/src/app/assets ./assets
+COPY --from=builder --chown=tfm:nogroup /usr/src/app/assets ./assets
 
 # Run command.
 

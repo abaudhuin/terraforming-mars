@@ -4,8 +4,16 @@ import {Request} from '../Request';
 import {Response} from '../Response';
 import {statusCode} from '../../common/http/statusCode';
 
+export function setNoStoreHeaders(res: Response): void {
+  res.setHeader('Cache-Control', 'private, no-store, no-cache, must-revalidate, max-age=0, s-maxage=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+}
+
 export function badRequest(req: Request, res: Response, err?: string): void {
   console.warn('bad request', req.url);
+  setNoStoreHeaders(res);
   res.writeHead(statusCode.badRequest);
   res.write('Bad request');
   if (err) {
@@ -19,6 +27,7 @@ export function notFound(req: Request, res: Response, err?: string): void {
   if (!process.argv.includes('hide-not-found-warnings')) {
     console.warn('Not found', req.method, req.url);
   }
+  setNoStoreHeaders(res);
   res.writeHead(statusCode.notFound);
   res.write('Not found');
   if (err) {
@@ -51,6 +60,7 @@ export function internalServerError(
   res: Response,
   err: unknown): void {
   console.warn('internal server error: ', req.url, err);
+  setNoStoreHeaders(res);
   res.writeHead(statusCode.internalServerError);
 
   res.write('Internal server error: ');
@@ -68,6 +78,7 @@ export function internalServerError(
 
 export function notAuthorized(req: Request, res: Response): void {
   console.warn('Not authorized', req.method, req.url);
+  setNoStoreHeaders(res);
   res.writeHead(statusCode.forbidden);
   res.write('Not authorized');
   res.end();
@@ -75,6 +86,7 @@ export function notAuthorized(req: Request, res: Response): void {
 
 export function unprocessableEntity(req: Request, res: Response, msg: string = 'Unprocessable Entity'): void {
   console.warn(msg, req.method, req.url);
+  setNoStoreHeaders(res);
   res.writeHead(statusCode.unprocessableEntity);
   res.write(msg);
   res.end();
@@ -88,6 +100,7 @@ export function downgradeRedirect(_req: Request, res: Response, ctx: Context): v
 }
 
 export function writeJson(res: Response, ctx: Context, json: any, space?: string | number | undefined) {
+  setNoStoreHeaders(res);
   res.setHeader('Content-Type', 'application/json');
   if (ctx.user) {
     json._user = {userid: ctx.user.global_name};
@@ -102,4 +115,3 @@ export function quotaExceeded(req: Request, res: Response) {
   res.write('Quota exceeded');
   res.end();
 }
-

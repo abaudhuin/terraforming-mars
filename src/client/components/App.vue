@@ -188,9 +188,12 @@ export default defineComponent({
       const currentPathname = getLastPathSegment();
       const app = this as unknown as MainAppData;
 
-      const url = 'api/' + path + window.location.search.replace('&noredirect', '');
+      const params = new URLSearchParams(window.location.search);
+      params.delete('noredirect');
+      params.set('_cb', String(Date.now()));
+      const url = 'api/' + path + '?' + params.toString();
 
-      fetch(url)
+      fetch(url, {cache: 'no-store'})
         .then((resp) => {
           if (!resp.ok) {
             throw new Error(`Error getting game data: ${resp.statusText}`);

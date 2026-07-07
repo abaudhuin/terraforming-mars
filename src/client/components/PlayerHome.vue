@@ -32,6 +32,42 @@
 
     <template v-else>
       <header class="tm-table-hud">
+        <details class="tm-utility-menu">
+          <summary :title="$t('Table tools')">
+            <span v-i18n>Tools</span>
+          </summary>
+          <div class="tm-utility-panel">
+            <div class="tm-tool-list">
+              <div v-if="game.spectatorId" class="tm-tool-row">
+                <a :href="'/spectator?id=' + game.spectatorId" target="_blank" rel="noopener noreferrer" v-i18n>Spectator link</a>
+              </div>
+            </div>
+
+            <div v-if="thisPlayer.selfReplicatingRobotsCards.length > 0" class="tm-mini-section">
+              <div class="tm-panel-heading">
+                <span v-i18n>Self-replicating Robots</span>
+                <small>{{ thisPlayer.selfReplicatingRobotsCards.length }}</small>
+              </div>
+              <div class="tm-card-strip tm-card-strip--mini">
+                <div v-for="card in thisPlayer.selfReplicatingRobotsCards" :key="card.name" class="cardbox">
+                  <Card :card="card"/>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="thisPlayer.underworldData.tokens.length > 0" class="tm-mini-section">
+              <div class="tm-panel-heading">
+                <span v-i18n>Underground tokens</span>
+              </div>
+              <UndergroundTokens :underworldData="thisPlayer.underworldData"/>
+            </div>
+
+            <div class="tm-mini-section tm-purge-warning">
+              <PurgeWarning :expectedPurgeTimeMs="game.expectedPurgeTimeMs"/>
+            </div>
+          </div>
+        </details>
+
         <div class="tm-turn-context">
           <span class="tm-status-pill" :class="{'tm-status-pill--active': isPlayerActing(playerView)}">{{ turnStatusLabel }}</span>
           <span v-if="activePlayer" class="tm-active-player" :class="'player_bg_color_' + activePlayer.color">{{ activePlayer.name }}</span>
@@ -46,6 +82,7 @@
 
         <div class="tm-top-tools">
           <button type="button" class="tm-control tm-control--review tm-control--board" @click="openOverlay('board')" v-i18n>Board</button>
+          <button type="button" class="tm-control tm-control--review tm-control--cards" @click="openCardsOverlay()" v-i18n>Cards</button>
           <button type="button" class="tm-control tm-control--review tm-control--players" @click="openPlayers" v-i18n>Players</button>
         </div>
       </header>
@@ -55,7 +92,7 @@
           <PlayersOverview :playerView="playerView" @open-player="openPlayer" v-trim-whitespace/>
         </aside>
 
-        <section class="tm-board-stage">
+        <section class="tm-board-stage" ref="boardStage">
           <button type="button" class="tm-board-expand-button tm-icon-control tm-icon-control--expand" @click="openOverlay('board')" :aria-label="$t('Expand board')">
             <span aria-hidden="true"></span>
           </button>
@@ -160,7 +197,7 @@
                   <span class="played-cards-count">{{ cardsInHandCount.toString() }}</span>
                   <span class="played-cards-selection" v-i18n>{{ getToggleLabel('HAND') }}</span>
                 </button>
-                <button type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye tm-hand-open-button" @click="openCardsOverlay('hand')" :aria-label="$t('Open cards')">
+                <button type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye tm-hand-open-button" @click="openCardsOverlay()" :aria-label="$t('Open hand')">
                   <span aria-hidden="true"></span>
                 </button>
               </div>
@@ -186,9 +223,6 @@
                   <span class="played-cards-count">{{ eventTableauCount }}</span>
                   <span class="played-cards-selection" v-i18n>Events</span>
                 </button>
-                <button type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye tm-hand-open-button" @click="openCardsOverlay('played')" :aria-label="$t('Open cards')">
-                  <span aria-hidden="true"></span>
-                </button>
               </div>
             </div>
 
@@ -209,42 +243,6 @@
         </section>
         </template>
       </section>
-
-      <details class="tm-utility-menu">
-        <summary :title="$t('Table tools')">
-          <span v-i18n>Tools</span>
-        </summary>
-        <div class="tm-utility-panel">
-          <div class="tm-tool-list">
-            <div v-if="game.spectatorId" class="tm-tool-row">
-              <a :href="'/spectator?id=' + game.spectatorId" target="_blank" rel="noopener noreferrer" v-i18n>Spectator link</a>
-            </div>
-          </div>
-
-          <div v-if="thisPlayer.selfReplicatingRobotsCards.length > 0" class="tm-mini-section">
-            <div class="tm-panel-heading">
-              <span v-i18n>Self-replicating Robots</span>
-              <small>{{ thisPlayer.selfReplicatingRobotsCards.length }}</small>
-            </div>
-            <div class="tm-card-strip tm-card-strip--mini">
-              <div v-for="card in thisPlayer.selfReplicatingRobotsCards" :key="card.name" class="cardbox">
-                <Card :card="card"/>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="thisPlayer.underworldData.tokens.length > 0" class="tm-mini-section">
-            <div class="tm-panel-heading">
-              <span v-i18n>Underground tokens</span>
-            </div>
-            <UndergroundTokens :underworldData="thisPlayer.underworldData"/>
-          </div>
-
-          <div class="tm-mini-section tm-purge-warning">
-            <PurgeWarning :expectedPurgeTimeMs="game.expectedPurgeTimeMs"/>
-          </div>
-        </div>
-      </details>
 
       <div v-if="activeOverlay !== 'none'" class="tm-modal-backdrop" @click.self="closeOverlay">
         <section class="tm-modal" :class="'tm-modal--' + activeOverlay">
@@ -289,47 +287,31 @@
               v-else-if="activeOverlay === 'cards'"
               class="tm-card-modal-grid"
               :class="['tm-card-modal-grid--' + cardOverlayFocus, {'tm-card-modal-grid--single': allCardsInHand.length === 0}]">
-              <section v-if="allCardsInHand.length > 0" class="tm-modal-card-section">
-                <header class="tm-modal-section-heading">
-                  <h3 v-i18n>Hand</h3>
-                </header>
-                <div class="tm-card-gallery">
-                  <div v-for="card in allCardsInHand" :key="card.name" class="cardbox">
-                    <Card :card="card"/>
-                  </div>
-                </div>
-              </section>
-
               <section class="tm-modal-card-section">
                 <header class="tm-modal-section-heading">
-                  <h3 v-i18n>Played cards</h3>
-                  <div class="played-cards-filters tm-modal-filters">
-                    <button type="button" :class="getHideButtonClass('ACTIVE')" @click.prevent="toggle('ACTIVE')">
-                      <span class="played-cards-count">{{ activeTableauCount }}</span>
-                      <span class="played-cards-selection" v-i18n>Blue</span>
-                    </button>
-                    <button type="button" :class="getHideButtonClass('AUTOMATED')" @click.prevent="toggle('AUTOMATED')">
-                      <span class="played-cards-count">{{ automatedTableauCount }}</span>
-                      <span class="played-cards-selection" v-i18n>Green</span>
-                    </button>
-                    <button type="button" :class="getHideButtonClass('EVENT')" @click.prevent="toggle('EVENT')">
-                      <span class="played-cards-count">{{ eventTableauCount }}</span>
-                      <span class="played-cards-selection" v-i18n>Events</span>
-                    </button>
-                  </div>
+                  <h3 v-i18n>Hand</h3>
+                  <small>{{ cardOverlayFilteredCards.length }} / {{ allCardsInHand.length }}</small>
                 </header>
-                <div class="tm-card-gallery">
-                  <div v-for="card in getCardsByType(thisPlayer.tableau, [CardType.CORPORATION])" :key="card.name" class="cardbox">
-                    <Card :card="card" :actionUsed="isCardActivated(card, thisPlayer)" :cubeColor="thisPlayer.color"/>
+                <div class="tm-card-modal-toolbar cards-filter">
+                  <label class="tm-card-modal-search">
+                    <span v-i18n>Search</span>
+                    <input type="search" v-model="cardOverlaySearch" :placeholder="$t('Search hand')">
+                  </label>
+                  <div class="tm-card-modal-controls tm-modal-filters">
+                    <button type="button" :class="cardOverlayButtonClass(cardOverlayFilter === 'playable')" @click="setCardOverlayFilter('playable')" v-i18n>Playable</button>
+                    <button type="button" :class="cardOverlayButtonClass(cardOverlayFilter === 'affordable')" @click="setCardOverlayFilter('affordable')" v-i18n>Affordable</button>
+                    <button type="button" :class="cardOverlayButtonClass(cardOverlayGroup === 'type')" @click="setCardOverlayGroup('type')" v-i18n>Type</button>
+                    <button type="button" :class="cardOverlayButtonClass(cardOverlayGroup === 'tag')" @click="setCardOverlayGroup('tag')" v-i18n>Tag</button>
+                    <button type="button" :class="cardOverlayButtonClass(cardOverlayFilter === 'warnings')" @click="setCardOverlayFilter('warnings')" v-i18n>Warning</button>
+                    <button type="button" :class="cardOverlayButtonClass(cardOverlaySort === 'cost')" @click="toggleCardOverlayCostSort()" v-i18n>Cost</button>
+                    <button type="button" :class="cardOverlayButtonClass(!cardOverlayHasActiveControls)" @click="clearCardOverlayControls()" v-i18n>All</button>
                   </div>
-                  <div v-for="card in getCardsByType(thisPlayer.tableau, [CardType.CEO])" :key="card.name" class="cardbox">
-                    <Card :card="card" :actionUsed="isCardActivated(card, thisPlayer)" :cubeColor="thisPlayer.color"/>
+                </div>
+                <div v-if="cardOverlayFilteredCards.length === 0" class="tm-card-modal-empty" v-i18n>No cards match</div>
+                <div v-else class="tm-card-gallery">
+                  <div v-for="card in cardOverlayFilteredCards" :key="card.name" class="cardbox">
+                    <Card :card="card"/>
                   </div>
-                  <div v-show="isVisible('ACTIVE')" v-for="card in activeTableauCards" :key="card.name" class="cardbox">
-                    <Card :card="card" :actionUsed="isCardActivated(card, thisPlayer)" :cubeColor="thisPlayer.color"/>
-                  </div>
-                  <StackedCards v-show="isVisible('AUTOMATED')" :cards="automatedTableauCards" />
-                  <StackedCards v-show="isVisible('EVENT')" :cards="eventTableauCards" />
                 </div>
               </section>
             </div>
@@ -460,15 +442,25 @@ type PlayerHomeModel = {
   activeOverlay: OverlayKind;
   selectedPlayerColor: Color | undefined;
   cardOverlayFocus: CardOverlayFocus;
+  cardOverlaySearch: string;
+  cardOverlayFilter: CardOverlayFilter;
+  cardOverlayGroup: CardOverlayGroup;
+  cardOverlaySort: CardOverlaySort;
   bottomTrayHeight: number | undefined;
   activityRailWidth: number | undefined;
   resizeTarget: ResizeTarget;
+  boardFitZoom: number | undefined;
+  boardFitYOffset: number | undefined;
+  boardResizeObserver: ResizeObserver | undefined;
   activityPreviewMessage: LogMessage | undefined;
   playerLogPreviewMessage: LogMessage | undefined;
 }
 
 type OverlayKind = 'none' | 'board' | 'cards' | 'log' | 'player';
 type CardOverlayFocus = 'balanced' | 'hand' | 'played';
+type CardOverlayFilter = 'all' | 'playable' | 'affordable' | 'warnings';
+type CardOverlayGroup = 'none' | 'type' | 'tag';
+type CardOverlaySort = 'table' | 'cost';
 type ResizeTarget = 'bottom' | 'activity' | undefined;
 
 type ToggleableCardType = 'HAND' | 'ACTIVE' | 'AUTOMATED' | 'EVENT';
@@ -494,9 +486,16 @@ export default defineComponent({
       activeOverlay: 'none',
       selectedPlayerColor: undefined,
       cardOverlayFocus: 'balanced',
+      cardOverlaySearch: '',
+      cardOverlayFilter: 'all',
+      cardOverlayGroup: 'none',
+      cardOverlaySort: 'table',
       bottomTrayHeight: undefined,
       activityRailWidth: undefined,
       resizeTarget: undefined,
+      boardFitZoom: undefined,
+      boardFitYOffset: undefined,
+      boardResizeObserver: undefined,
       activityPreviewMessage: undefined,
       playerLogPreviewMessage: undefined,
     };
@@ -558,6 +557,12 @@ export default defineComponent({
       if (this.activityRailWidth !== undefined) {
         style['--tm-activity-width'] = `${this.activityRailWidth}px`;
       }
+      if (this.boardFitZoom !== undefined) {
+        style['--tm-board-fit-zoom'] = this.boardFitZoom.toFixed(3);
+      }
+      if (this.boardFitYOffset !== undefined) {
+        style['--tm-board-fit-y-offset'] = `${this.boardFitYOffset}px`;
+      }
       return style;
     },
     inputKind(): string {
@@ -611,7 +616,7 @@ export default defineComponent({
       case 'board':
         return 'Mars board';
       case 'cards':
-        return 'Hand and played cards';
+        return 'Hand';
       case 'log':
         return 'Game log';
       case 'player':
@@ -655,6 +660,18 @@ export default defineComponent({
       return playerView.preludeCardsInHand
         .concat(playerView.ceoCardsInHand)
         .concat(playerView.cardsInHand);
+    },
+    cardOverlayFilteredCards(): Array<CardModel> {
+      const term = this.cardOverlaySearch.trim().toLocaleLowerCase();
+      return this.allCardsInHand
+        .filter((card) => this.cardMatchesOverlayControls(card, term))
+        .sort((a, b) => this.compareOverlayCards(a, b));
+    },
+    cardOverlayHasActiveControls(): boolean {
+      return this.cardOverlaySearch.trim() !== '' ||
+        this.cardOverlayFilter !== 'all' ||
+        this.cardOverlayGroup !== 'none' ||
+        this.cardOverlaySort !== 'table';
     },
     activeTableauCount(): number {
       return getCardsByType(this.thisPlayer.tableau, [CardType.ACTIVE]).length;
@@ -709,8 +726,15 @@ export default defineComponent({
     MoonGlobalParameterValue,
   },
 
+  mounted() {
+    document.addEventListener('keydown', this.handleGlobalKeydown);
+    this.$nextTick(this.installBoardFitObserver);
+  },
+
   beforeUnmount() {
+    document.removeEventListener('keydown', this.handleGlobalKeydown);
     this.removeLayoutResizeListeners();
+    this.removeBoardFitObserver();
   },
 
   methods: {
@@ -738,12 +762,12 @@ export default defineComponent({
     },
     updateLayoutResize(event: PointerEvent): void {
       if (this.resizeTarget === 'bottom') {
-        const maxHeight = Math.min(430, Math.max(260, window.innerHeight - 420));
-        this.bottomTrayHeight = this.clampLayoutValue(window.innerHeight - event.clientY - 8, 220, maxHeight);
+        const maxHeight = Math.min(Math.round(window.innerHeight * 0.72), Math.max(300, window.innerHeight - 170));
+        this.bottomTrayHeight = this.clampLayoutValue(window.innerHeight - event.clientY - 8, 320, maxHeight);
       }
       if (this.resizeTarget === 'activity') {
-        const maxWidth = Math.min(520, Math.max(310, window.innerWidth - 980));
-        this.activityRailWidth = this.clampLayoutValue(window.innerWidth - event.clientX - 8, 260, maxWidth);
+        const maxWidth = Math.min(820, Math.max(280, window.innerWidth - 620));
+        this.activityRailWidth = this.clampLayoutValue(window.innerWidth - event.clientX - 8, 220, maxWidth);
       }
     },
     stopLayoutResize(): void {
@@ -754,14 +778,87 @@ export default defineComponent({
       window.removeEventListener('pointermove', this.updateLayoutResize);
       window.removeEventListener('pointerup', this.stopLayoutResize);
     },
+    installBoardFitObserver(): void {
+      const boardStage = this.$refs.boardStage;
+      if (!(boardStage instanceof HTMLElement)) {
+        return;
+      }
+      this.removeBoardFitObserver();
+      if (typeof ResizeObserver !== 'undefined') {
+        this.boardResizeObserver = new ResizeObserver(this.updateBoardFit);
+        this.boardResizeObserver.observe(boardStage);
+      }
+      window.addEventListener('resize', this.updateBoardFit);
+      this.updateBoardFit();
+    },
+    removeBoardFitObserver(): void {
+      this.boardResizeObserver?.disconnect();
+      this.boardResizeObserver = undefined;
+      window.removeEventListener('resize', this.updateBoardFit);
+    },
+    updateBoardFit(): void {
+      const boardStage = this.$refs.boardStage;
+      if (!(boardStage instanceof HTMLElement)) {
+        return;
+      }
+      const rect = boardStage.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) {
+        return;
+      }
+
+      const boardNaturalWidth = 670;
+      const boardNaturalHeight = 573;
+      const horizontalPadding = 34;
+      const verticalPadding = 28;
+      const fitByWidth = (rect.width - horizontalPadding) / boardNaturalWidth;
+      const fitByHeight = (rect.height - verticalPadding) / boardNaturalHeight;
+      const maxZoom = window.innerHeight < 820 ? 1.16 : 1.48;
+      const minZoom = window.innerHeight < 820 ? 0.58 : 0.66;
+      const zoom = this.clampLayoutValue(Math.min(fitByWidth, fitByHeight) * 1000, minZoom * 1000, maxZoom * 1000) / 1000;
+      const spareHeight = Math.max(0, rect.height - (boardNaturalHeight * zoom));
+      const yOffset = this.clampLayoutValue(-Math.max(0, spareHeight - 24) * 0.06, -56, 0);
+
+      if (this.boardFitZoom !== zoom) {
+        this.boardFitZoom = zoom;
+      }
+      if (this.boardFitYOffset !== yOffset) {
+        this.boardFitYOffset = yOffset;
+      }
+    },
+    handleGlobalKeydown(event: KeyboardEvent): void {
+      if (event.key !== 'Escape') {
+        return;
+      }
+      if (this.activeOverlay !== 'none') {
+        event.preventDefault();
+        this.closeOverlay();
+        return;
+      }
+      if (this.activityPreviewMessage !== undefined) {
+        event.preventDefault();
+        this.closeActivityLogPreview();
+        return;
+      }
+      if (this.playerLogPreviewMessage !== undefined) {
+        event.preventDefault();
+        this.closePlayerLogPreview();
+        return;
+      }
+      const openPanels = Array.from(this.$el.querySelectorAll('details[open]'));
+      const openPanel = openPanels[openPanels.length - 1];
+      if (openPanel instanceof HTMLDetailsElement) {
+        event.preventDefault();
+        openPanel.open = false;
+      }
+    },
     openOverlay(overlay: OverlayKind): void {
       this.activeOverlay = overlay;
       if (overlay === 'cards') {
-        this.cardOverlayFocus = 'balanced';
+        this.cardOverlayFocus = 'hand';
       }
     },
-    openCardsOverlay(focus: CardOverlayFocus = 'balanced'): void {
-      this.cardOverlayFocus = focus;
+    openCardsOverlay(): void {
+      this.cardOverlayFocus = 'hand';
       this.activeOverlay = 'cards';
     },
     closeOverlay(): void {
@@ -818,6 +915,78 @@ export default defineComponent({
     },
     toggleCardOverlayFocus(section: 'hand' | 'played'): void {
       this.cardOverlayFocus = this.cardOverlayFocus === section ? 'balanced' : section;
+    },
+    setCardOverlayFilter(filter: Exclude<CardOverlayFilter, 'all'>): void {
+      this.cardOverlayFilter = this.cardOverlayFilter === filter ? 'all' : filter;
+    },
+    setCardOverlayGroup(group: Exclude<CardOverlayGroup, 'none'>): void {
+      this.cardOverlayGroup = this.cardOverlayGroup === group ? 'none' : group;
+    },
+    toggleCardOverlayCostSort(): void {
+      this.cardOverlaySort = this.cardOverlaySort === 'cost' ? 'table' : 'cost';
+    },
+    clearCardOverlayControls(): void {
+      this.cardOverlaySearch = '';
+      this.cardOverlayFilter = 'all';
+      this.cardOverlayGroup = 'none';
+      this.cardOverlaySort = 'table';
+    },
+    cardOverlayButtonClass(active: boolean): Record<string, boolean> {
+      return {
+        'tm-card-modal-control': true,
+        'tm-card-modal-control--active': active,
+      };
+    },
+    cardMatchesOverlayControls(card: CardModel, term: string): boolean {
+      const cardDefinition = getCardOrThrow(card.name);
+      const haystack = [
+        card.name,
+        cardDefinition.type,
+        cardDefinition.module,
+        ...cardDefinition.tags,
+      ].join(' ').toLocaleLowerCase();
+      if (term !== '' && !haystack.includes(term)) {
+        return false;
+      }
+      switch (this.cardOverlayFilter) {
+      case 'playable':
+        return card.isDisabled !== true;
+      case 'affordable':
+        return card.isDisabled !== true && this.cardOverlayCost(card) <= this.cardOverlayBuyingPower();
+      case 'warnings':
+        return card.isDisabled === true || (card.warnings?.length ?? 0) > 0;
+      case 'all':
+        return true;
+      }
+    },
+    compareOverlayCards(first: CardModel, second: CardModel): number {
+      if (this.cardOverlayGroup === 'type') {
+        const typeOrder = this.cardOverlayType(first).localeCompare(this.cardOverlayType(second));
+        if (typeOrder !== 0) return typeOrder;
+      }
+      if (this.cardOverlayGroup === 'tag') {
+        const tagOrder = this.cardOverlayPrimaryTag(first).localeCompare(this.cardOverlayPrimaryTag(second));
+        if (tagOrder !== 0) return tagOrder;
+      }
+      if (this.cardOverlaySort === 'cost') {
+        const costOrder = this.cardOverlayCost(first) - this.cardOverlayCost(second);
+        if (costOrder !== 0) return costOrder;
+      }
+      return String(first.name).localeCompare(String(second.name));
+    },
+    cardOverlayType(card: CardModel): string {
+      return getCardOrThrow(card.name).type;
+    },
+    cardOverlayPrimaryTag(card: CardModel): string {
+      return getCardOrThrow(card.name).tags[0] ?? 'none';
+    },
+    cardOverlayCost(card: CardModel): number {
+      return card.calculatedCost ?? getCardOrThrow(card.name).cost ?? 0;
+    },
+    cardOverlayBuyingPower(): number {
+      return this.thisPlayer.megacredits +
+        this.thisPlayer.steel * this.thisPlayer.steelValue +
+        this.thisPlayer.titanium * this.thisPlayer.titaniumValue;
     },
     focusActions(): void {
       const actions = document.querySelector('.tm-action-workbench');

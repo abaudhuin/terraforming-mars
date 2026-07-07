@@ -118,7 +118,7 @@ export default defineComponent({
       }
 
       root.isServerSideRequestInProgress = true;
-      fetch(url, options)
+      fetch(url, {...options, cache: 'no-store'})
         .then(async (response) => {
           if (response.ok) {
             this.updatePlayerView(await response.json());
@@ -166,8 +166,12 @@ export default defineComponent({
       const root = vueRoot(this);
       clearTimeout(ui_update_timeout_id);
       const askForUpdate = () => {
+        const params = new URLSearchParams(window.location.search);
+        params.set('gameAge', String(this.playerView.game.gameAge));
+        params.set('undoCount', String(this.playerView.game.undoCount));
+        params.set('_cb', String(Date.now()));
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', paths.API_WAITING_FOR + window.location.search + '&gameAge=' + this.playerView.game.gameAge + '&undoCount=' + this.playerView.game.undoCount);
+        xhr.open('GET', paths.API_WAITING_FOR + '?' + params.toString());
         xhr.onerror = function() {
           root.showAlert('Error fetching state', CANNOT_CONTACT_SERVER, () => vueApp.waitForUpdate());
         };

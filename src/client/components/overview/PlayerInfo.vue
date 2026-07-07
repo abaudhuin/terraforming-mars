@@ -21,16 +21,19 @@
           </div>
           <PlayerResources :player="player" v-trim-whitespace />
           <div class="tm-rail-player-summary">
-            <div class="tm-rail-stat tm-rail-stat--vp">
-              <span>VP</span>
+            <div class="tm-rail-stat tm-rail-stat--vp" title="VP">
+              <span class="tm-rail-stat-icon tm-rail-stat-icon--vp" aria-hidden="true"></span>
+              <span class="tm-rail-stat-label">VP</span>
               <strong>{{ player.victoryPointsBreakdown.total }}</strong>
             </div>
-            <div class="tm-rail-stat tm-rail-stat--tr">
-              <span>TR</span>
+            <div class="tm-rail-stat tm-rail-stat--tr" title="TR">
+              <span class="tm-rail-stat-icon tm-rail-stat-icon--tr" aria-hidden="true"></span>
+              <span class="tm-rail-stat-label">TR</span>
               <strong>{{ player.terraformRating }}</strong>
             </div>
-            <div class="tm-rail-stat tm-rail-stat--cards">
-              <span v-i18n>Cards</span>
+            <div class="tm-rail-stat tm-rail-stat--cards" :title="$t('Cards')">
+              <span class="tm-rail-stat-icon tm-rail-stat-icon--cards" aria-hidden="true"></span>
+              <span class="tm-rail-stat-label" v-i18n>Cards</span>
               <strong>{{ player.cardsInHandNbr }}</strong>
             </div>
           </div>

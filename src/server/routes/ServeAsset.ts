@@ -40,7 +40,7 @@ export class ServeAsset extends Handler {
   private readonly cache = new BufferCache();
 
   // Public for tests
-  public constructor(private cacheAgeSeconds: string | number = process.env.ASSET_CACHE_MAX_AGE || 0,
+  public constructor(_cacheAgeSeconds: string | number = process.env.ASSET_CACHE_MAX_AGE || 0,
     // only production caches resources
     private cacheAssets: boolean = isProduction(),
     private fileApi: FileAPI = FileAPI.INSTANCE) {
@@ -61,7 +61,7 @@ export class ServeAsset extends Handler {
     }
 
     // Remove leading slash.
-    const path = req.url.substring(1);
+    const path = new URL(req.url, 'http://localhost').pathname.substring(1);
 
     const supportedEncodings = this.supportedEncodings(req);
     const toFile: {file?: string, encoding?: Encoding } = this.toFile(path, supportedEncodings);
@@ -71,6 +71,7 @@ export class ServeAsset extends Handler {
     }
 
     const file = toFile.file;
+    responses.setNoStoreHeaders(res);
 
     // asset caching
     const buffer = this.cacheAssets ? this.cache.get(file) : undefined;
@@ -79,10 +80,7 @@ export class ServeAsset extends Handler {
         responses.notModified(res);
         return;
       }
-      res.setHeader('Cache-Control', 'must-revalidate');
       res.setHeader('ETag', buffer.hash);
-    } else if (this.cacheAssets === false && req.url !== '/main.js' && req.url !== '/main.js.map') {
-      res.setHeader('Cache-Control', 'max-age=' + this.cacheAgeSeconds);
     }
 
     const contentType = ContentType.getContentType(file);

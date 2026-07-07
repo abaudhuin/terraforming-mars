@@ -4,10 +4,24 @@ services:
     build: ./
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "127.0.0.1:${TM_PORT:-18080}:8080"
     security_opt:
       - no-new-privileges:true
     volumes:
       - tm-db:/usr/src/app/db
+
+  cloudflared:
+    container_name: terraforming-mars-cloudflared
+    image: cloudflare/cloudflared:2026.3.0
+    profiles:
+      - cloudflare
+    user: "${TM_CLOUDFLARED_UID:-1000}:${TM_CLOUDFLARED_GID:-1000}"
+    restart: unless-stopped
+    depends_on:
+      - terraforming-mars
+    command: tunnel --config /etc/cloudflared/tm-f5qn.yml run
+    volumes:
+      - "${HOME}/.cloudflared:/etc/cloudflared:ro"
+
 volumes:
   tm-db:

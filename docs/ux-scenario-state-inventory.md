@@ -18,6 +18,8 @@ Each scenario candidate should eventually answer these questions:
 
 The future scenario runner should make these easy to add as named presets or JSON fixture config. Direct model injection is acceptable for visual fixtures as long as the fixture is clearly marked as synthetic. Engine-driven fast play is better when the screenshot depends on a legal pending input or a complete log trail.
 
+When doing a visual audit, use generated indexes only as navigation. Small UI bugs must be checked in the full-resolution PNG, and suspicious findings from an old or long-running capture should be validated against a current targeted rerun before they are recorded as active issues.
+
 ## Coverage Axes
 
 Use these axes before adding a new concrete scenario. If a scenario does not add a new visual shape on at least one axis, it is probably duplicate coverage.
@@ -993,6 +995,9 @@ catalog. The important baked packs are:
   cards, Ares, Pathfinders, CEOs, two starting corporations.
 - `primary-heavy-4p-with-turmoil`: the same heavy preset with Turmoil delegates,
   parties, global events, policy/influence, and the same primary module surfaces.
+- `global-all-modules-wide-density`: five-player, all-module desktop stress
+  fixture with dense synthetic player state and the full core/panel/card/module
+  shot set for large and ultrawide screen checks.
 - `colonies-venus-pathfinders-3p`: occupied colony tiles, visitor ships, colony
   track, Venus track, Pathfinders planetary tracks, cards, log, player, and board
   overlays.
@@ -1017,7 +1022,7 @@ Useful focused runs:
 TM_BASE_URL=http://localhost:8081 \
 TM_VISUAL_OUT=/tmp/tm-primary \
 TM_SCENARIOS=primary-heavy-4p \
-TM_VIEWPORTS=1600x900,1440x900 \
+TM_VIEWPORTS=1600x900,1440x900,1920x1080,1920x1200,2560x1440,3440x1440 \
 node scripts/visual-scenarios.mjs
 ```
 

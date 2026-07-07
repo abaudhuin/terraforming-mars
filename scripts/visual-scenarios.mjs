@@ -13,6 +13,9 @@ const stamp = new Date().toISOString().replace(/[:.]/g, '-');
 const outputDir = path.resolve(process.env.TM_VISUAL_OUT ?? `/tmp/tm-visual-scenarios-${stamp}`);
 const headless = process.env.TM_HEADED !== '1';
 const slowMo = Number.parseInt(process.env.TM_SLOWMO ?? '0', 10) || 0;
+const navigationWaitUntil = process.env.TM_NAVIGATION_WAIT_UNTIL ?? 'domcontentloaded';
+const visualSettleMs = Number.parseInt(process.env.TM_VISUAL_SETTLE_MS ?? '180', 10) || 0;
+const optionalActionTimeoutMs = Number.parseInt(process.env.TM_OPTIONAL_ACTION_TIMEOUT_MS ?? '2500', 10) || 0;
 const defaultProjectCardsToKeep = Number.parseInt(process.env.TM_SCENARIO_PROJECTS ?? '3', 10) || 0;
 const printFullSummary = process.env.TM_PRINT_FULL_SUMMARY === '1';
 const captureSetupScreens = process.env.TM_CAPTURE_SETUP !== '0';
@@ -220,6 +223,23 @@ const builtInScenarios = [
     coverageTags: ['base', 'turn-active', 'turn-waiting', 'actions', 'payment', 'standard-projects', 'milestones-awards', 'board-interaction', 'log', 'cards', 'player-dossier'],
   },
   {
+    name: 'action-choice-stack',
+    description: 'Active-turn action-panel fixture for the stable command rail: blue card action, nested production choices, project-card play, colony trade, standard projects, sell patents, and pass.',
+    players: 2,
+    projectCards: 4,
+    expansions: {
+      ...defaultExpansions,
+      promo: true,
+      venus: true,
+      colonies: true,
+      prelude: true,
+    },
+    advance: ['generation2'],
+    visualPatch: 'action-choice-density',
+    shots: ['action-idle', 'action-blue-card', 'action-play-card-payment', 'action-play-card-card-selected', 'action-trade-colony', 'action-standard-projects', 'action-sell-patents'],
+    coverageTags: ['actions', 'command-rail', 'blue-action', 'nested-choice', 'project-card-input', 'colony-trade', 'standard-projects', 'sell-patents', 'button-placement'],
+  },
+  {
     name: 'ux-turn-modes',
     description: 'Same small legal game viewed through active, waiting, selected-action, post-action, pass-oriented, overlay-open, and log feedback states.',
     players: 2,
@@ -315,6 +335,26 @@ const builtInScenarios = [
     visualPatch: 'turmoil-density',
     shots: [...shots('core', 'panels'), 'turmoil-open'],
     coverageTags: ['primary-heavy', 'turmoil', 'delegates', 'parties', 'global-events', 'policy-action', 'influence', 'venus', 'colonies', 'ares', 'pathfinders', 'ceos'],
+  },
+  {
+    name: 'global-all-modules-wide-density',
+    description: 'Broad all-module desktop stress fixture: five players, dense cards/resources/logs, every major module enabled, and the full table/panel/card/extension shot set for wide-screen QA.',
+    players: 5,
+    projectCards: 10,
+    expansions: allExpansions,
+    overrides: {
+      includeFanMA: true,
+      startingCorporations: 2,
+      startingCeos: 3,
+      startingPreludes: 4,
+      moonStandardProjectVariant: true,
+      altVenusBoard: true,
+      politicalAgendasExtension: 'Standard',
+    },
+    advance: ['generation2'],
+    visualPatch: 'global-all-module-density',
+    shots: shots('core', 'panels', 'cards', 'extensions'),
+    coverageTags: ['global-stress', 'all-modules', 'wide-screen', 'five-players', 'primary-heavy', 'turmoil', 'moon', 'underworld', 'delta-project', 'venus', 'colonies', 'ares', 'pathfinders', 'ceos', 'cards', 'overlays', 'resizing'],
   },
   {
     name: 'base-2p-action',
@@ -453,7 +493,7 @@ const builtInScenarios = [
 ];
 
 const builtInScenarioByName = new Map(builtInScenarios.map((scenario) => [scenario.name, scenario]));
-const defaultViewports = '1600x900,1440x900';
+const defaultViewports = '1600x900,1440x900,1920x1080,1920x1200,2560x1440,3440x1440';
 
 const viewports = (process.env.TM_VIEWPORTS ?? defaultViewports)
   .split(',')
@@ -883,6 +923,67 @@ function patchGameLogForDensity(serialized, options = {}) {
   serialized.gameAge = (serialized.gameAge ?? 0) + dense.length;
 }
 
+function patchActionChoiceForDensity(serialized) {
+  const player = serialized.players[0];
+  if (player === undefined) return;
+  serialized.activePlayer = player.id;
+  serialized.phase = 'action';
+  serialized.generation = Math.max(serialized.generation ?? 1, 2);
+  serialized.passedPlayers = [];
+  player.pickedCorporationCard = 'Robinson Industries';
+  player.dealtCorporationCards = [];
+  player.dealtPreludeCards = [];
+  player.dealtCeoCards = [];
+  player.dealtProjectCards = [];
+  player.pendingInitialActions = [];
+  player.preludeCardsInHand = [];
+  player.ceoCardsInHand = [];
+  player.playedCards = [
+    {name: 'Robinson Industries'},
+    {name: 'Noctis Farming'},
+    {name: 'Ecology Experts'},
+    {name: 'Business Empire'},
+  ];
+  player.cardsInHand = [
+    'Supercapacitors',
+    'Atmo Collectors',
+    'Rad-Chem Factory',
+    'Soil Factory',
+    'Food Factory',
+    'Neptunian Power Consultants',
+    'Energy Tapping',
+    'Micro-Mills',
+    'Floating Refinery',
+    'Methane From Titan',
+  ];
+  player.megaCredits = 86;
+  player.megaCreditProduction = 2;
+  player.steel = 6;
+  player.steelProduction = 0;
+  player.titanium = 4;
+  player.titaniumProduction = 0;
+  player.plants = 8;
+  player.plantProduction = 0;
+  player.energy = 6;
+  player.energyProduction = 0;
+  player.heat = 12;
+  player.heatProduction = 0;
+  player.steelValue = 2;
+  player.titaniumValue = 3;
+  player.cardCost = 3;
+  player.cardDiscount = 0;
+  player.actionsThisGeneration = [];
+  player.actionsTakenThisRound = 0;
+  player.tradesThisGeneration = 0;
+  player.fleetSize = 1;
+  player.terraformRating = Math.max(player.terraformRating ?? 20, 24);
+  serialized.players.slice(1).forEach((other) => {
+    other.passed = false;
+    other.actionsThisGeneration = [];
+  });
+  patchColoniesForDensity(serialized);
+}
+
 function applyVisualPatch(serialized, patchName) {
   const endgame = patchName === 'endgame-all-scoring';
   const includePassed = patchName === 'turn-mode-density' || patchName === 'five-player-density' || endgame;
@@ -902,6 +1003,9 @@ function applyVisualPatch(serialized, patchName) {
   patchAresForDensity(serialized);
   patchTurmoilForDensity(serialized);
   patchGameLogForDensity(serialized, {longLog: patchName !== 'core-action-density'});
+  if (patchName === 'action-choice-density') {
+    patchActionChoiceForDensity(serialized);
+  }
   if (endgame) {
     serialized.passedPlayers = serialized.players.map((player) => player.id);
     serialized.donePlayers = serialized.players.map((player) => player.id);
@@ -1121,9 +1225,9 @@ async function captureSetup(context, scenario, game, viewport) {
   const page = await context.newPage();
   const diagnostics = bindPageDiagnostics(page);
   try {
-    await page.goto(player.href, {waitUntil: 'networkidle'});
+    await page.goto(player.href, {waitUntil: navigationWaitUntil});
     await waitForVisualShell(page);
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(visualSettleMs);
     setupCaptures.push(await screenshotWithMetrics(page, scenario, viewport, 'setup-initial', diagnostics));
 
     const corporation = page.locator('label.cardbox').filter({has: page.locator('.card-title.is-corporation')}).first();
@@ -1248,12 +1352,87 @@ function safeFilename(input) {
 
 async function collectMetrics(page) {
   return page.evaluate(() => {
-    const rect = (selector) => {
-      const element = document.querySelector(selector);
-      if (element === null) return null;
+    const elementRect = (element) => {
       const r = element.getBoundingClientRect();
       return {x: Math.round(r.x), y: Math.round(r.y), width: Math.round(r.width), height: Math.round(r.height)};
     };
+    const rect = (selector) => {
+      const element = document.querySelector(selector);
+      if (element === null) return null;
+      return elementRect(element);
+    };
+    const actionRoot = document.querySelector('.tm-action-workbench');
+    const cardContentOverflows = actionRoot === null ? [] : [...actionRoot.querySelectorAll('.card-container .card-content:not(.global-event-card-content)')]
+      .map((element, index) => {
+        const card = element.closest('.card-container');
+        const title = card?.querySelector('.card-title, .card-title-main')?.textContent?.trim().replace(/\s+/g, ' ') ?? `card ${index + 1}`;
+        return {
+          index,
+          title,
+          rect: elementRect(element),
+          scrollWidth: element.scrollWidth,
+          clientWidth: element.clientWidth,
+          scrollHeight: element.scrollHeight,
+          clientHeight: element.clientHeight,
+        };
+      })
+      .filter((item) => item.scrollWidth > item.clientWidth + 2 || item.scrollHeight > item.clientHeight + 2);
+    const colonyChoiceClipping = actionRoot === null ? [] : [...actionRoot.querySelectorAll('.wf-component--select-card label.cardbox .colony-card')]
+      .map((element, index) => {
+        const label = element.closest('label.cardbox');
+        const component = element.closest('.wf-component--select-card');
+        const title = component?.querySelector('.wf-component-title');
+        const labelRect = label === null ? null : label.getBoundingClientRect();
+        const componentRect = component === null ? null : component.getBoundingClientRect();
+        const titleRect = title === undefined || title === null ? null : title.getBoundingClientRect();
+        const cardRect = element.getBoundingClientRect();
+        const clippedByLabel = labelRect === null ? false : (
+          cardRect.left < labelRect.left - 2 ||
+          cardRect.top < labelRect.top - 2 ||
+          cardRect.right > labelRect.right + 2 ||
+          cardRect.bottom > labelRect.bottom + 2
+        );
+        const clippedByComponent = componentRect === null ? false : (
+          cardRect.left < componentRect.left - 2 ||
+          cardRect.top < componentRect.top - 2 ||
+          cardRect.right > componentRect.right + 2 ||
+          cardRect.bottom > componentRect.bottom + 2 ||
+          (labelRect !== null && labelRect.bottom > componentRect.bottom + 2)
+        );
+        const overlapsTitle = titleRect === null ? false : cardRect.top < titleRect.bottom + 4;
+        return {
+          index,
+          title: element.querySelector('.colony-card-title-span')?.textContent?.trim() ?? `colony ${index + 1}`,
+          rect: elementRect(element),
+          label: label === null ? null : elementRect(label),
+          component: component === null ? null : elementRect(component),
+          titleRect: titleRect === null ? null : elementRect(title),
+          clippedByLabel,
+          clippedByComponent,
+          overlapsTitle,
+        };
+      })
+      .filter((item) => item.clippedByLabel || item.clippedByComponent || item.overlapsTitle);
+    const workflowActionClipping = actionRoot === null ? [] : [...actionRoot.querySelectorAll('.wf-command-detail .wf-action')]
+      .map((element, index) => {
+        const container = element.closest('.wf-command-detail') ?? actionRoot;
+        const elementBounds = element.getBoundingClientRect();
+        const containerBounds = container.getBoundingClientRect();
+        const clippedByContainer = (
+          elementBounds.left < containerBounds.left - 2 ||
+          elementBounds.top < containerBounds.top - 2 ||
+          elementBounds.right > containerBounds.right + 2 ||
+          elementBounds.bottom > containerBounds.bottom + 2
+        );
+        return {
+          index,
+          title: element.textContent?.trim().replace(/\s+/g, ' ') || `workflow action ${index + 1}`,
+          rect: elementRect(element),
+          container: elementRect(container),
+          clippedByContainer,
+        };
+      })
+      .filter((item) => item.clippedByContainer);
     const scrollableSelectors = [
       '.tm-player-rail',
       '.tm-activity-rail #logpanel-scrollable',
@@ -1295,6 +1474,9 @@ async function collectMetrics(page) {
       players: rect('.tm-player-rail'),
       activity: rect('.tm-activity-rail'),
       modal: rect('.tm-modal'),
+      cardContentOverflows,
+      colonyChoiceClipping,
+      workflowActionClipping,
       scrollables,
     };
   });
@@ -1366,7 +1548,7 @@ async function firstVisible(locator) {
 async function clickIfPresent(page, selector, options = {}) {
   const locator = await firstVisible(page.locator(selector));
   if (locator === undefined) return false;
-  await locator.click(options);
+  await locator.click({timeout: optionalActionTimeoutMs, ...options});
   await page.waitForTimeout(350);
   return true;
 }
@@ -1374,15 +1556,15 @@ async function clickIfPresent(page, selector, options = {}) {
 async function clickButtonText(page, container, text) {
   const locator = await firstVisible(page.locator(container).getByRole('button', {name: new RegExp(text, 'i')}));
   if (locator === undefined) return false;
-  await locator.click();
+  await locator.click({timeout: optionalActionTimeoutMs});
   await page.waitForTimeout(350);
   return true;
 }
 
 async function selectAction(page, text) {
-  const tile = page.locator('.tm-action-workbench label, .tm-action-workbench button, .tm-action-workbench .wf-command-tile').filter({hasText: new RegExp(text, 'i')}).first();
-  if (await tile.count() === 0) return false;
-  await tile.click();
+  const tile = await firstVisible(page.locator('.tm-action-workbench label, .tm-action-workbench button, .tm-action-workbench .wf-command-tile').filter({hasText: new RegExp(text, 'i')}));
+  if (tile === undefined) return false;
+  await tile.click({timeout: optionalActionTimeoutMs});
   await page.waitForTimeout(450);
   return true;
 }
@@ -1403,7 +1585,7 @@ async function clickFirstMatching(page, selectors) {
   for (const selector of selectors) {
     const locator = await firstVisible(page.locator(selector));
     if (locator !== undefined) {
-      await locator.click();
+      await locator.click({timeout: optionalActionTimeoutMs});
       await page.waitForTimeout(350);
       return true;
     }
@@ -1415,7 +1597,7 @@ async function fillFirstMatching(page, selectors, value) {
   for (const selector of selectors) {
     const locator = await firstVisible(page.locator(selector));
     if (locator !== undefined) {
-      await locator.fill(value);
+      await locator.fill(value, {timeout: optionalActionTimeoutMs});
       await page.waitForTimeout(300);
       return true;
     }
@@ -1427,7 +1609,7 @@ async function clickTextIfPresent(page, text, selectors = ['button', 'label', '[
   for (const selector of selectors) {
     const locator = await firstVisible(page.locator(selector).filter({hasText: new RegExp(text, 'i')}));
     if (locator !== undefined) {
-      await locator.click();
+      await locator.click({timeout: optionalActionTimeoutMs});
       await page.waitForTimeout(350);
       return true;
     }
@@ -1526,7 +1708,7 @@ async function selectFirstVisibleCard(page) {
 
 async function prepareCardsSearch(page, query) {
   if (!await openCardsOverlay(page)) return false;
-  await fillFirstMatching(page, [
+  return fillFirstMatching(page, [
     '.tm-modal input[type="search"]',
     '.tm-modal input[placeholder*="Search" i]',
     '.tm-modal input[placeholder*="Filter" i]',
@@ -1536,12 +1718,11 @@ async function prepareCardsSearch(page, query) {
     '.tm-card-desk input[placeholder*="Search" i]',
     '.tm-card-desk input[placeholder*="Filter" i]',
   ], query);
-  return true;
 }
 
 async function prepareCardsFilter(page, label) {
   if (!await openCardsOverlay(page)) return false;
-  await clickTextIfPresent(page, label, [
+  return clickTextIfPresent(page, label, [
     '.tm-modal button',
     '.tm-modal label',
     '.tm-modal [role="button"]',
@@ -1549,7 +1730,6 @@ async function prepareCardsFilter(page, label) {
     '.tm-card-desk button',
     '.tm-card-desk label',
   ]);
-  return true;
 }
 
 async function hoverBoardSpace(page) {
@@ -1573,8 +1753,8 @@ async function showAresHazards(page) {
 }
 
 async function showCeoCards(page) {
-  if (!await openCardsOverlay(page)) return false;
-  const locator = page.locator('.tm-modal .ceo-label, .tm-modal .background-color-ceo, .tm-modal .card-ceo-container').first();
+  if (!await openPlayersOverlay(page)) return false;
+  const locator = page.locator('.tm-modal .tm-player-dossier-cards .cardbox').filter({hasText: /CEO|Asimov|Huan|Quill|Oscar|Shara/i}).first();
   return await locator.count() > 0;
 }
 
@@ -1607,7 +1787,7 @@ async function waitForEndgameShell(page) {
 async function openEndgamePage(page, seat) {
   const isEndgame = await page.evaluate(() => location.pathname.includes('/the-end')).catch(() => false);
   if (!isEndgame) {
-    await page.goto(pageURL(`/the-end?id=${seat.id}`), {waitUntil: 'networkidle'});
+    await page.goto(pageURL(`/the-end?id=${seat.id}`), {waitUntil: navigationWaitUntil});
   }
   await waitForEndgameShell(page);
   return true;
@@ -1628,6 +1808,18 @@ const allShotDefinitions = [
   {name: 'table-active', seat: 'active', coverageTags: ['active-turn', 'table-layout', 'no-overlay']},
   {name: 'table-waiting', seat: 'waiting', coverageTags: ['waiting-turn', 'table-layout', 'opponent-active']},
   {name: 'action-idle', seat: 'active', coverageTags: ['action-panel', 'active-idle']},
+  {name: 'action-blue-card', seat: 'active', prepare: async (page) => {
+    if (!await selectAction(page, 'Perform an action from a played card')) return false;
+    await page.waitForTimeout(300);
+    return true;
+  }, coverageTags: ['action-selected', 'blue-action', 'nested-choice', 'production-choice']},
+  {name: 'action-blue-card-choice', seat: 'active', prepare: async (page) => {
+    if (!await selectAction(page, 'Perform an action from a played card')) return false;
+    if (!await selectFirstVisibleCard(page)) return false;
+    if (!await clickButtonText(page, '.tm-action-workbench', 'take action')) return false;
+    await page.waitForTimeout(500);
+    return true;
+  }, coverageTags: ['action-selected', 'blue-action', 'nested-choice', 'production-choice', 'confirm-placement']},
   {name: 'action-play-card-payment', seat: 'active', prepare: (page) => selectAction(page, 'Play project card'), coverageTags: ['action-selected', 'play-card', 'payment', 'project-card-input']},
   {name: 'action-play-card-card-selected', seat: 'active', prepare: async (page) => {
     if (!await selectAction(page, 'Play project card')) return false;
@@ -1643,6 +1835,7 @@ const allShotDefinitions = [
   }, coverageTags: ['action-panel', 'overlay-open', 'log']},
   {name: 'action-fund-award', seat: 'active', prepare: (page) => selectAction(page, 'Fund an award'), coverageTags: ['fund-award', 'milestones-awards', 'action-selected']},
   {name: 'action-claim-milestone', seat: 'active', prepare: (page) => selectAction(page, 'Claim a milestone'), coverageTags: ['claim-milestone', 'milestones-awards', 'action-selected']},
+  {name: 'action-trade-colony', seat: 'active', prepare: (page) => selectAction(page, 'Trade with a colony tile'), coverageTags: ['colony-trade', 'action-selected', 'extension-choice']},
   {name: 'action-standard-projects', seat: 'active', prepare: (page) => selectAction(page, 'Standard projects'), coverageTags: ['standard-projects', 'action-selected']},
   {name: 'action-sell-patents', seat: 'active', prepare: (page) => selectAction(page, 'Sell patents'), coverageTags: ['sell-patents', 'card-selection', 'action-selected']},
   {name: 'milestones-awards-hover', seat: 'active', prepare: (page) => hoverIfPresent(page, '.tm-ma-panel-summary, .tm-ma-panel button, .milestone-award-inline'), coverageTags: ['milestones-awards', 'hover-focus', 'button-affordance']},
@@ -1751,9 +1944,9 @@ async function captureShot(context, scenario, viewport, seats, shot) {
     diagnostics,
   };
   try {
-    await page.goto(seat.href, {waitUntil: 'networkidle'});
+    await page.goto(seat.href, {waitUntil: navigationWaitUntil});
     await waitForVisualShell(page);
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(visualSettleMs);
     if (shot.prepare !== undefined) {
       const prepared = await shot.prepare(page, seat, scenario);
       if (prepared === false) {
@@ -1967,6 +2160,18 @@ function collectVisualNotes(summary) {
     const scrollables = activeScrollables(metrics);
     if (scrollables.length > 4) {
       notes.push({...context, message: `${scrollables.length} scrollable regions are active`});
+    }
+    if ((metrics.cardContentOverflows ?? []).length > 0) {
+      const titles = metrics.cardContentOverflows.map((item) => item.title).slice(0, 4).join(', ');
+      notes.push({...context, message: `card content overflows inside action panel: ${titles}`});
+    }
+    if ((metrics.colonyChoiceClipping ?? []).length > 0) {
+      const titles = metrics.colonyChoiceClipping.map((item) => item.title).slice(0, 4).join(', ');
+      notes.push({...context, message: `colony choices exceed their selectable slots: ${titles}`});
+    }
+    if ((metrics.workflowActionClipping ?? []).length > 0) {
+      const titles = metrics.workflowActionClipping.map((item) => item.title).slice(0, 4).join(', ');
+      notes.push({...context, message: `workflow action buttons exceed command detail: ${titles}`});
     }
   };
 

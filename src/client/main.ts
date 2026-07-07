@@ -39,7 +39,7 @@ async function bootstrap() {
 
   if (window.isSecureContext && 'serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('sw.js').then(function(registration) {
+      navigator.serviceWorker.register('sw.js?v=1').then(function(registration) {
         console.log('registered the service worker', registration);
       });
     });

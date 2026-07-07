@@ -46,7 +46,10 @@
 
     <details v-if="players.length > 1" class="player_home_block--milestones-and-awards tm-ma-panel">
       <summary class="tm-ma-panel-summary">
-        <span v-i18n>Milestones & Awards</span>
+        <span class="tm-ma-panel-title" v-i18n>Milestones & Awards</span>
+        <span class="tm-ma-panel-close tm-icon-control tm-icon-control--close" aria-hidden="true">
+          <span></span>
+        </span>
       </summary>
       <a class="hotkey-target"></a>
       <div class="tm-ma-panel-body">

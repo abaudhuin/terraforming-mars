@@ -27,6 +27,10 @@
       </label>
     </div>
 
+    <div v-if="shouldShowChoiceSubmit()" class="wf-command-submit">
+      <AppButton type="submit" :title="selectedChoiceSubmitLabel" @click="saveSelectedOption" />
+    </div>
+
     <div v-if="selectedOption && hasMeaningfulChildUi(selectedOption)" class="wf-command-detail">
       <PlayerInputFactory ref="inputfactory"
                             :playerView="playerView"
@@ -42,6 +46,7 @@
 
 import {defineComponent} from 'vue';
 import {isHTMLElement} from '@/client/utils/vueUtils';
+import AppButton from '@/client/components/common/AppButton.vue';
 import {PlayerViewModel} from '@/common/models/PlayerModel';
 import {OrOptionsModel, PlayerInputModel} from '@/common/models/PlayerInputModel';
 import {getPreferences} from '@/client/utils/PreferencesManager';
@@ -49,6 +54,9 @@ import {InputResponse, OrOptionsResponse} from '@/common/inputs/InputResponse';
 
 export default defineComponent({
   name: 'OrOptions',
+  components: {
+    AppButton,
+  },
   props: {
     playerView: {
       type: Object as () => PlayerViewModel,
@@ -116,6 +124,12 @@ export default defineComponent({
     isSimpleChoiceList(): boolean {
       return this.displayedOptions.every((option: PlayerInputModel) => option.type === 'option');
     },
+    selectedChoiceSubmitLabel(): string {
+      if (this.selectedOption === undefined) {
+        return '';
+      }
+      return this.inlineSubmitLabel(this.selectedOption);
+    },
   },
   methods: {
     getSelectedOptionTop(): number | undefined {
@@ -154,15 +168,29 @@ export default defineComponent({
     },
     shouldShowInlineSubmit(option: PlayerInputModel, idx: number): boolean {
       return this.showsave === true &&
+        !this.isSimpleChoiceList &&
         this.selectedIdx === idx &&
         !this.isDisabledOption(option) &&
         !this.hasMeaningfulChildUi(option);
+    },
+    shouldShowChoiceSubmit(): boolean {
+      return this.showsave === true &&
+        this.isSimpleChoiceList &&
+        this.selectedOption !== undefined &&
+        !this.isDisabledOption(this.selectedOption) &&
+        !this.hasMeaningfulChildUi(this.selectedOption);
     },
     inlineSubmitLabel(option: PlayerInputModel): string {
       if (this.optionTitle(this.playerinput).includes('award')) {
         return 'Fund';
       }
       return option.buttonLabel;
+    },
+    saveSelectedOption() {
+      if (this.selectedOption === undefined) {
+        return;
+      }
+      this.saveOption(this.selectedOption, this.selectedIdx);
     },
     saveOption(option: PlayerInputModel, displayedIdx: number) {
       if (this.isDisabledOption(option) || option.type !== 'option') {
