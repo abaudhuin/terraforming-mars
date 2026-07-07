@@ -525,6 +525,7 @@ const layoutStorageKeys = {
   activityRailWidth: 'tm-player-table-activity-rail-width',
   activityRailCollapsed: 'tm-player-table-activity-rail-collapsed',
 } as const;
+const twoRowActionTrayHeight = 540;
 
 function readStoredLayoutDimension(key: string): number | undefined {
   if (typeof localStorage === 'undefined') {
@@ -638,6 +639,8 @@ export default defineComponent({
         'tm-player-table--passive': !this.isPlayerActing(this.playerView),
         'tm-player-table--magnify-cards': getPreferences().magnify_cards,
         'tm-player-table--activity-collapsed': this.isActivityRailCollapsed,
+        'tm-player-table--two-row-actions':
+          this.bottomTrayHeight !== undefined && this.bottomTrayHeight >= twoRowActionTrayHeight,
         [`tm-player-table--input-${this.inputKind}`]: true,
         'tm-player-table--setup': this.thisPlayer.tableau.length === 0,
       };

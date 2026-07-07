@@ -8066,4 +8066,29 @@
     transform: scale(1.02) !important;
   }
 }
+
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--two-row-actions:has(.tm-action-workbench .tm-project-payment),
+.preferences_magnify_cards #player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--two-row-actions:has(.tm-action-workbench .tm-project-payment) {
+  .tm-action-workbench .tm-project-card-chooser,
+  .tm-action-workbench .tm-project-card-chooser:has(.card-container:hover),
+  .tm-action-workbench .tm-project-card-chooser:has(.card-container:focus-within) {
+    box-sizing: border-box;
+    width: min(100%, 1240px);
+    max-height: 584px;
+    flex-flow: row wrap;
+    align-content: flex-start;
+    overflow: auto;
+    padding-right: 18px;
+    padding-bottom: 16px;
+  }
+
+  .tm-action-workbench .tm-project-card-option {
+    flex: 0 0 230px;
+  }
+
+  .tm-action-workbench .tm-project-card-chooser:has(.tm-project-card-option--standard) {
+    width: min(100%, 1010px);
+    max-height: 284px;
+  }
+}
 /* stylelint-enable no-duplicate-selectors */
