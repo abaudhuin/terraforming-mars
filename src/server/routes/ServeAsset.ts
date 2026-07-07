@@ -127,9 +127,9 @@ export class ServeAsset extends Handler {
     // Only serve compressed versions in production. Development mode serves
     // uncompressed versions because they can be hot-swapped.
     if (isProduction()) {
-      if (encodings.has('br')) {
+      if (encodings.has('br') && this.fileApi.existsSync(file + '.br')) {
         return {file: file + '.br', encoding: 'br'};
-      } else if (encodings.has('gzip')) {
+      } else if (encodings.has('gzip') && this.fileApi.existsSync(file + '.gz')) {
         return {file: file + '.gz', encoding: 'gzip'};
       }
     }

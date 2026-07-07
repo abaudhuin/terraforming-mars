@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 # Define the version once at the top
 ARG NODE_VERSION=22-alpine3.24
 
@@ -5,7 +7,7 @@ ARG NODE_VERSION=22-alpine3.24
 FROM node:${NODE_VERSION} AS install
 
 # Install required tools
-RUN apk add --no-cache --virtual .gyp git python3 py3-setuptools make g++ \
+RUN apk add --no-cache --virtual .gyp python3 py3-setuptools make g++ \
   && ln -sf python3 /usr/bin/python
 
 WORKDIR /usr/src/app
@@ -14,23 +16,29 @@ WORKDIR /usr/src/app
 COPY ["package.json", "package-lock.json", "./"]
 
 # Install dependencies
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci --prefer-offline
 
 
 # Create image for application building
 FROM install AS builder
 
-# Copy sources
-COPY . .
+# Copy only the files required by the production build.
+COPY ["tsconfig.json", "tsconfig.vue-tsc.json", "rspack.config.mjs", "./"]
+COPY ["src/tsconfig.json", "./src/tsconfig.json"]
+COPY ["src", "./src"]
+COPY ["assets", "./assets"]
 
 # Run building
+ARG SOURCE_VERSION=unknown
+ENV SOURCE_VERSION=$SOURCE_VERSION
 RUN npm run build
 
 
 # Create image to prepare prod dependencies to be copied from
 FROM install AS installprod
 
-RUN npm ci --production --prefer-offline
+RUN npm prune --omit=dev \
+  && find node_modules -type d -empty -delete
 
 
 # Target image

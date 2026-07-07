@@ -1,5 +1,5 @@
 <template>
-  <div v-if="warnings !== undefined">
+  <div v-if="warnings.length > 0" class="warnings-component" role="status">
     <div v-for="(warning, idx) in (warnings || [])" :key="idx" class="card-warning">
       {{ $t(descriptions[warning]) }}
     </div>

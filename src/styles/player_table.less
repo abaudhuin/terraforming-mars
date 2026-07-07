@@ -585,7 +585,7 @@
     position: relative;
     min-height: 0;
     display: grid;
-    grid-template-columns: 390px minmax(0, 1fr) 250px;
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
   }
 
@@ -2582,7 +2582,6 @@
   }
 
   &.tm-player-table--passive {
-    --tm-bottom-height: clamp(284px, 35vh, 316px);
     --tm-board-zoom: 0.94;
     --tm-board-y-offset: -42px;
 
@@ -2615,7 +2614,7 @@
     }
 
     .tm-bottom-tray {
-      grid-template-columns: 300px minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .tm-action-workbench {
@@ -3606,21 +3605,26 @@
 
 #player-home.tm-player-table:not(.tm-player-table--setup) {
   --tm-hud-height: 44px;
-  --tm-bottom-height: 316px;
+  --tm-stable-bottom-height: clamp(300px, 34vh, 384px);
+  --tm-bottom-height: var(--tm-stable-bottom-height);
   --tm-board-zoom: 1;
 
   grid-template-rows: var(--tm-hud-height) minmax(0, 1fr) var(--tm-bottom-height);
   gap: 6px;
 
   @media (max-height: 940px) {
-    --tm-bottom-height: 312px;
+    --tm-stable-bottom-height: clamp(286px, 34vh, 330px);
     --tm-board-zoom: 0.88;
   }
 
   @media (max-height: 820px) {
     --tm-hud-height: 40px;
-    --tm-bottom-height: 260px;
+    --tm-stable-bottom-height: clamp(252px, 34vh, 292px);
     --tm-board-zoom: 0.74;
+  }
+
+  @media (min-height: 1000px) {
+    --tm-stable-bottom-height: clamp(340px, 34vh, 392px);
   }
 
   .tm-table-hud {
@@ -4215,7 +4219,7 @@
   }
 
   .tm-bottom-tray {
-    grid-template-columns: 458px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 6px;
   }
 
@@ -5047,7 +5051,6 @@
   }
 
   &.tm-player-table--passive {
-    --tm-bottom-height: clamp(390px, 44vh, 430px);
     --tm-board-zoom: 0.74;
 
     @media (min-height: 1000px) {
@@ -5055,7 +5058,6 @@
     }
 
     @media (max-height: 820px) {
-      --tm-bottom-height: 356px;
       --tm-board-zoom: 0.62;
     }
 
@@ -5804,6 +5806,35 @@
     background: transparent;
   }
 
+  .tm-action-workbench .wf-component > .warnings-component,
+  .tm-action-workbench .wf-component > .card-warning {
+    flex: 0 0 100%;
+    order: 0;
+    max-width: min(760px, 100%);
+    margin: 0;
+    padding: 7px 10px;
+    border: 1px solid rgba(255, 204, 100, 0.28);
+    border-left: 3px solid rgba(255, 204, 100, 0.72);
+    border-radius: 6px;
+    background: rgba(255, 204, 100, 0.08);
+    color: #ffdd92;
+    font-family: Ubuntu, sans-serif;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  .tm-action-workbench .warnings-component {
+    display: grid;
+    gap: 4px;
+  }
+
+  .tm-action-workbench .warnings-component .card-warning {
+    margin: 0;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
   .tm-action-workbench .wf-component--select-card > label.cardbox {
     flex: 0 0 212px;
     width: 212px;
@@ -5969,7 +6000,7 @@
   .tm-action-workbench .wf-component--select-card > label.cardbox:has(.colony-card) > .colony-card,
   .tm-action-workbench .wf-component--select-colony > label.tm-colony-card-option > .colony-card {
     margin: 0;
-    transform: scale(0.55);
+    transform: scale(0.49);
     transform-origin: top left;
   }
 
@@ -7723,7 +7754,22 @@
 }
 
 #player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) {
-  --tm-bottom-height: clamp(408px, 48vh, 462px);
+  .tm-action-workbench .wf-component--select-card {
+    justify-content: flex-start;
+  }
+
+  .tm-action-workbench .wf-component--select-card:not(:has(.colony-card)) {
+    padding-bottom: 50px;
+    scroll-padding-bottom: 56px;
+  }
+
+  .tm-action-workbench .wf-component--select-card > .wf-component-title.nofloat,
+  .tm-action-workbench .wf-component--select-card > .wf-component-title {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 
   .tm-action-workbench .wf-component--select-card {
     justify-content: flex-start;
@@ -7886,6 +7932,16 @@
       height: 31px;
       font-size: 15px;
     }
+  }
+}
+
+#player-home.tm-player-table:not(.tm-player-table--setup) {
+  .tm-board-stage .tm-mars-board-surface {
+    place-items: center;
+  }
+
+  .tm-board-stage .board-cont {
+    transform-origin: center center;
   }
 }
 

@@ -1,10 +1,10 @@
 <template>
   <div id="spectator-home" :class="(game.turmoil ? 'with-turmoil': '')">
 
-    <div v-if="game.phase === 'end'">
-      <div class="player_home_block">
-        <DynamicTitle title="This game is over!" :color="spectator.color"/>
-        <a :href="'the-end?id='+ spectator.id" v-i18n>Go to game results</a>
+    <div v-if="game.phase === 'end'" class="tm-end-overlay" role="dialog" aria-labelledby="tm-end-title">
+      <div class="tm-end-banner">
+        <DynamicTitle id="tm-end-title" title="This game is over!" :color="spectator.color"/>
+        <a class="tm-end-link" :href="'the-end?id='+ spectator.id" v-i18n>Go to game results</a>
       </div>
     </div>
 

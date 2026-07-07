@@ -302,6 +302,52 @@ describe('Game', () => {
     expect(options.title).eq('Place any final greenery from plants');
   });
 
+  it('Solo player wins with Venus enabled when Venus track completion is not required', () => {
+    const player = TestPlayer.BLUE.newPlayer();
+    const game = Game.newInstance('game-solo-venus', [player], player, 'spectatorid', {
+      venusNextExtension: true,
+      requiresVenusTrackCompletion: false,
+    });
+    /* Removes SelectInitialCards. The cast verifies that it's popping the right thing. */
+    cast(player.popWaitingFor(), SelectInitialCards);
+
+    // Set up end-game conditions with Mars complete and Venus incomplete.
+    game.generation = 14;
+    setTemperature(game, constants.MAX_TEMPERATURE);
+    setOxygenLevel(game, constants.MAX_OXYGEN_LEVEL);
+    setVenusScaleLevel(game, constants.MIN_VENUS_SCALE);
+    maxOutOceans(player);
+    player.plants = 9;
+
+    forceGenerationEnd(game);
+
+    expect(game.phase).to.eq(Phase.PRODUCTION);
+    runAllActions(game);
+    const options = cast(player.popWaitingFor(), OrOptions);
+    expect(options.title).eq('Place any final greenery from plants');
+  });
+
+  it('Solo player loses with Venus enabled when Venus track completion is required and incomplete', () => {
+    const player = TestPlayer.BLUE.newPlayer();
+    const game = Game.newInstance('game-solo-venus-required', [player], player, 'spectatorid', {
+      venusNextExtension: true,
+      requiresVenusTrackCompletion: true,
+    });
+
+    // Set up end-game conditions with Mars complete and Venus incomplete.
+    game.generation = 14;
+    setTemperature(game, constants.MAX_TEMPERATURE);
+    setOxygenLevel(game, constants.MAX_OXYGEN_LEVEL);
+    setVenusScaleLevel(game, constants.MIN_VENUS_SCALE);
+    maxOutOceans(player);
+    player.plants = 9;
+
+    forceGenerationEnd(game);
+
+    expect(game.phase).to.eq(Phase.END);
+    expect(game.isSoloModeWin()).is.not.true;
+  });
+
   it('Solo player should not place final greeneries if victory condition not met', () => {
     const player = TestPlayer.BLUE.newPlayer();
     const game = Game.newInstance('game-solo2', [player], player, 'spectatorid');
