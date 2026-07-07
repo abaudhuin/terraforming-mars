@@ -5724,31 +5724,37 @@
     margin: 0 2px;
   }
 
-  .tm-action-workbench .wf-command-detail > .wf-options:has(.colony-card) {
-    height: calc(100% - 12px);
-    max-height: calc(100% - 12px);
+  .tm-action-workbench .wf-command-detail > .wf-options:has(.wf-component--select-colony) {
+    height: 100%;
+    max-height: 100%;
     min-height: 0;
     position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr);
-    gap: 7px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 6px;
     overflow: hidden;
   }
 
-  .tm-action-workbench .wf-command-detail > .wf-options:has(.colony-card) > .wf-action {
-    position: absolute;
+  .tm-action-workbench .wf-command-detail > .wf-options:has(.wf-component--select-colony) > .wf-action {
+    position: static;
     z-index: 2;
-    top: 60px;
-    right: 0;
-    width: auto;
+    width: 100%;
+    min-height: 40px;
     margin: 0;
+    padding: 4px 10px 0;
+    border-top: 1px solid var(--tm-border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    background: linear-gradient(180deg, rgba(10, 12, 13, 0.82), rgba(10, 12, 13, 0.98));
+    box-sizing: border-box;
   }
 
-  .tm-action-workbench .wf-command-detail > .wf-options:has(.colony-card) > .wf-action .btn {
-    min-width: 116px;
-    min-height: 31px;
-    height: 31px;
+  .tm-action-workbench .wf-command-detail > .wf-options:has(.wf-component--select-colony) > .wf-action .btn {
+    min-width: 132px;
+    min-height: 34px;
+    height: 34px;
   }
 
   .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-component--select-card {
@@ -5826,31 +5832,124 @@
     transform-origin: top left;
   }
 
-  .tm-action-workbench .wf-component--select-card:has(.colony-card) {
+  .tm-action-workbench .wf-component--select-colony {
     height: 100%;
     min-height: 0;
     display: flex;
     flex-flow: row wrap;
     align-items: start;
     place-content: start;
-    gap: 5px 8px;
+    gap: 7px 9px;
     overflow: auto;
-    padding: 0;
+    padding: 0 6px 2px 0;
+    scroll-padding-bottom: 12px;
   }
 
-  .tm-action-workbench .wf-component--select-card:has(.colony-card) > .wf-component-title {
-    flex: 0 0 100%;
+  .tm-action-workbench .wf-component--select-colony > .wf-component-title {
+    flex: 1 1 280px;
     min-width: 0;
-    padding: 5px 132px 5px 8px;
+    padding: 6px 9px;
     font-size: 17px;
     line-height: 1;
   }
 
-  .tm-action-workbench .wf-component--select-card:has(.colony-card) > .wf-component-actions {
+  .tm-action-workbench .wf-component--select-colony > .wf-component-actions {
     flex: 0 0 auto;
   }
 
-  .tm-action-workbench .wf-component--select-card > label.cardbox:has(.colony-card) {
+  .tm-action-workbench .tm-colony-trade-status {
+    flex: 999 1 520px;
+    min-height: 42px;
+    padding: 7px 9px;
+    border: 1px solid var(--tm-border-soft);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--tm-muted);
+    box-sizing: border-box;
+  }
+
+  .tm-action-workbench .tm-colony-trade-fleets,
+  .tm-action-workbench .tm-colony-visitor-list {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .tm-action-workbench .tm-colony-trade-status-label,
+  .tm-action-workbench .tm-colony-fleet-count,
+  .tm-action-workbench .tm-colony-selected-summary {
+    font-family: Prototype, sans-serif;
+    font-size: 13px;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .tm-action-workbench .tm-colony-trade-status-label {
+    color: var(--tm-text);
+  }
+
+  .tm-action-workbench .tm-colony-fleet-slots {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .tm-action-workbench .tm-colony-fleet-token {
+    width: 31px;
+    height: 31px;
+    display: inline-block;
+    overflow: hidden;
+    flex: 0 0 auto;
+  }
+
+  .tm-action-workbench .tm-colony-fleet-token > .colonies-fleet {
+    transform: scale(0.44);
+    transform-origin: top left;
+  }
+
+  .tm-action-workbench .tm-colony-fleet-token--used {
+    opacity: 0.28;
+    filter: grayscale(0.9);
+  }
+
+  .tm-action-workbench .tm-colony-fleet-token--visitor {
+    width: 23px;
+    height: 23px;
+  }
+
+  .tm-action-workbench .tm-colony-fleet-token--visitor > .colonies-fleet {
+    transform: scale(0.33);
+  }
+
+  .tm-action-workbench .tm-colony-visitor-chip,
+  .tm-action-workbench .tm-colony-selected-summary {
+    min-height: 28px;
+    padding: 0 8px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.26);
+    color: var(--tm-text);
+    white-space: nowrap;
+  }
+
+  .tm-action-workbench .tm-colony-selected-summary {
+    margin-left: auto;
+    color: var(--tm-accent);
+  }
+
+  .tm-action-workbench .tm-colony-selected-summary--empty {
+    color: var(--tm-muted);
+  }
+
+  .tm-action-workbench .wf-component--select-card > label.cardbox:has(.colony-card),
+  .tm-action-workbench .wf-component--select-colony > label.tm-colony-card-option {
     flex: 0 0 238px;
     width: 238px;
     height: 164px;
@@ -5861,15 +5960,57 @@
     overflow: visible;
   }
 
-  .tm-action-workbench .wf-component--select-card > label.cardbox:has(.colony-card) > input {
+  .tm-action-workbench .wf-component--select-card > label.cardbox:has(.colony-card) > input,
+  .tm-action-workbench .wf-component--select-colony > label.tm-colony-card-option > input {
     top: 6px;
     left: 6px;
   }
 
-  .tm-action-workbench .wf-component--select-card > label.cardbox:has(.colony-card) > .colony-card {
+  .tm-action-workbench .wf-component--select-card > label.cardbox:has(.colony-card) > .colony-card,
+  .tm-action-workbench .wf-component--select-colony > label.tm-colony-card-option > .colony-card {
     margin: 0;
     transform: scale(0.55);
     transform-origin: top left;
+  }
+
+  .tm-action-workbench .tm-colony-card-option {
+    position: relative;
+  }
+
+  .tm-action-workbench .tm-colony-card-option--selected > .colony-card {
+    box-shadow: 0 0 0 2px rgba(255, 204, 100, 0.78), 0 0 18px rgba(255, 204, 100, 0.26);
+  }
+
+  .tm-action-workbench .tm-colony-visitor-badge,
+  .tm-action-workbench .tm-colony-card-selected-mark {
+    position: absolute;
+    z-index: 4;
+    min-height: 24px;
+    padding: 0 7px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 204, 100, 0.42);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(9, 10, 11, 0.88);
+    color: var(--tm-text);
+    font-family: Prototype, sans-serif;
+    font-size: 12px;
+    line-height: 1;
+    text-transform: uppercase;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+    pointer-events: none;
+  }
+
+  .tm-action-workbench .tm-colony-visitor-badge {
+    top: 6px;
+    right: 6px;
+  }
+
+  .tm-action-workbench .tm-colony-card-selected-mark {
+    right: 6px;
+    bottom: 6px;
+    color: var(--tm-accent);
   }
 
   .tm-action-workbench .wf-component--select-card > label.cardbox > input[type="checkbox"]:checked + .filterDiv.card-container,
@@ -7599,6 +7740,17 @@
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+  }
+
+  .tm-action-workbench .wf-component--select-colony > .wf-component-title.nofloat,
+  .tm-action-workbench .wf-component--select-colony > .wf-component-title {
+    flex: 1 1 280px;
+    width: auto;
+    max-width: none;
+  }
+
+  .tm-action-workbench .wf-component--select-colony > .tm-colony-trade-status {
+    flex: 999 1 520px;
   }
 
   .tm-action-workbench .wf-component--select-card > .wf-component-actions.nofloat,

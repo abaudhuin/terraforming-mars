@@ -25,6 +25,7 @@ import {AndOptionsResponse, InputResponse} from '@/common/inputs/InputResponse';
 
 interface DataModel {
   responded: Array<InputResponse | undefined>,
+  childRefsReady: boolean,
 }
 
 export default defineComponent({
@@ -55,7 +56,11 @@ export default defineComponent({
   data(): DataModel {
     return {
       responded: this.playerinput.options.map(() => undefined),
+      childRefsReady: false,
     };
+  },
+  mounted() {
+    this.childRefsReady = true;
   },
   methods: {
     playerFactorySaved(idx: number) {
@@ -64,9 +69,12 @@ export default defineComponent({
       };
     },
     canSave(): boolean {
+      if (this.childRefsReady === false) {
+        return false;
+      }
       const refs = this.$refs.childInputs as Array<{canSave?: () => boolean}> | undefined;
       if (!refs) {
-        return true;
+        return this.playerinput.options.length === 0;
       }
       for (const child of refs) {
         if (child.canSave instanceof Function) {
@@ -99,4 +107,3 @@ export default defineComponent({
 });
 
 </script>
-

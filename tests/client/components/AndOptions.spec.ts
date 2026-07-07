@@ -42,6 +42,7 @@ describe('AndOptions', () => {
       },
     });
     const buttons = component.findAllComponents({name: 'AppButton'});
+    await component.vm.$nextTick();
     await buttons[0].trigger('click');
     expect(savedData).to.not.be.undefined;
     expect(savedData!.type).to.eq('and');
@@ -85,6 +86,7 @@ describe('AndOptions', () => {
       },
     });
     const buttons = component.findAllComponents({name: 'AppButton'});
+    await component.vm.$nextTick();
     await buttons[0].trigger('click');
     expect(savedData).to.deep.eq({type: 'and', responses: [{type: 'option'}, {type: 'option'}]});
   });
