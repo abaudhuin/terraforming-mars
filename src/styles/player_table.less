@@ -3405,13 +3405,31 @@
     padding-top: 10px;
   }
 
+  .player_home_block--setup .board-accordion[open] {
+    border: 1px solid var(--tm-border-soft);
+    border-radius: 8px;
+    padding: 0 12px 14px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .player_home_block--setup .board-accordion[open] > .accordion-header {
+    position: sticky;
+    top: -12px;
+    z-index: 8;
+    margin: 0 -12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--tm-border-soft);
+    border-radius: 8px 8px 0 0;
+    background: rgba(15, 16, 18, 0.98);
+  }
+
   .player_home_block--setup .board-accordion:not([open]) .accordion-body {
     display: none;
   }
 
   .player_home_block--setup .board-accordion .accordion-body {
     max-height: none;
-    overflow: visible;
+    overflow: hidden;
     padding-left: 0;
   }
 
@@ -3422,6 +3440,8 @@
     height: 573px;
     margin: 12px auto 0;
     overflow: visible;
+    transform: translateY(-62px) scale(0.82);
+    transform-origin: top center;
   }
 
   .player_home_block--setup .board-accordion .board-outer-spaces {
