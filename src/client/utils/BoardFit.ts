@@ -12,10 +12,11 @@ export function calculateBoardFit(
   viewportHeight: number,
   bottomInset = 0,
   maxScale = 1.6,
-  gutter = 10,
+  horizontalGutter = 10,
+  verticalGutter = 4,
 ): BoardFit {
-  const safeWidth = Math.max(0, viewportWidth - gutter * 2);
-  const safeHeight = Math.max(0, viewportHeight - Math.max(0, bottomInset) - gutter * 2);
+  const safeWidth = Math.max(0, viewportWidth - horizontalGutter * 2);
+  const safeHeight = Math.max(0, viewportHeight - Math.max(0, bottomInset) - verticalGutter * 2);
   const scale = Math.max(0, Math.min(maxScale, safeWidth / BOARD_PAINT_WIDTH, safeHeight / BOARD_PAINT_HEIGHT));
 
   return {

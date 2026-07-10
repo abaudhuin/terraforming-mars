@@ -3,14 +3,18 @@
     <!-- Show the background, tooltip, and other setup -->
     <div class="filterDiv colony-card colonies" :class="backgroundClass" :title="tooltip" v-i18n>
 
-    <!-- Show colony ship if somebody is visiting -->
-    <div v-if="colony.visitor !== undefined" class="colony-spaceship">
-      <div :class="'colonies-fleet colonies-fleet-'+ colony.visitor"></div>
-    </div>
-
     <!-- show the large title on top -->
     <div class="colony-card-title-div">
       <span class="colony-card-title-span" :class="colony.name + '-title'">{{colony.name}}</span>
+      <span
+        v-if="colony.visitor !== undefined"
+        class="colony-visitor-chip"
+        :aria-label="visitorLabel"
+        :title="visitorLabel">
+        <span class="colony-visitor-chip-icon" aria-hidden="true">
+          <span :class="'colonies-fleet colonies-fleet-'+ colony.visitor"></span>
+        </span>
+      </span>
     </div>
 
     <div class="colony-content" :style="'margin-top: {{colonyContentOffset}}px;'">
@@ -172,6 +176,12 @@ export default defineComponent({
       return `${titles[0]}: ${translateText(descriptions[0])}
 ${titles[1]}: ${translateText(descriptions[1])}
 ${titles[2]}: ${translateText(descriptions[2])}`;
+    },
+    visitorLabel(): string {
+      if (this.colony.visitor === undefined) {
+        return '';
+      }
+      return translateText('Visiting fleet') + ': ' + this.colony.visitor;
     },
     ColonyName(): typeof ColonyName {
       return ColonyName;
