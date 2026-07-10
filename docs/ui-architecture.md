@@ -52,7 +52,7 @@ build, development, lint, test, and visual smoke flow.
 | --- | --- |
 | `npm run dev` | Starts the local dev workflow through `scripts/dev.sh`. |
 | `npm run dev:server` | Runs the TypeScript server with `tsx watch`. |
-| `npm run dev:client` | Runs Rolldown in watch mode. |
+| `npm run dev:client` | Runs Vite client build watch mode. |
 | `npm run build` | Runs the fast parallel build orchestrator for static assets, server, card data, and client assets. |
 | `npm run make:css` | Compiles `src/styles/common.less` to `build/styles.css` and fast gzip/brotli sidecars. |
 | `npm run make:cards` | Exports generated card rendering data. |
@@ -451,9 +451,9 @@ Primary entrypoint: `src/styles/common.less`
 - Cards, board, player home, create game, preferences, payments, logs,
   expansions, help, and other feature styles
 
-`rolldown.config.mjs` also injects `variables.less` and `mixins.less` into every
-Vue `<style lang="less">` block through the Vue SFC LESS preprocessor's
-`additionalData` option.
+`vite.config.mjs` also injects `variables.less` and `mixins.less` into every Vue
+`<style lang="less">` block through the Vue SFC and Vite LESS preprocessor
+`additionalData` options.
 
 Current styling characteristics:
 

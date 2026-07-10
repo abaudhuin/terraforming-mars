@@ -41,4 +41,36 @@ describe('PlayerResource', () => {
     });
     expect(wrapper.find('[data-test="resource-value"]').exists()).is.true;
   });
+
+  it('Does not show default steel and titanium values in learner mode', () => {
+    for (const [type, value] of [[Resource.STEEL, 2], [Resource.TITANIUM, 3]] as const) {
+      const wrapper = shallowMount(PlayerResource, {
+        ...globalConfig,
+        props: {
+          type,
+          count: 10,
+          production: 1,
+          value,
+        },
+      });
+
+      expect(wrapper.find('[data-test="resource-value"]').exists()).is.false;
+    }
+  });
+
+  it('Shows increased steel and titanium values', () => {
+    for (const [type, value] of [[Resource.STEEL, 3], [Resource.TITANIUM, 4]] as const) {
+      const wrapper = shallowMount(PlayerResource, {
+        ...globalConfig,
+        props: {
+          type,
+          count: 10,
+          production: 1,
+          value,
+        },
+      });
+
+      expect(wrapper.find('[data-test="resource-value"]').text()).eq(`${value}M€`);
+    }
+  });
 });

@@ -156,10 +156,11 @@ async function submitInitialSetup(context, player, diagnostics) {
 
   await screenshot(page, `${player.text.toLowerCase()}-setup-submitted`);
   const text = await bodyText(page);
+  const tableReady = await page.locator('#player-home.tm-player-table:not(.tm-player-table--setup) .tm-card-desk').count() > 0;
   await page.close();
   return {
     player: player.text,
-    setupSubmitted: text.includes('Your selected cards:') || text.includes('Actions'),
+    setupSubmitted: tableReady || text.includes('Your selected cards:') || text.includes('Actions'),
   };
 }
 

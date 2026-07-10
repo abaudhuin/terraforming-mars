@@ -21,6 +21,21 @@ describe('LogMessageComponent', () => {
     expect(wrapper.exists()).to.be.true;
   });
 
+  it('only emits a preview click from an actual card target', async () => {
+    const message = new LogMessage(LogMessageType.DEFAULT, 'Played ${0}', [
+      {type: LogMessageDataType.CARD, value: CardName.ANTS},
+    ]);
+    const wrapper = shallowMount(LogMessageComponent, {
+      ...globalConfig,
+      props: {message, viewModel: fakeViewModel()},
+    });
+
+    await wrapper.find('.log-plain-text').trigger('click');
+    expect(wrapper.emitted('click')).to.be.undefined;
+    await wrapper.find('.log-card').trigger('click');
+    expect(wrapper.emitted('click')).to.have.length(1);
+  });
+
   it('renders CARD type as a single card span', () => {
     const message = new LogMessage(LogMessageType.DEFAULT, '${0}', [
       {type: LogMessageDataType.CARD, value: CardName.ANTS},

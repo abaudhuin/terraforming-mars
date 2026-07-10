@@ -84,7 +84,10 @@
 
         <div class="tm-top-tools">
           <button type="button" class="tm-control tm-control--review tm-control--board" @click="openOverlay('board')" v-i18n>Board</button>
-          <button type="button" class="tm-control tm-control--review tm-control--cards" @click="openCardsOverlay()" v-i18n>Cards</button>
+          <button type="button" class="tm-control tm-control--review tm-control--cards" @click="openCardsOverlay()">
+            <span v-i18n>Cards</span>
+            <small v-if="cardsInHandCount > 0" class="tm-control-badge">{{ cardsInHandCount }}</small>
+          </button>
           <button type="button" class="tm-control tm-control--review tm-control--players" @click="openPlayers" v-i18n>Players</button>
         </div>
       </header>
@@ -182,40 +185,21 @@
         </section>
 
         <template v-else>
-        <section class="tm-action-workbench player_home_block--actions" tabindex="-1">
+        <section v-if="hasPlayerInput" class="tm-action-workbench player_home_block--actions" tabindex="-1">
           <a name="actions" class="player_home_anchor"></a>
           <div class="tm-panel-heading">
             <span v-i18n>Actions</span>
             <span class="tm-compat-text">Actions</span>
-            <button
-              v-if="cardsInHandCount > 0"
-              type="button"
-              class="tm-action-hand-button"
-              :class="{'tm-action-hand-button--open': showActionHand}"
-              @click="toggleActionHand"
-              :aria-expanded="showActionHand">
-              <span v-i18n>Hand</span>
-              <small>{{ cardsInHandCount }}</small>
-            </button>
           </div>
           <WaitingFor v-if="game.phase !== 'end'" :playerView="playerView" :waitingfor="playerView.waitingFor"/>
-          <section v-if="showActionHand" class="tm-action-hand-drawer" aria-label="Hand">
-            <header class="tm-action-hand-header">
-              <div>
-                <span v-i18n>My hand</span>
-                <small>{{ cardsInHandCount }}</small>
-              </div>
-              <button type="button" class="tm-action-hand-close tm-icon-control tm-icon-control--close" @click="closeActionHand" :aria-label="$t('Close hand')">
-                <span aria-hidden="true"></span>
-              </button>
-            </header>
-            <div class="tm-action-hand-gallery">
-              <div v-for="card in allCardsInHand" :key="card.name" class="cardbox">
-                <Card :card="card"/>
-              </div>
-            </div>
-          </section>
         </section>
+        <WaitingFor
+          v-else-if="game.phase !== 'end'"
+          v-show="false"
+          class="tm-passive-sync"
+          :playerView="playerView"
+          :waitingfor="playerView.waitingFor"
+          :showPassiveStatus="false"/>
 
         <section class="tm-card-desk" :class="{'tm-card-desk--engine-only': cardsInHandCount === 0 && playerView.draftedCards.length === 0}">
           <a name="cards" class="player_home_anchor"></a>
@@ -238,9 +222,6 @@
                 <button type="button" :class="getHideButtonClass('HAND')" @click.prevent="toggle('HAND')">
                   <span class="played-cards-count">{{ cardsInHandCount.toString() }}</span>
                   <span class="played-cards-selection" v-i18n>{{ getToggleLabel('HAND') }}</span>
-                </button>
-                <button type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye tm-hand-open-button" @click="openCardsOverlay()" :aria-label="$t('Open hand')">
-                  <span aria-hidden="true"></span>
                 </button>
               </div>
             </div>
@@ -278,8 +259,12 @@
               <div v-show="isVisible('ACTIVE')" v-for="card in activeTableauCards" :key="card.name" class="cardbox">
                 <Card :card="card" :actionUsed="isCardActivated(card, thisPlayer)" :cubeColor="thisPlayer.color"/>
               </div>
-              <StackedCards v-show="isVisible('AUTOMATED')" :cards="automatedTableauCards" />
-              <StackedCards v-show="isVisible('EVENT')" :cards="eventTableauCards" />
+              <div v-show="isVisible('AUTOMATED')" v-for="card in automatedTableauCards" :key="card.name" class="cardbox">
+                <Card :card="card" :actionUsed="isCardActivated(card, thisPlayer)" :cubeColor="thisPlayer.color"/>
+              </div>
+              <div v-show="isVisible('EVENT')" v-for="card in eventTableauCards" :key="card.name" class="cardbox">
+                <Card :card="card" :actionUsed="isCardActivated(card, thisPlayer)" :cubeColor="thisPlayer.color"/>
+              </div>
             </div>
           </div>
           </section>
@@ -424,8 +409,20 @@
                     <div v-show="isVisible('ACTIVE')" v-for="card in sortActiveCards(getCardsByType(selectedPlayer.tableau, [CardType.ACTIVE, CardType.PRELUDE]).filter((c) => isActive(c)))" :key="card.name" class="cardbox">
                       <Card :card="card" :actionUsed="isCardActivated(card, selectedPlayer)" :cubeColor="selectedPlayer.color"/>
                     </div>
-                    <StackedCards v-show="isVisible('AUTOMATED')" :cards="getCardsByType(selectedPlayer.tableau, [CardType.AUTOMATED, CardType.PRELUDE]).filter((c) => isNotActive(c))" />
-                    <StackedCards v-show="isVisible('EVENT')" :cards="getCardsByType(selectedPlayer.tableau, [CardType.EVENT])" />
+                    <div
+                      v-show="isVisible('AUTOMATED')"
+                      v-for="card in getCardsByType(selectedPlayer.tableau, [CardType.AUTOMATED, CardType.PRELUDE]).filter((c) => isNotActive(c))"
+                      :key="card.name"
+                      class="cardbox">
+                      <Card :card="card" :actionUsed="isCardActivated(card, selectedPlayer)" :cubeColor="selectedPlayer.color"/>
+                    </div>
+                    <div
+                      v-show="isVisible('EVENT')"
+                      v-for="card in getCardsByType(selectedPlayer.tableau, [CardType.EVENT])"
+                      :key="card.name"
+                      class="cardbox">
+                      <Card :card="card" :actionUsed="isCardActivated(card, selectedPlayer)" :cubeColor="selectedPlayer.color"/>
+                    </div>
                   </div>
                 </section>
 
@@ -469,7 +466,6 @@ import PlayerResources from '@/client/components/overview/PlayerResources.vue';
 import PlayerTags from '@/client/components/overview/PlayerTags.vue';
 import DynamicTitle from '@/client/components/common/DynamicTitle.vue';
 import SortableCards from '@/client/components/SortableCards.vue';
-import StackedCards from '@/client/components/StackedCards.vue';
 import PurgeWarning from '@/client/components/common/PurgeWarning.vue';
 import UndergroundTokens from '@/client/components/underworld/UndergroundTokens.vue';
 import KeyboardShortcuts from '@/client/components/KeyboardShortcuts.vue';
@@ -493,7 +489,6 @@ type PlayerHomeModel = {
   showActiveCards: boolean;
   showAutomatedCards: boolean;
   showEventCards: boolean;
-  showActionHand: boolean;
   isActivityRailCollapsed: boolean;
   activeOverlay: OverlayKind;
   selectedPlayerColor: Color | undefined;
@@ -575,7 +570,6 @@ export default defineComponent({
       showActiveCards: !preferences.hide_active_cards,
       showAutomatedCards: !preferences.hide_automated_cards,
       showEventCards: !preferences.hide_event_cards,
-      showActionHand: false,
       isActivityRailCollapsed: readStoredLayoutBoolean(layoutStorageKeys.activityRailCollapsed),
       activeOverlay: 'none',
       selectedPlayerColor: undefined,
@@ -669,6 +663,9 @@ export default defineComponent({
     isDecisionActive(): boolean {
       return this.isPlayerActing(this.playerView);
     },
+    hasPlayerInput(): boolean {
+      return this.playerView.waitingFor !== undefined;
+    },
     activePlayer(): PublicPlayerModel | undefined {
       return this.playerView.players.find((player) => player.isActive);
     },
@@ -730,7 +727,7 @@ export default defineComponent({
       if (this.playerView.waitingFor !== undefined) {
         return 'Waiting for other players';
       }
-      return 'Planning';
+      return this.activePlayer === undefined ? 'Waiting' : 'Watching';
     },
     actionSummary(): string {
       if (this.playerView.waitingFor !== undefined && !this.playerView.waitingFor.optional) {
@@ -808,7 +805,6 @@ export default defineComponent({
     PlayerResources,
     PlayerTags,
     SortableCards,
-    StackedCards,
     PurgeWarning,
     UndergroundTokens,
     KeyboardShortcuts,
@@ -904,17 +900,16 @@ export default defineComponent({
         return;
       }
 
-      const boardNaturalWidth = 670;
-      const boardNaturalHeight = 620;
-      const horizontalPadding = 34;
-      const verticalPadding = 54;
+      const boardNaturalWidth = 700;
+      const boardNaturalHeight = 700;
+      const horizontalPadding = 28;
+      const verticalPadding = 28;
       const fitByWidth = (rect.width - horizontalPadding) / boardNaturalWidth;
       const fitByHeight = (rect.height - verticalPadding) / boardNaturalHeight;
       const maxZoom = window.innerHeight < 820 ? 1.16 : 1.48;
       const minZoom = window.innerHeight < 820 ? 0.30 : 0.42;
       const zoom = this.clampLayoutValue(Math.min(fitByWidth, fitByHeight) * 1000, minZoom * 1000, maxZoom * 1000) / 1000;
-      const visualYOffset = Math.max(zoom * 10, (1.08 - zoom) * 80);
-      const yOffset = this.clampLayoutValue(visualYOffset, 0, 32);
+      const yOffset = 0;
 
       if (this.boardFitZoom !== zoom) {
         this.boardFitZoom = zoom;
@@ -937,11 +932,6 @@ export default defineComponent({
         this.closeActivityLogPreview();
         return;
       }
-      if (this.showActionHand) {
-        event.preventDefault();
-        this.closeActionHand();
-        return;
-      }
       if (this.playerLogPreviewMessage !== undefined) {
         event.preventDefault();
         this.closePlayerLogPreview();
@@ -956,7 +946,6 @@ export default defineComponent({
     },
     openOverlay(overlay: OverlayKind): void {
       this.activeOverlay = overlay;
-      this.closeActionHand();
       if (overlay === 'cards') {
         this.cardOverlayFocus = 'hand';
       }
@@ -964,7 +953,6 @@ export default defineComponent({
     openCardsOverlay(): void {
       this.cardOverlayFocus = 'hand';
       this.activeOverlay = 'cards';
-      this.closeActionHand();
     },
     closeOverlay(): void {
       this.activeOverlay = 'none';
@@ -994,12 +982,6 @@ export default defineComponent({
     },
     closePlayerLogPreview(): void {
       this.playerLogPreviewMessage = undefined;
-    },
-    toggleActionHand(): void {
-      this.showActionHand = !this.showActionHand;
-    },
-    closeActionHand(): void {
-      this.showActionHand = false;
     },
     toggleActivityRail(): void {
       this.isActivityRailCollapsed = !this.isActivityRailCollapsed;

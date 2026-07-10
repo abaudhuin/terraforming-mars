@@ -1,35 +1,45 @@
 <template>
   <div class="wf-component wf-component--select-card wf-component--select-colony" :class="{'wf-component--trade-colony': isTradeAction}">
-    <div v-if="showtitle === true" class="nofloat wf-component-title">{{ $t(playerinput.title) }}</div>
+    <div v-if="showtitle === true && !isTradeAction" class="nofloat wf-component-title">{{ $t(playerinput.title) }}</div>
 
     <div v-if="isTradeAction" class="tm-colony-trade-status">
-      <div class="tm-colony-trade-fleets">
-        <span class="tm-colony-trade-status-label" v-i18n>Trade fleets</span>
-        <span class="tm-colony-fleet-slots">
-          <span
-            v-for="slot in fleetSlots"
-            :key="slot.index"
-            class="tm-colony-fleet-token"
-            :class="{'tm-colony-fleet-token--used': slot.used}"
-            :title="slot.used ? $t('Fleet used') : $t('Fleet ready')">
-            <span class="colonies-fleet" :class="playerFleetClass"></span>
+      <div class="tm-colony-trade-heading">
+        <span class="tm-colony-trade-title">{{ $t(playerinput.title) }}</span>
+        <div class="tm-colony-selected-summary" :class="{'tm-colony-selected-summary--empty': selectedColony === undefined}">
+          <span v-if="selectedColony !== undefined">{{ selectedColony }}</span>
+          <span v-else v-i18n>No colony selected</span>
+        </div>
+      </div>
+
+      <div class="tm-colony-trade-fleet-board">
+        <div
+          v-for="row in fleetPreviewRows"
+          :key="row.color"
+          class="tm-colony-player-fleets"
+          :class="{'tm-colony-player-fleets--self': row.isSelf}">
+          <span class="tm-colony-player-name" :class="'player_bg_color_' + row.color">{{ row.name }}</span>
+          <span class="tm-colony-fleet-slots">
+            <span
+              v-for="slot in row.slots"
+              :key="slot.index"
+              class="tm-colony-fleet-token"
+              :class="{'tm-colony-fleet-token--used': slot.used}"
+              :title="slot.used ? $t('Fleet used') : $t('Fleet ready')">
+              <span class="colonies-fleet" :class="'colonies-fleet-' + row.color"></span>
+            </span>
           </span>
-        </span>
-        <span class="tm-colony-fleet-count">{{ availableFleetCount }}/{{ fleetSize }} <span v-i18n>ready</span></span>
+          <span class="tm-colony-fleet-count">{{ row.availableFleetCount }}/{{ row.fleetSize }}</span>
+        </div>
       </div>
 
       <div v-if="visitedColonies.length > 0" class="tm-colony-visitor-list">
+        <span class="tm-colony-trade-status-label" v-i18n>Visiting</span>
         <span v-for="colony in visitedColonies" :key="colony.name" class="tm-colony-visitor-chip">
           <span class="tm-colony-fleet-token tm-colony-fleet-token--visitor">
             <span class="colonies-fleet" :class="visitorFleetClass(colony)"></span>
           </span>
           <span>{{ colony.name }}</span>
         </span>
-      </div>
-
-      <div class="tm-colony-selected-summary" :class="{'tm-colony-selected-summary--empty': selectedColony === undefined}">
-        <span v-if="selectedColony !== undefined">{{ selectedColony }}</span>
-        <span v-else v-i18n>No colony selected</span>
       </div>
     </div>
 
@@ -59,12 +69,27 @@ import Colony from '@/client/components/colonies/Colony.vue';
 import AppButton from '@/client/components/common/AppButton.vue';
 import {ColonyModel} from '@/common/models/ColonyModel';
 import {SelectColonyModel} from '@/common/models/PlayerInputModel';
-import {PlayerViewModel} from '@/common/models/PlayerModel';
+import {PlayerViewModel, PublicPlayerModel} from '@/common/models/PlayerModel';
 import {SelectColonyResponse} from '@/common/inputs/InputResponse';
 import {ColonyName} from '@/common/colonies/ColonyName';
+import {Color} from '@/common/Color';
 
 type DataModel = {
   selectedColony: ColonyName | undefined,
+};
+
+type FleetSlot = {
+  index: number;
+  used: boolean;
+};
+
+type FleetPreviewRow = {
+  color: Color;
+  name: string;
+  fleetSize: number;
+  availableFleetCount: number;
+  isSelf: boolean;
+  slots: Array<FleetSlot>;
 };
 
 export default defineComponent({
@@ -119,29 +144,40 @@ export default defineComponent({
     visitorTitle(colony: ColonyModel): string {
       return `${colony.visitor} fleet on ${colony.name}`;
     },
+    fleetSlotsFor(player: PublicPlayerModel): Array<FleetSlot> {
+      const fleetSize = Math.max(0, player.fleetSize ?? 0);
+      const available = this.availableFleetCountFor(player);
+      return Array.from({length: fleetSize}, (_unused, index) => ({
+        index,
+        used: index >= available,
+      }));
+    },
+    availableFleetCountFor(player: PublicPlayerModel): number {
+      const fleetSize = Math.max(0, player.fleetSize ?? 0);
+      const usedFleetCount = Math.max(0, Math.min(fleetSize, player.tradesThisGeneration ?? 0));
+      return Math.max(0, fleetSize - usedFleetCount);
+    },
   },
   computed: {
     isTradeAction(): boolean {
       return this.playerinput.buttonLabel.toLowerCase() === 'trade';
     },
-    fleetSize(): number {
-      return Math.max(0, this.playerView.thisPlayer?.fleetSize ?? 0);
-    },
-    usedFleetCount(): number {
-      return Math.max(0, Math.min(this.fleetSize, this.playerView.thisPlayer?.tradesThisGeneration ?? 0));
-    },
-    availableFleetCount(): number {
-      return Math.max(0, this.fleetSize - this.usedFleetCount);
-    },
-    fleetSlots(): Array<{index: number, used: boolean}> {
-      return Array.from({length: this.fleetSize}, (_unused, index) => ({
-        index,
-        used: index >= this.availableFleetCount,
-      }));
-    },
-    playerFleetClass(): string {
-      const color = this.playerView.thisPlayer?.color;
-      return color === undefined ? '' : `colonies-fleet-${color}`;
+    fleetPreviewRows(): Array<FleetPreviewRow> {
+      const self = this.playerView.thisPlayer;
+      const players = this.playerView.players ?? [];
+      const sourcePlayers = players.length > 0 ? players : (self === undefined ? [] : [self]);
+      const rows = sourcePlayers
+        .filter((player) => (player.fleetSize ?? 0) > 0)
+        .map((player) => ({
+          color: player.color,
+          name: player.color === self?.color ? this.$t('You') : player.name,
+          fleetSize: Math.max(0, player.fleetSize ?? 0),
+          availableFleetCount: this.availableFleetCountFor(player),
+          isSelf: player.color === self?.color,
+          slots: this.fleetSlotsFor(player),
+        }));
+
+      return rows.sort((a, b) => Number(b.isSelf) - Number(a.isSelf));
     },
     visitedColonies(): ReadonlyArray<ColonyModel> {
       return (this.playerinput.coloniesModel || []).filter((colony) => colony.visitor !== undefined);

@@ -22,7 +22,8 @@ const entryFiles = [
   'build/sw.js',
 ];
 const chunkFiles = await walk('build/chunks').catch(() => []);
-const candidates = [...entryFiles, ...chunkFiles].filter((file) => file.endsWith('.js'));
+const assetFiles = await walk('build/assets').catch(() => []);
+const candidates = [...entryFiles, ...chunkFiles, ...assetFiles].filter((file) => file.endsWith('.js') || file.endsWith('.css'));
 const files = [];
 
 for (const file of candidates) {

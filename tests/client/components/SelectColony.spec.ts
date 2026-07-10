@@ -31,10 +31,25 @@ describe('SelectColony', () => {
       props: {
         playerView: {
           thisPlayer: {
+            name: 'Red player',
             color: 'red',
             fleetSize: 2,
             tradesThisGeneration: 1,
           },
+          players: [
+            {
+              name: 'Red player',
+              color: 'red',
+              fleetSize: 2,
+              tradesThisGeneration: 1,
+            },
+            {
+              name: 'Blue player',
+              color: 'blue',
+              fleetSize: 1,
+              tradesThisGeneration: 0,
+            },
+          ],
         } as PlayerViewModel,
         playerinput: {
           title: 'Select colony tile for trade',
@@ -58,6 +73,8 @@ describe('SelectColony', () => {
 
     expect(wrapper.find('.tm-colony-trade-status').exists()).to.be.true;
     expect(wrapper.find('.tm-colony-fleet-count').text()).to.contain('1/2');
+    expect(wrapper.findAll('.tm-colony-player-fleets')).to.have.length(2);
+    expect(wrapper.findAll('.tm-colony-fleet-count')[1].text()).to.contain('1/1');
     expect(wrapper.find('.tm-colony-visitor-chip').text()).to.contain(ColonyName.CALLISTO);
     expect(wrapper.find('.tm-colony-visitor-badge').text()).to.contain('blue');
   });

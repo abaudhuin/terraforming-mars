@@ -5,16 +5,14 @@ canonical developer interface.
 
 ## Tooling Roles
 
-- Rolldown is the default client bundler for production builds and client watch
+- Vite is the default client bundler for production builds and client watch
   mode. It handles the browser TypeScript/Vue graph and writes `main.js`,
   `vendors.js`, `sw.js`, and lazy chunks under `build/chunks/`.
-- OXC is used through Rolldown for fast JavaScript and TypeScript transforms and
-  minification.
 - Oxlint is the source lint engine for TypeScript, JavaScript, and Vue files.
 - TypeScript 7 RC is the default TypeScript package. Its Go-native `tsc` powers
   server and test project builds.
-- Mocha remains the server test runner.
-- Vitest runs client component tests against Vue single-file components.
+- Vitest runs server, client, and integration tests. The projects are named
+  `server`, `client`, and `integration` in `vite.config.mjs`.
 
 npm remains the expected package manager for repository scripts and lockfile
 updates. Bun and Rsbuild/Rspack are not part of the default flow.
@@ -40,7 +38,7 @@ npm run build
 2. `npm run build:server` and `npm run make:cards` run at the same time after
    generated JSON exists.
 3. `npm run build:client:assets` removes stale client outputs, bundles with
-   Rolldown, and writes gzip/brotli sidecars.
+   Vite, and writes gzip/brotli sidecars.
 
 Production builds do not emit source maps by default. This keeps the build fast
 and avoids spending time compressing large map files. Use
@@ -95,7 +93,7 @@ npm run dev
 
 1. Generate static JSON with `make:json`.
 2. Start the server with `tsx watch`.
-3. Start Rolldown client watch mode.
+3. Start Vite client build watch mode.
 4. Watch LESS and generated card rendering data.
 
 Targeted watch commands:
@@ -107,7 +105,7 @@ npm run watch:less
 npm run watch:cards
 ```
 
-`dev:client` is the Rolldown watcher.
+`dev:client` is the Vite build watcher.
 
 ## Linting
 
@@ -148,19 +146,19 @@ npm run test:postgresql
 npm run build:test
 ```
 
-Client tests use Vitest with the same Vue SFC and LESS preprocessing conventions
-as the Rolldown application build.
+All tests run through Vitest. Client tests use the same Vue SFC and LESS
+preprocessing conventions as the Vite application build.
 
 Single server test file:
 
 ```bash
-npx mocha --import=tsx --require tests/testing/setup.ts "tests/cards/base/Algae.spec.ts"
+vitest run --project server tests/cards/base/Algae.spec.ts
 ```
 
 Single client test file:
 
 ```bash
-cross-env NODE_ENV=development vitest run -c vitest.config.mjs tests/client/components/Board.spec.ts
+vitest run --project client tests/client/components/Board.spec.ts
 ```
 
 ## Visual Smoke
@@ -187,14 +185,16 @@ game reaches generation 2 without page or console errors.
 Generated build outputs belong under `build/` and `src/genfiles/`. Do not commit
 them. `npm run clean` removes both directories.
 
-The Rolldown client build owns these generated client files:
+The Vite client build owns these generated client files:
 
 - `build/main.js`
 - `build/vendors.js`
 - `build/sw.js`
 - `build/chunks/`
+- `build/assets/`
 - matching `.gz` and `.br` sidecars
 
 Production source maps are opt-in with `TM_BUILD_SOURCEMAPS=1`.
 
-CSS is still built separately by `make:css` into `build/styles.css`.
+Global CSS is still built separately by `make:css` into `build/styles.css`.
+Vue component CSS emitted by Vite lives under `build/assets/`.

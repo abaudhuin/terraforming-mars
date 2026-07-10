@@ -5,9 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Development Commands
 
 ```bash
-npm run build                # Fast full build: parallel CSS/JSON and server/cards, native tsc, Rolldown
+npm run build                # Fast full build: parallel CSS/JSON and server/cards, native tsc, Vite client build
 npm run build:server         # Native TypeScript compile server only: tsc --build src/tsconfig.json
-npm run build:client         # Rolldown production bundle, then gzip/brotli client assets
+npm run build:client         # Vite production bundle, then gzip/brotli client assets
 npm run build:test           # Native TypeScript compile tests: tsc --build tests/tsconfig.json
 npm run lint                 # All lints: Oxlint + i18n audit + stylelint
 npm run lint:oxc             # Fast Oxlint correctness preflight over src and tests
@@ -25,21 +25,21 @@ debugging production bundles.
 
 ```bash
 npm run test                 # All tests (server + client)
-npm run test:server          # Mocha server tests (~6700 tests)
+npm run test:server          # Vitest server tests (~7000 tests)
 npm run test:client          # Vitest client component tests
 
 # Single server test file
-npx mocha --import=tsx --require tests/testing/setup.ts "tests/cards/base/Algae.spec.ts"
+vitest run --project server tests/cards/base/Algae.spec.ts
 
 # Single client test file
-cross-env NODE_ENV=development vitest run -c vitest.config.mjs tests/client/components/Board.spec.ts
+vitest run --project client tests/client/components/Board.spec.ts
 ```
 
 ### Dev Servers
 
 ```bash
 npm run dev:server           # Server with hot reload (tsx watch)
-npm run dev:client           # Rolldown watch mode
+npm run dev:client           # Vite client build watch mode
 npm run watch:less           # CSS rebuild on change
 ```
 
@@ -48,10 +48,10 @@ npm run watch:less           # CSS rebuild on change
 ### Three-Layer Structure
 
 - **`src/server/`** - Game engine, card logic, routes, database. Runs on Node.js.
-- **`src/client/`** - Vue 3 frontend (Options API, `defineComponent`). Bundled with Rolldown for app builds.
+- **`src/client/`** - Vue 3 frontend (Options API, `defineComponent`). Bundled with Vite for app builds.
 - **`src/common/`** - Shared types, enums, and models used by both client and server. No runtime logic that depends on either side.
 
-The `@/` import alias maps to `./src/` (configured in tsconfig paths, Rolldown, and Vitest).
+The `@/` import alias maps to `./src/` (configured in tsconfig paths and Vite/Vitest).
 
 ### Card System
 

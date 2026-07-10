@@ -1,5 +1,5 @@
 <template>
-   <li v-if="message !== undefined && message.data !== undefined && message.message !== undefined" @click.prevent="$emit('click')">
+   <li v-if="message !== undefined && message.data !== undefined && message.message !== undefined" @click="messageClicked">
     <span v-if="message.type !== LogMessageType.NEW_GENERATION" :title="when" v-html="icon"></span>
     <template v-for="(data, idx) of entries" :key="idx">
       <span class="log-plain-text" v-if="typeof(data) === 'string'">{{ data }}</span>
@@ -80,6 +80,14 @@ export default defineComponent({
     },
   },
   methods: {
+    messageClicked(event: MouseEvent) {
+      const target = event.target;
+      const currentTarget = event.currentTarget;
+      const cardTarget = target instanceof Element ? target.closest('.log-card') : null;
+      if (cardTarget !== null && currentTarget instanceof Element && currentTarget.contains(cardTarget)) {
+        this.$emit('click');
+      }
+    },
     cardToHtml(data: LogMessageData & {type: LogMessageDataType.CARD, value: CardName}) {
       return this.innerCardToHtml(data.value, data.attrs);
     },

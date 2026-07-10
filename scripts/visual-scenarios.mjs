@@ -134,10 +134,12 @@ const SHOT_GROUPS = {
   core: [
     'table-active',
     'table-waiting',
+    'waiting-card-hover',
     'action-idle',
     'action-play-card-payment',
     'action-play-card-card-selected',
     'action-standard-projects',
+    'standard-project-hover',
     'action-fund-award',
     'action-claim-milestone',
     'milestones-awards-hover',
@@ -151,6 +153,7 @@ const SHOT_GROUPS = {
   turnModes: [
     'table-active',
     'table-waiting',
+    'waiting-card-hover',
     'action-idle',
     'action-pass-selected',
     'action-play-card-payment',
@@ -169,17 +172,21 @@ const SHOT_GROUPS = {
     'overlay-board-ma-open',
     'overlay-cards',
     'overlay-cards-scrolled',
+    'overlay-cards-refresh-preserved',
     'overlay-log',
     'overlay-log-scrolled',
     'overlay-players',
     'overlay-player-opponent',
     'resized-layout',
     'bottom-tray-enlarged',
+    'bottom-tray-compressed',
     'activity-rail-enlarged',
+    'activity-rail-collapsed',
   ],
   cards: [
     'overlay-cards',
     'overlay-cards-scrolled',
+    'overlay-cards-refresh-preserved',
     'cards-search-results',
     'cards-search-no-results',
     'cards-filter-playable',
@@ -190,6 +197,7 @@ const SHOT_GROUPS = {
     'cards-sort-cost',
     'action-play-card-payment',
     'action-play-card-card-selected',
+    'standard-project-hover',
   ],
   extensions: [
     ...primaryExtensionShots,
@@ -236,7 +244,7 @@ const builtInScenarios = [
     },
     advance: ['generation2'],
     visualPatch: 'action-choice-density',
-    shots: ['action-idle', 'action-blue-card', 'action-play-card-payment', 'action-play-card-card-selected', 'action-trade-colony', 'action-standard-projects', 'action-sell-patents'],
+    shots: ['action-idle', 'action-blue-card', 'action-play-card-payment', 'action-play-card-card-selected', 'action-trade-colony', 'action-trade-colony-hover', 'action-standard-projects', 'standard-project-hover', 'action-sell-patents'],
     coverageTags: ['actions', 'command-rail', 'blue-action', 'nested-choice', 'project-card-input', 'colony-trade', 'standard-projects', 'sell-patents', 'button-placement'],
   },
   {
@@ -493,7 +501,7 @@ const builtInScenarios = [
 ];
 
 const builtInScenarioByName = new Map(builtInScenarios.map((scenario) => [scenario.name, scenario]));
-const defaultViewports = '1600x900,1440x900,1920x1080,1920x1200,2560x1440,3440x1440';
+const defaultViewports = '1600x900,1440x900,1920x1080,1920x1200,2048x1536,2560x1440,3440x1440';
 
 const viewports = (process.env.TM_VIEWPORTS ?? defaultViewports)
   .split(',')
@@ -1245,6 +1253,16 @@ async function captureSetup(context, scenario, game, viewport) {
       await page.waitForTimeout(150);
       setupCaptures.push(await screenshotWithMetrics(page, scenario, viewport, 'setup-scroll-bottom', diagnostics));
     }
+
+    const boardAccordion = page.locator('.player_home_block--setup .board-accordion').first();
+    if (await boardAccordion.count() > 0) {
+      await boardAccordion.evaluate((element) => {
+        element.open = true;
+        element.scrollIntoView({block: 'start'});
+      });
+      await page.waitForTimeout(250);
+      setupCaptures.push(await screenshotWithMetrics(page, scenario, viewport, 'setup-board-open', diagnostics));
+    }
   } finally {
     await page.close();
   }
@@ -1435,7 +1453,7 @@ async function collectMetrics(page) {
       .filter((item) => item.clippedByContainer);
     const scrollableSelectors = [
       '.tm-player-rail',
-      '.tm-activity-rail #logpanel-scrollable',
+      '.tm-activity-rail .log-panel > .panel-body',
       '.tm-action-workbench',
       '.tm-card-desk',
       '.tm-card-strip',
@@ -1478,6 +1496,8 @@ async function collectMetrics(page) {
       colonyChoiceClipping,
       workflowActionClipping,
       scrollables,
+      hoverScrollStability: globalThis.__tmVisualHoverScrollStability ?? null,
+      statePreservation: globalThis.__tmVisualStatePreservation ?? null,
     };
   });
 }
@@ -1578,6 +1598,126 @@ async function hoverIfPresent(page, selector) {
   if (locator === undefined) return false;
   await locator.hover({timeout: 2500});
   await page.waitForTimeout(250);
+  return true;
+}
+
+async function firstVisibleInViewport(page, locator) {
+  const viewport = page.viewportSize();
+  const count = await locator.count();
+  for (let idx = 0; idx < count; idx++) {
+    const item = locator.nth(idx);
+    if (!await item.isVisible().catch(() => false)) continue;
+    const box = await item.boundingBox();
+    if (box === null || viewport === null) continue;
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    if (x < 0 || y < 0 || x > viewport.width || y > viewport.height) continue;
+    const receivesPointer = await item.evaluate((element, point) => {
+      const hit = document.elementFromPoint(point.x, point.y);
+      return hit !== null && (element === hit || element.contains(hit));
+    }, {x, y}).catch(() => false);
+    if (receivesPointer) return {locator: item, x, y};
+  }
+  return undefined;
+}
+
+async function hoverCardAndTrackScroll(page, targetSelector, scrollRootSelectors) {
+  await page.evaluate((selectors) => {
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) continue;
+      const maxTop = Math.max(0, element.scrollHeight - element.clientHeight);
+      const maxLeft = Math.max(0, element.scrollWidth - element.clientWidth);
+      if (maxTop > 0) element.scrollTop = Math.min(maxTop, 48);
+      if (maxLeft > 0) element.scrollLeft = Math.min(maxLeft, 72);
+    }
+  }, scrollRootSelectors);
+  await page.waitForTimeout(120);
+
+  const target = await firstVisibleInViewport(page, page.locator(targetSelector));
+  if (target === undefined) return false;
+
+  const snapshot = async () => target.locator.evaluate((element, selectors) => {
+    const roots = [];
+    const add = (candidate, selector) => {
+      if (!(candidate instanceof HTMLElement) || roots.some((item) => item.element === candidate)) return;
+      roots.push({element: candidate, selector});
+    };
+    add(document.scrollingElement, 'document');
+    for (const selector of selectors) add(element.closest(selector) ?? document.querySelector(selector), selector);
+    return roots.map(({element: root, selector}) => ({
+      selector,
+      scrollTop: root.scrollTop,
+      scrollLeft: root.scrollLeft,
+      overflowX: getComputedStyle(root).overflowX,
+      overflowY: getComputedStyle(root).overflowY,
+    }));
+  }, scrollRootSelectors);
+
+  const before = await snapshot();
+  await page.mouse.move(target.x, target.y);
+  await page.waitForTimeout(320);
+  const after = await snapshot();
+  await page.evaluate(({targetSelector, before, after}) => {
+    const delta = after.map((item, index) => ({
+      selector: item.selector,
+      scrollTop: item.scrollTop - (before[index]?.scrollTop ?? item.scrollTop),
+      scrollLeft: item.scrollLeft - (before[index]?.scrollLeft ?? item.scrollLeft),
+      overflowChanged: item.overflowX !== before[index]?.overflowX || item.overflowY !== before[index]?.overflowY,
+    }));
+    globalThis.__tmVisualHoverScrollStability = {targetSelector, before, after, delta};
+  }, {targetSelector, before, after});
+  return true;
+}
+
+async function refreshCardsOverlayAndTrackState(page, _seat, _scenario, game) {
+  if (!await openCardsOverlay(page)) return false;
+  const gallery = await firstVisible(page.locator('.tm-modal .tm-card-gallery'));
+  if (gallery === undefined) return false;
+  const before = await page.evaluate(() => {
+    const setTrackedScroll = (element, top, left) => {
+      if (!(element instanceof HTMLElement)) return null;
+      const maxTop = Math.max(0, element.scrollHeight - element.clientHeight);
+      const maxLeft = Math.max(0, element.scrollWidth - element.clientWidth);
+      element.scrollTop = Math.min(maxTop, top);
+      element.scrollLeft = Math.min(maxLeft, left);
+      return {scrollTop: element.scrollTop, scrollLeft: element.scrollLeft};
+    };
+    return {
+      gallery: setTrackedScroll(document.querySelector('.tm-modal .tm-card-gallery'), 80, 120),
+      cardStrip: setTrackedScroll(document.querySelector('.tm-card-strip'), 0, 120),
+    };
+  });
+  const response = page
+    .waitForResponse((candidate) => new URL(candidate.url()).pathname.endsWith('/api/player'), {timeout: 8000})
+    .catch(() => undefined);
+  const mutation = await mutateSerializedGame(game.id, (serialized) => {
+    serialized.gameAge = Number(serialized.gameAge ?? 0) + 1;
+  });
+  if (!mutation.applied) return false;
+  if (await response === undefined) return false;
+  await page.waitForTimeout(400);
+  const after = await page.evaluate(() => {
+    const modal = document.querySelector('.tm-modal');
+    const gallery = document.querySelector('.tm-modal .tm-card-gallery');
+    const cardStrip = document.querySelector('.tm-card-strip');
+    return {
+      overlayOpen: modal !== null,
+      gallery: gallery instanceof HTMLElement ? {scrollTop: gallery.scrollTop, scrollLeft: gallery.scrollLeft} : null,
+      cardStrip: cardStrip instanceof HTMLElement ? {scrollTop: cardStrip.scrollTop, scrollLeft: cardStrip.scrollLeft} : null,
+    };
+  });
+  await page.evaluate(({before, after}) => {
+    globalThis.__tmVisualStatePreservation = {
+      before,
+      after,
+      scrollUnchanged:
+        after.gallery?.scrollTop === before.gallery?.scrollTop &&
+        after.gallery?.scrollLeft === before.gallery?.scrollLeft &&
+        after.cardStrip?.scrollTop === before.cardStrip?.scrollTop &&
+        after.cardStrip?.scrollLeft === before.cardStrip?.scrollLeft,
+    };
+  }, {before, after});
   return true;
 }
 
@@ -1807,6 +1947,11 @@ async function scrollIntoViewIfPresent(page, selectors) {
 const allShotDefinitions = [
   {name: 'table-active', seat: 'active', coverageTags: ['active-turn', 'table-layout', 'no-overlay']},
   {name: 'table-waiting', seat: 'waiting', coverageTags: ['waiting-turn', 'table-layout', 'opponent-active']},
+  {name: 'waiting-card-hover', seat: 'waiting', prepare: (page) => hoverCardAndTrackScroll(
+    page,
+    '.tm-card-strip .cardbox > .card-container',
+    ['.tm-card-desk', '.tm-card-strip'],
+  ), coverageTags: ['waiting-turn', 'card-hover', 'scroll-stability', 'chromium']},
   {name: 'action-idle', seat: 'active', coverageTags: ['action-panel', 'active-idle']},
   {name: 'action-blue-card', seat: 'active', prepare: async (page) => {
     if (!await selectAction(page, 'Perform an action from a played card')) return false;
@@ -1836,7 +1981,19 @@ const allShotDefinitions = [
   {name: 'action-fund-award', seat: 'active', prepare: (page) => selectAction(page, 'Fund an award'), coverageTags: ['fund-award', 'milestones-awards', 'action-selected']},
   {name: 'action-claim-milestone', seat: 'active', prepare: (page) => selectAction(page, 'Claim a milestone'), coverageTags: ['claim-milestone', 'milestones-awards', 'action-selected']},
   {name: 'action-trade-colony', seat: 'active', prepare: (page) => selectAction(page, 'Trade with a colony tile'), coverageTags: ['colony-trade', 'action-selected', 'extension-choice']},
+  {name: 'action-trade-colony-hover', seat: 'active', prepare: async (page) => {
+    if (!await selectAction(page, 'Trade with a colony tile')) return false;
+    return hoverIfPresent(page, '.tm-colony-card-option');
+  }, coverageTags: ['colony-trade', 'hover-focus', 'colony-card-zoom']},
   {name: 'action-standard-projects', seat: 'active', prepare: (page) => selectAction(page, 'Standard projects'), coverageTags: ['standard-projects', 'action-selected']},
+  {name: 'standard-project-hover', seat: 'active', prepare: async (page) => {
+    if (!await selectAction(page, 'Standard projects')) return false;
+    return hoverCardAndTrackScroll(
+      page,
+      '.tm-project-card-option--standard > .card-container, .tm-project-card-option--standard .card-container',
+      ['.tm-project-card-chooser', '.tm-action-workbench'],
+    );
+  }, coverageTags: ['standard-projects', 'hover-focus', 'two-row-layout', 'scroll-stability']},
   {name: 'action-sell-patents', seat: 'active', prepare: (page) => selectAction(page, 'Sell patents'), coverageTags: ['sell-patents', 'card-selection', 'action-selected']},
   {name: 'milestones-awards-hover', seat: 'active', prepare: (page) => hoverIfPresent(page, '.tm-ma-panel-summary, .tm-ma-panel button, .milestone-award-inline'), coverageTags: ['milestones-awards', 'hover-focus', 'button-affordance']},
   {name: 'milestones-awards-open', seat: 'active', prepare: (page) => clickIfPresent(page, '.tm-ma-panel-summary') || clickTextIfPresent(page, 'Milestones'), coverageTags: ['milestones-awards', 'compact-open', 'claimed-funded-state']},
@@ -1856,11 +2013,17 @@ const allShotDefinitions = [
   {name: 'underworld-open', seat: 'active', prepare: openUnderworldSurface, coverageTags: ['underworld', 'underground-tokens', 'corruption', 'board-tokens', 'player-tokens']},
   {name: 'delta-open', seat: 'active', prepare: (page) => openExtensionSummary(page, ['.tm-extension-panel--delta > summary', '.tm-extension-panel--deltaProject > summary', 'details:has-text("Delta") > summary']), coverageTags: ['delta-project', 'extension-panel']},
   {name: 'tools-open', seat: 'active', prepare: (page) => clickIfPresent(page, '.tm-utility-menu > summary'), coverageTags: ['tools-menu', 'utility-panel']},
-  {name: 'activity-scrolled', seat: 'active', prepare: (page) => scrollSelector(page, '.tm-activity-rail #logpanel-scrollable'), coverageTags: ['log', 'compact-log', 'scrolled-list']},
+  {name: 'activity-scrolled', seat: 'active', prepare: (page) => scrollSelector(page, '.tm-activity-rail .log-panel > .panel-body'), coverageTags: ['log', 'compact-log', 'scrolled-list']},
   {name: 'player-rail-scrolled', seat: 'active', prepare: (page) => scrollSelector(page, '.tm-player-rail'), coverageTags: ['player-rail', 'scrolled-list', 'five-players']},
   {name: 'resized-layout', seat: 'active', prepare: resizeLayout, coverageTags: ['resizing', 'activity-rail', 'cards-tray', 'layout-mechanics']},
   {name: 'bottom-tray-enlarged', seat: 'active', prepare: (page) => resizeBottomTray(page, -120), coverageTags: ['cards-tray', 'resizing']},
+  {name: 'bottom-tray-compressed', seat: 'active', prepare: (page) => resizeBottomTray(page, 140), coverageTags: ['board', 'cards-tray', 'resizing', 'action-panel']},
   {name: 'activity-rail-enlarged', seat: 'active', prepare: (page) => resizeActivityRail(page, -120), coverageTags: ['activity-rail', 'resizing', 'log']},
+  {name: 'activity-rail-collapsed', seat: 'active', prepare: async (page) => {
+    const toggled = await clickIfPresent(page, '.tm-icon-control--activity-toggle');
+    if (toggled) await page.waitForTimeout(300);
+    return toggled;
+  }, coverageTags: ['activity-rail', 'collapsed', 'toggle']},
   {name: 'board-space-hover', seat: 'active', prepare: hoverBoardSpace, coverageTags: ['board-interaction', 'hover-focus', 'space-detail']},
   {name: 'overlay-board', seat: 'active', prepare: openBoardOverlay, coverageTags: ['board', 'full-overlay', 'mars-map']},
   {name: 'overlay-board-ma-open', seat: 'active', prepare: async (page) => {
@@ -1877,6 +2040,7 @@ const allShotDefinitions = [
     if (!await openCardsOverlay(page)) return false;
     return scrollSelector(page, '.tm-card-gallery', 'right');
   }, coverageTags: ['cards', 'full-overlay', 'scrolled-list', 'dense-tableau']},
+  {name: 'overlay-cards-refresh-preserved', seat: 'waiting', prepare: refreshCardsOverlayAndTrackState, coverageTags: ['cards', 'full-overlay', 'refresh', 'state-preservation', 'scroll-stability', 'waiting-turn']},
   {name: 'cards-search-results', seat: 'active', prepare: (page) => prepareCardsSearch(page, 'Mars'), coverageTags: ['cards', 'search', 'search-results']},
   {name: 'cards-search-no-results', seat: 'active', prepare: (page) => prepareCardsSearch(page, 'zzzz-no-card'), coverageTags: ['cards', 'search', 'no-results-empty-state']},
   {name: 'cards-filter-playable', seat: 'active', prepare: (page) => prepareCardsFilter(page, 'Playable'), coverageTags: ['cards', 'filter-playable']},
@@ -1888,7 +2052,7 @@ const allShotDefinitions = [
   {name: 'overlay-log', seat: 'active', prepare: openLogOverlay, coverageTags: ['log', 'full-overlay']},
   {name: 'overlay-log-scrolled', seat: 'active', prepare: async (page) => {
     if (!await openLogOverlay(page)) return false;
-    return scrollSelector(page, '.tm-modal #logpanel-scrollable');
+    return scrollSelector(page, '.tm-modal .log-panel > .panel-body');
   }, coverageTags: ['log', 'full-overlay', 'scrolled-list', 'dense-log']},
   {name: 'overlay-players', seat: 'active', prepare: openPlayersOverlay, coverageTags: ['players', 'full-overlay', 'player-dossier']},
   {name: 'overlay-player-opponent', seat: 'active', prepare: async (page) => {
@@ -1913,7 +2077,7 @@ const allShotDefinitions = [
   }, coverageTags: ['endgame', 'final-board', 'mars-map', 'moon-board']},
   {name: 'endgame-final-log', seat: 'active', prepare: async (page, seat) => {
     await openEndgamePage(page, seat);
-    return scrollIntoViewIfPresent(page, ['#logpanel-scrollable', '.log-panel', '.logpanel']);
+    return scrollIntoViewIfPresent(page, ['.log-panel > .panel-body', '.log-panel', '.logpanel']);
   }, coverageTags: ['endgame', 'final-log', 'dense-log']},
 ];
 
@@ -1927,7 +2091,7 @@ function shotDefinitionsForScenario(scenario) {
     .filter(Boolean);
 }
 
-async function captureShot(context, scenario, viewport, seats, shot) {
+async function captureShot(context, scenario, viewport, seats, shot, game) {
   const seat = seats[shot.seat] ?? seats.active;
   const page = await context.newPage();
   const diagnostics = bindPageDiagnostics(page);
@@ -1948,7 +2112,7 @@ async function captureShot(context, scenario, viewport, seats, shot) {
     await waitForVisualShell(page);
     await page.waitForTimeout(visualSettleMs);
     if (shot.prepare !== undefined) {
-      const prepared = await shot.prepare(page, seat, scenario);
+      const prepared = await shot.prepare(page, seat, scenario, game);
       if (prepared === false) {
         result.skipped = true;
         result.reason = 'selector not present for this scenario/state';
@@ -2024,7 +2188,7 @@ async function captureStage(browser, scenario, scenarioSummary, game, stageName)
     const context = await browser.newContext({viewport: {width: viewport.width, height: viewport.height}, deviceScaleFactor: 1});
     for (const shot of stageShotDefinitions) {
       const namedShot = {...shot, baseName: shot.name, name: `${stageName}-${shot.name}`};
-      stage.captures.push(await captureShot(context, scenario, viewport, seats, namedShot));
+      stage.captures.push(await captureShot(context, scenario, viewport, seats, namedShot, game));
     }
     await context.close();
   }
@@ -2172,6 +2336,17 @@ function collectVisualNotes(summary) {
     if ((metrics.workflowActionClipping ?? []).length > 0) {
       const titles = metrics.workflowActionClipping.map((item) => item.title).slice(0, 4).join(', ');
       notes.push({...context, message: `workflow action buttons exceed command detail: ${titles}`});
+    }
+    const unstableHoverRoots = (metrics.hoverScrollStability?.delta ?? []).filter((item) => (
+      Math.abs(item.scrollTop) > 1 || Math.abs(item.scrollLeft) > 1 || item.overflowChanged
+    ));
+    if (unstableHoverRoots.length > 0) {
+      notes.push({...context, message: `card hover changed scroll state: ${JSON.stringify(unstableHoverRoots)}`});
+    }
+    if (metrics.statePreservation !== null && (
+      metrics.statePreservation.after?.overlayOpen !== true || metrics.statePreservation.scrollUnchanged !== true
+    )) {
+      notes.push({...context, message: `overlay state changed across player refresh: ${JSON.stringify(metrics.statePreservation)}`});
     }
   };
 

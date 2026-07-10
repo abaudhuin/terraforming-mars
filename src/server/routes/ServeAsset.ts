@@ -16,6 +16,11 @@ const DEFAULT_ASSET_CACHE_MAX_AGE_SECONDS = 14400;
 const DEFAULT_EDGE_ASSET_CACHE_MAX_AGE_SECONDS = 86400;
 const VERSIONED_ASSET_CACHE_MAX_AGE_SECONDS = 31536000;
 
+function isPathInside(root: string, file: string): boolean {
+  const relative = path.relative(root, file);
+  return relative === '' || (relative.startsWith('..') === false && path.isAbsolute(relative) === false);
+}
+
 export class FileAPI {
   public static readonly INSTANCE: FileAPI = new FileAPI();
 
@@ -184,10 +189,18 @@ export class ServeAsset extends Handler {
       if (urlPath.startsWith('chunks/')) {
         const chunksRoot = path.resolve('./build/chunks');
         const resolvedFile = path.resolve(path.normalize('build/' + urlPath));
-        if (resolvedFile.startsWith(chunksRoot)) {
+        if (isPathInside(chunksRoot, resolvedFile)) {
           if (urlPath.endsWith('.js') || urlPath.endsWith('.js.map')) {
             return this.toMainFile(urlPath, encodings);
           }
+        }
+      }
+
+      if (urlPath.startsWith('assets/')) {
+        const buildAssetsRoot = path.resolve('./build/assets');
+        const resolvedBuildFile = path.resolve(path.normalize('build/' + urlPath));
+        if (isPathInside(buildAssetsRoot, resolvedBuildFile) && this.fileApi.existsSync('build/' + urlPath)) {
+          return this.toMainFile(urlPath, encodings);
         }
       }
 

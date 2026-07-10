@@ -13,7 +13,7 @@
       <span class="label-additional" v-if="players.length === 1"><span :class="lastGenerationClass()" v-i18n>of {{lastSoloGeneration}}</span></span>
     </div>
     <div class="panel log-panel">
-      <div id="logpanel-scrollable" class="panel-body">
+      <div ref="scrollablePanel" class="panel-body">
         <ul v-if="messages">
           <LogMessageComponent v-for="(message, index) in visibleMessages" :key="index" :class="getLogMessageClasses(message)" :message="message" :viewModel="viewModel" @click="messageClicked(message)" @spaceClicked="spaceClicked"/>
         </ul>
@@ -40,12 +40,13 @@ import LogMessageComponent from '@/client/components/logpanel/LogMessageComponen
 import CardPanel from '@/client/components/logpanel/CardPanel.vue';
 import {isMarsSpace} from '@/common/boards/spaces';
 
-let logAbortController: AbortController | undefined;
-
 type LogPanelModel = {
   messages: Array<LogMessage>,
   selectedGeneration: number,
   selectedMessage: LogMessage | undefined,
+  lastKnownGeneration: number,
+  showingRecentHistory: boolean,
+  logAbortController: AbortController | undefined,
 };
 
 type CardPanelMode = 'inline' | 'emit' | 'off';
@@ -98,6 +99,9 @@ export default defineComponent({
       messages: [],
       selectedGeneration: -1,
       selectedMessage: undefined,
+      lastKnownGeneration: -1,
+      showingRecentHistory: false,
+      logAbortController: undefined,
     };
   },
   components: {
@@ -128,7 +132,6 @@ export default defineComponent({
     getLogMessageClasses(message: LogMessage): Record<string, boolean> {
       const previewable = this.cardPanelMode !== 'off' && this.messageHasPreview(message);
       return {
-        'log-message--previewable': previewable,
         'log-message--selected': previewable && this.cardPanelMode === 'inline' && this.selectedMessage === message,
       };
     },
@@ -158,6 +161,7 @@ export default defineComponent({
     selectGeneration(gen: number): void {
       if (gen !== this.selectedGeneration) {
         this.selectedMessage = undefined;
+        this.showingRecentHistory = false;
         this.getLogsForGeneration(gen);
       }
       this.selectedGeneration = gen;
@@ -171,13 +175,13 @@ export default defineComponent({
     replaceMessages(url: string, scrollToEnd: boolean): void {
       const messages = this.messages;
       // abort any pending requests
-      if (logAbortController) {
-        logAbortController.abort();
-        logAbortController = undefined;
+      if (this.logAbortController) {
+        this.logAbortController.abort();
+        this.logAbortController = undefined;
       }
 
       const controller = new AbortController();
-      logAbortController = controller;
+      this.logAbortController = controller;
 
       fetch(url, {signal: controller.signal})
         .then((resp) => {
@@ -191,14 +195,22 @@ export default defineComponent({
           if (!data) {
             return;
           }
+          const scrollState = this.getScrollState();
           messages.splice(0, messages.length);
           messages.push(...data);
           if (getPreferences().enable_sounds && window.location.search.includes('experimental=1') ) {
             SoundManager.newLog();
           }
-          if (scrollToEnd) {
-            this.$nextTick(this.scrollToEnd);
-          }
+          this.$nextTick(() => {
+            if (scrollToEnd && scrollState.pinnedToBottom) {
+              this.scrollToEnd();
+            } else {
+              const scrollablePanel = this.getScrollablePanel();
+              if (scrollablePanel !== undefined) {
+                scrollablePanel.scrollTop = scrollState.scrollTop;
+              }
+            }
+          });
         })
         .catch((err) => {
           if (err.name === 'AbortError') {
@@ -206,12 +218,44 @@ export default defineComponent({
             return;
           }
           console.error('error updating messages, unable to reach server');
+        })
+        .finally(() => {
+          if (this.logAbortController === controller) {
+            this.logAbortController = undefined;
+          }
         });
     },
+    getScrollablePanel(): HTMLElement | undefined {
+      return this.$refs.scrollablePanel as HTMLElement | undefined;
+    },
+    getScrollState(): {scrollTop: number, pinnedToBottom: boolean} {
+      const scrollablePanel = this.getScrollablePanel();
+      if (scrollablePanel === undefined) {
+        return {scrollTop: 0, pinnedToBottom: true};
+      }
+      const distanceFromBottom = scrollablePanel.scrollHeight - scrollablePanel.clientHeight - scrollablePanel.scrollTop;
+      return {
+        scrollTop: scrollablePanel.scrollTop,
+        pinnedToBottom: distanceFromBottom <= 4,
+      };
+    },
     scrollToEnd() {
-      const scrollablePanel = document.getElementById('logpanel-scrollable');
-      if (scrollablePanel !== null) {
+      const scrollablePanel = this.getScrollablePanel();
+      if (scrollablePanel !== undefined) {
         scrollablePanel.scrollTop = scrollablePanel.scrollHeight;
+      }
+    },
+    refreshForStepChange() {
+      const wasViewingLatest = this.selectedGeneration === this.lastKnownGeneration;
+      this.lastKnownGeneration = this.generation;
+      if (wasViewingLatest) {
+        this.selectedGeneration = this.generation;
+      }
+
+      if (this.showingRecentHistory && wasViewingLatest) {
+        this.getLogsForRecentHistory();
+      } else {
+        this.getLogsForGeneration(this.selectedGeneration);
       }
     },
     getClassesGenIndicator(gen: number): string {
@@ -270,11 +314,22 @@ export default defineComponent({
   },
   mounted() {
     this.selectedGeneration = this.generation;
+    this.lastKnownGeneration = this.generation;
+    this.showingRecentHistory = this.recentHistory;
     if (this.recentHistory) {
       this.getLogsForRecentHistory();
     } else {
       this.getLogsForGeneration(this.generation);
     }
+  },
+  beforeUnmount() {
+    this.logAbortController?.abort();
+    this.logAbortController = undefined;
+  },
+  watch: {
+    step() {
+      this.refreshForStepChange();
+    },
   },
 });
 

@@ -36,6 +36,8 @@
 }
 
 .resource_item_stock_count {
+  position: relative;
+  z-index: 4;
   font-size: 30px;
   text-align: center;
   line-height: 1;
@@ -70,19 +72,24 @@
 }
 
 .resource_icon--megacredit-value {
-  background-image: url(./assets/resources/megacredit.png);
-  background-size: 20px 20px;
-  width: 20px;
-  height: 20px;
-  color: black;
-  font-size: 15px;
+  min-width: 24px;
+  height: 15px;
+  margin-left: 4px;
+  padding: 0 3px;
+  border: 1px solid rgba(255, 204, 100, 0.32);
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 204, 100, 0.16);
+  color: #ffdd7a;
+  font-size: 10px;
   font-style: normal;
   font-family: Prototype, sans-serif;
-  line-height: 21px;
-  margin-left: -14px;
-  margin-top: -37px;
+  line-height: 1;
   text-align: center;
-  position: relative;
+  vertical-align: top;
+  position: static;
 }
 
 @resource_types: titanium, steel, heat, data, science, seed, graphene, asteroid, hydroelectric-resource;

@@ -169,9 +169,10 @@ describe('Player', () => {
     player2.playCard(card, undefined);
     expect(player1.production.megacredits).to.eq(1);
   });
-  it('Chains onend functions from player inputs', function(done) {
+  it('Chains onend functions from player inputs', () => {
     const player = new Player('blue', 'blue', false, 0, 'p-blue');
     Game.newInstance('gameid', [player], player, 'spectatorid');
+    let onEndCount = 0;
     const mockOption3 = new SelectOption('Mock select option 3').andThen(() => {
       return undefined;
     });
@@ -181,13 +182,20 @@ describe('Player', () => {
     const mockOption = new SelectOption('Mock select option').andThen(() => {
       return mockOption2;
     });
-    player.setWaitingFor(mockOption, done);
+    player.setWaitingFor(mockOption, () => {
+      onEndCount++;
+    });
     player.process({type: 'option'});
+    expect(onEndCount).eq(1);
+    expect(player.getWaitingFor()).to.be.undefined;
+    runAllActions(player.game);
     expect(player.getWaitingFor()).not.to.be.undefined;
     player.process({type: 'option'});
+    expect(onEndCount).eq(1);
     expect(player.getWaitingFor()).not.to.be.undefined;
     player.process({type: 'option'});
     expect(player.getWaitingFor()).to.be.undefined;
+    expect(onEndCount).eq(1);
   });
   it('Omits buffer gas for non solo games', () => {
     const player = new Player('blue', 'blue', false, 0, 'p-blue');

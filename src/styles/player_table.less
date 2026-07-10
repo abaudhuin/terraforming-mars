@@ -567,7 +567,7 @@
       line-height: 1.35;
     }
 
-    #logpanel-scrollable {
+    .log-panel > .panel-body {
       height: 100%;
       overflow-y: auto;
       padding-right: 4px;
@@ -1044,7 +1044,6 @@
   .hiding-card-button,
   .tm-ma-panel-summary,
   .tm-table-leaf-summary,
-  .tm-action-hand-button,
   .tm-extension-panel > summary,
   .wf-command-inline-submit,
   .wf-component-actions .btn-submit,
@@ -1067,8 +1066,6 @@
   .tm-ma-panel-summary:focus,
   .tm-table-leaf-summary:hover,
   .tm-table-leaf-summary:focus,
-  .tm-action-hand-button:hover,
-  .tm-action-hand-button:focus,
   .tm-extension-panel > summary:hover,
   .tm-extension-panel > summary:focus {
     border-color: var(--tm-control-border-hover);
@@ -1078,6 +1075,8 @@
   }
 
   .tm-control {
+    position: relative;
+    isolation: isolate;
     min-height: 28px;
     padding: 0 10px;
     display: inline-flex;
@@ -1101,6 +1100,27 @@
     }
   }
 
+  .tm-control-badge {
+    position: relative;
+    z-index: 1;
+    min-width: 18px;
+    height: 18px;
+    margin-left: 1px;
+    padding: 0 5px;
+    border: 1px solid rgba(255, 224, 153, 0.5);
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    background: #c77c2d;
+    color: #fff8e8;
+    font-family: Ubuntu, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.72);
+    pointer-events: none;
+  }
+
   .tm-control--board::before {
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18'/%3E%3C/svg%3E");
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18'/%3E%3C/svg%3E");
@@ -1117,6 +1137,7 @@
   }
 
   .tm-icon-control {
+    position: relative;
     width: 30px;
     height: 30px;
     min-width: 30px;
@@ -1128,9 +1149,13 @@
 
     > span,
     > .icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
       width: 17px;
       height: 17px;
       display: block;
+      transform: translate(-50%, -50%);
       background: currentColor;
       mask: center / contain no-repeat;
       -webkit-mask: center / contain no-repeat;
@@ -1144,14 +1169,14 @@
 
   .tm-panel-icon-button.tm-icon-control--activity-toggle > span,
   .tm-icon-control--activity-toggle > span {
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 6l-6 6 6 6'/%3E%3Cpath d='M20 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 6l-6 6 6 6'/%3E%3Cpath d='M20 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 6l6 6-6 6'/%3E%3Cpath d='M4 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 6l6 6-6 6'/%3E%3Cpath d='M4 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
   }
 
   .tm-panel-icon-button.tm-icon-control--activity-toggle-open > span,
   .tm-icon-control--activity-toggle-open > span {
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 6l6 6-6 6'/%3E%3Cpath d='M4 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 6l6 6-6 6'/%3E%3Cpath d='M4 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 6l-6 6 6 6'/%3E%3Cpath d='M20 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 6l-6 6 6 6'/%3E%3Cpath d='M20 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat;
   }
 
   .tm-icon-control--close > span,
@@ -2746,7 +2771,7 @@
     margin: 0 0 10px;
   }
 
-  .tm-modal--log #logpanel-scrollable {
+  .tm-modal--log .log-panel > .panel-body {
     height: calc(100% - 8px);
     overflow: auto;
   }
@@ -2776,7 +2801,7 @@
     grid-template-rows: minmax(0, 1fr);
   }
 
-  .log-container--compact #logpanel-scrollable {
+  .log-container--compact .log-panel > .panel-body {
     height: 100%;
     overflow: auto;
   }
@@ -3437,10 +3462,10 @@
     position: relative;
     // Preserve the board's fixed background-to-tile offsets by preventing child margin collapse.
     display: flow-root;
-    height: 573px;
+    height: 470px;
     margin: 12px auto 0;
     overflow: visible;
-    transform: translateY(-62px) scale(0.82);
+    transform: scale(0.82);
     transform-origin: top center;
   }
 
@@ -3705,7 +3730,7 @@
   }
 
   .tm-table-main {
-    grid-template-columns: 302px minmax(0, 1fr) var(--tm-activity-width, 310px);
+    grid-template-columns: 332px minmax(0, 1fr) var(--tm-activity-width, 310px);
     gap: 6px;
   }
 
@@ -3902,6 +3927,8 @@
 
     .resource_item_stock_count {
       font-size: 18px;
+      position: relative;
+      z-index: 4;
       text-align: left;
     }
 
@@ -3975,9 +4002,21 @@
 
   .tm-board-stage {
     display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
     place-items: center;
     padding: 6px;
     overflow: hidden;
+
+    > .tm-game-board-view {
+      grid-area: 1 / 1;
+    }
+
+    > .tm-board-expand-button {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 30;
+    }
 
     .tm-game-board-view,
     .tm-mars-board-surface {
@@ -3990,8 +4029,14 @@
 
     .tm-mars-board-surface {
       display: grid;
+      grid-template: minmax(0, 1fr) / minmax(0, 1fr);
       place-items: center;
       overflow: hidden;
+    }
+
+    .tm-mars-board-surface > .player_home_anchor,
+    .tm-mars-board-surface > .board-cont {
+      grid-area: 1 / 1;
     }
 
     .board-cont {
@@ -4642,7 +4687,6 @@
   .tm-icon-control,
   .tm-ma-panel-summary,
   .tm-table-leaf-summary,
-  .tm-action-hand-button,
   .tm-extension-panel > summary,
   .hiding-card-button {
     border: 1px solid var(--tm-control-border);
@@ -4659,8 +4703,6 @@
   .tm-ma-panel-summary:focus,
   .tm-table-leaf-summary:hover,
   .tm-table-leaf-summary:focus,
-  .tm-action-hand-button:hover,
-  .tm-action-hand-button:focus,
   .tm-extension-panel > summary:hover,
   .tm-extension-panel > summary:focus,
   .hiding-card-button:hover,
@@ -4672,6 +4714,7 @@
   }
 
   .tm-icon-control {
+    position: relative;
     width: 30px;
     height: 30px;
     min-width: 30px;
@@ -4683,9 +4726,13 @@
 
     > span,
     > .icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
       width: 17px;
       height: 17px;
       display: block;
+      transform: translate(-50%, -50%);
       background: currentColor;
       mask: center / contain no-repeat;
       -webkit-mask: center / contain no-repeat;
@@ -4699,14 +4746,14 @@
 
   .tm-panel-icon-button.tm-icon-control--activity-toggle > span,
   .tm-icon-control--activity-toggle > span {
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 6l-6 6 6 6'/%3E%3Cpath d='M20 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 6l-6 6 6 6'/%3E%3Cpath d='M20 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 6l6 6-6 6'/%3E%3Cpath d='M4 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 6l6 6-6 6'/%3E%3Cpath d='M4 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
   }
 
   .tm-panel-icon-button.tm-icon-control--activity-toggle-open > span,
   .tm-icon-control--activity-toggle-open > span {
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 6l6 6-6 6'/%3E%3Cpath d='M4 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 6l6 6-6 6'/%3E%3Cpath d='M4 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 6l-6 6 6 6'/%3E%3Cpath d='M20 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 6l-6 6 6 6'/%3E%3Cpath d='M20 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat;
   }
 
   .tm-icon-control--close > span,
@@ -5892,13 +5939,20 @@
     place-content: start;
     gap: 7px 9px;
     overflow: auto;
-    padding: 0 6px 2px 0;
-    scroll-padding-bottom: 12px;
+    padding: 0 6px 6px 0;
+    scroll-padding-bottom: 54px;
+  }
+
+  .tm-action-workbench .wf-component--trade-colony {
+    align-content: flex-start;
+    padding-bottom: 0;
   }
 
   .tm-action-workbench .wf-component--select-colony > .wf-component-title {
-    flex: 1 1 280px;
+    flex: 0 0 100%;
+    width: 100%;
     min-width: 0;
+    order: 0;
     padding: 6px 9px;
     font-size: 17px;
     line-height: 1;
@@ -5908,26 +5962,101 @@
     flex: 0 0 auto;
   }
 
+  .tm-action-workbench .wf-component--trade-colony > .wf-component-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    flex: 0 0 100%;
+    width: 100%;
+    order: 2;
+    min-height: 46px;
+    margin-top: auto;
+    padding: 7px 0 0;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    background: linear-gradient(to bottom, rgba(17, 19, 20, 0), rgba(17, 19, 20, 0.98) 38%);
+  }
+
   .tm-action-workbench .tm-colony-trade-status {
-    flex: 999 1 520px;
-    min-height: 42px;
-    padding: 7px 9px;
+    flex: 0 0 100%;
+    order: 0;
+    min-height: 64px;
+    padding: 8px 10px;
     border: 1px solid var(--tm-border-soft);
     border-radius: 6px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: minmax(190px, 0.36fr) minmax(280px, 1fr) auto;
+    align-items: stretch;
+    gap: 8px;
     background: rgba(255, 255, 255, 0.035);
     color: var(--tm-muted);
     box-sizing: border-box;
   }
 
-  .tm-action-workbench .tm-colony-trade-fleets,
+  .tm-action-workbench .tm-colony-trade-heading,
+  .tm-action-workbench .tm-colony-trade-fleet-board,
   .tm-action-workbench .tm-colony-visitor-list {
     display: flex;
     align-items: center;
     gap: 6px;
     min-width: 0;
+  }
+
+  .tm-action-workbench .tm-colony-trade-heading {
+    align-items: stretch;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .tm-action-workbench .tm-colony-trade-title {
+    min-width: 0;
+    color: var(--tm-text);
+    font-family: Prototype, sans-serif;
+    font-size: 15px;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tm-action-workbench .tm-colony-trade-fleet-board {
+    flex-wrap: wrap;
+    align-content: center;
+  }
+
+  .tm-action-workbench .tm-colony-player-fleets {
+    min-height: 38px;
+    min-width: 0;
+    padding: 2px 6px 2px 2px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.18);
+  }
+
+  .tm-action-workbench .tm-colony-player-fleets--self {
+    border-color: rgba(255, 204, 100, 0.45);
+    background: rgba(255, 204, 100, 0.08);
+  }
+
+  .tm-action-workbench .tm-colony-player-name {
+    max-width: 88px;
+    min-height: 20px;
+    padding: 0 6px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    color: white;
+    font-family: Prototype, sans-serif;
+    font-size: 11px;
+    line-height: 1;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .tm-action-workbench .tm-colony-trade-status-label,
@@ -5945,20 +6074,21 @@
 
   .tm-action-workbench .tm-colony-fleet-slots {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 2px;
   }
 
   .tm-action-workbench .tm-colony-fleet-token {
-    width: 31px;
-    height: 31px;
+    width: 32px;
+    height: 32px;
     display: inline-block;
     overflow: hidden;
     flex: 0 0 auto;
   }
 
   .tm-action-workbench .tm-colony-fleet-token > .colonies-fleet {
-    transform: scale(0.44);
+    transform: scale(0.46);
     transform-origin: top left;
   }
 
@@ -5968,17 +6098,17 @@
   }
 
   .tm-action-workbench .tm-colony-fleet-token--visitor {
-    width: 23px;
-    height: 23px;
+    width: 28px;
+    height: 28px;
   }
 
   .tm-action-workbench .tm-colony-fleet-token--visitor > .colonies-fleet {
-    transform: scale(0.33);
+    transform: scale(0.4);
   }
 
   .tm-action-workbench .tm-colony-visitor-chip,
   .tm-action-workbench .tm-colony-selected-summary {
-    min-height: 28px;
+    min-height: 34px;
     padding: 0 8px;
     border-radius: 5px;
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -5991,7 +6121,6 @@
   }
 
   .tm-action-workbench .tm-colony-selected-summary {
-    margin-left: auto;
     color: var(--tm-accent);
   }
 
@@ -6003,9 +6132,9 @@
   .tm-action-workbench .wf-component--select-colony > label.tm-colony-card-option {
     flex: 0 0 238px;
     width: 238px;
-    height: 164px;
+    height: 140px;
     min-width: 238px;
-    min-height: 164px;
+    min-height: 140px;
     order: 1;
     margin: 0;
     overflow: visible;
@@ -6022,10 +6151,23 @@
     margin: 0;
     transform: scale(0.49);
     transform-origin: top left;
+    transition: transform 140ms ease, filter 140ms ease;
+    will-change: transform;
   }
 
   .tm-action-workbench .tm-colony-card-option {
     position: relative;
+  }
+
+  .tm-action-workbench .wf-component--select-colony > label.tm-colony-card-option:hover,
+  .tm-action-workbench .wf-component--select-colony > label.tm-colony-card-option:focus-within {
+    z-index: 14;
+  }
+
+  .tm-action-workbench .wf-component--select-colony > label.tm-colony-card-option:hover > .colony-card,
+  .tm-action-workbench .wf-component--select-colony > label.tm-colony-card-option:focus-within > .colony-card {
+    transform: scale(0.49);
+    filter: drop-shadow(0 14px 20px rgba(0, 0, 0, 0.42));
   }
 
   .tm-action-workbench .tm-colony-card-option--selected > .colony-card {
@@ -6305,17 +6447,10 @@
   }
 
   &.tm-player-table--second-pass:not(.tm-player-table--setup) {
-    .log-panel .log-message--previewable {
+    .log-panel .log-message--selected {
       margin-left: -5px;
       padding: 2px 5px;
       border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 120ms ease, box-shadow 120ms ease;
-    }
-
-    .log-panel .log-message--previewable:hover,
-    .log-panel .log-message--previewable:focus,
-    .log-panel .log-message--selected {
       background: rgba(255, 204, 100, 0.12);
       box-shadow: inset 0 0 0 1px rgba(255, 204, 100, 0.2);
       outline: none;
@@ -6326,7 +6461,7 @@
       gap: 10px;
     }
 
-    .tm-modal--log .log-container--has-preview #logpanel-scrollable {
+    .tm-modal--log .log-container--has-preview .log-panel > .panel-body {
       height: 100%;
     }
 
@@ -6599,16 +6734,6 @@
     }
   }
 
-  .tm-card-strip .card-container.card-hover-tall:hover .card-content:not(.global-event-card-content),
-  .tm-card-gallery .card-container.card-hover-tall:hover .card-content:not(.global-event-card-content),
-  .wf-component--select-card .card-container.card-hover-tall:hover .card-content:not(.global-event-card-content),
-  .tm-project-card-option .card-container.card-hover-tall:hover .card-content:not(.global-event-card-content),
-  .tm-log-preview-desk .card-container.card-hover-tall:hover .card-content:not(.global-event-card-content) {
-    height: auto;
-    min-height: 218px;
-    overflow: visible;
-    padding-bottom: 8px;
-  }
 }
 
 #player-home.tm-player-table.tm-player-table--second-pass:not(.tm-player-table--setup) {
@@ -6717,7 +6842,7 @@
     }
 
     .player-info--self .player-status {
-      grid-template-columns: minmax(0, 1fr) 114px;
+      grid-template-columns: minmax(0, 1fr) 108px;
       gap: 4px;
     }
 
@@ -6761,7 +6886,7 @@
     .player-info--self .resource_item_stock,
     .player-info--opponent .resource_item_stock {
       display: grid;
-      grid-template-columns: 17px minmax(0, 1fr);
+      grid-template-columns: 18px minmax(0, 1fr);
       place-items: center start;
       gap: 2px;
     }
@@ -6776,6 +6901,8 @@
     .resource_item_stock_count,
     .player-info--self .resource_item_stock_count,
     .player-info--opponent .resource_item_stock_count {
+      position: relative;
+      z-index: 4;
       font-size: 14px;
       line-height: 15px;
       text-align: left;
@@ -6796,16 +6923,14 @@
     }
 
     .resource_icon--megacredit-value {
-      position: absolute;
-      z-index: 3;
-      top: -19px;
-      right: -2px;
-      width: 14px;
-      height: 14px;
-      margin: 0;
-      background-size: 14px 14px;
-      font-size: 10px;
-      line-height: 15px;
+      position: static;
+      z-index: auto;
+      min-width: 16px;
+      height: 10px;
+      margin: 0 0 0 2px;
+      padding: 0 2px;
+      font-size: 7px;
+      line-height: 10px;
     }
 
     .player-info--opponent .player-tags,
@@ -6894,6 +7019,7 @@
 
     .player-info--self .tag-count-display {
       position: absolute;
+      z-index: 4;
       right: -2px;
       bottom: -1px;
       min-width: 13px;
@@ -7301,31 +7427,35 @@
   .tm-board-stage .tm-table-leaf--colonies[open] .colonies-fleets-cont {
     position: absolute;
     z-index: 3;
-    top: 6px;
+    top: 1px;
     left: 98px;
-    height: 24px;
+    max-width: calc(100% - 150px);
+    height: 36px;
     margin: 0;
-    padding: 2px 7px;
+    padding: 1px 6px;
     border: 1px solid var(--tm-control-border);
     border-radius: 6px;
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
     background: rgba(255, 255, 255, 0.07);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
     overflow: hidden;
   }
 
   .tm-board-stage .tm-table-leaf--colonies[open] .colonies-player-fleets {
-    width: 24px;
-    height: 24px;
-    display: inline-block;
+    width: auto;
+    min-width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: flex-start;
   }
 
   .tm-board-stage .tm-table-leaf--colonies[open] .colonies-fleet {
-    transform: scale(0.34);
+    transform: scale(0.46);
     transform-origin: top left;
-    margin: 0 -46px -46px 0;
+    margin: 0 -38px -38px 0;
   }
 
   .tm-board-stage .tm-table-leaf--colonies[open] .player_home_colony_cont {
@@ -7419,7 +7549,7 @@
     height: 100%;
   }
 
-  .tm-activity-rail #logpanel-scrollable {
+  .tm-activity-rail .log-panel > .panel-body {
     min-height: 0;
     height: 100%;
   }
@@ -7459,16 +7589,12 @@
   }
 
   .tm-player-dossier-summary .resource_icon--megacredit-value {
-    position: absolute;
-    top: 23px;
-    right: auto;
-    left: 25px;
-    width: 16px;
-    height: 16px;
-    margin: 0;
-    background-size: 16px 16px;
-    font-size: 10px;
-    line-height: 16px;
+    position: static;
+    min-width: 20px;
+    height: 13px;
+    margin-left: 4px;
+    font-size: 9px;
+    line-height: 13px;
   }
 
   .tm-player-dossier-summary .player-tags {
@@ -7570,114 +7696,6 @@
   .tm-action-workbench > .tm-panel-heading {
     position: relative;
     z-index: 14;
-  }
-
-  .tm-action-hand-button {
-    min-height: 24px;
-    margin-left: auto;
-    padding: 0 9px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    color: var(--tm-muted);
-    font-family: Prototype, sans-serif;
-    font-size: 12px;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  .tm-action-hand-button--open {
-    border-color: var(--tm-control-border-hover);
-    background: var(--tm-control-bg-hover);
-    color: var(--tm-accent);
-  }
-
-  .tm-action-hand-button small {
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    border-radius: 5px;
-    display: inline-grid;
-    place-items: center;
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--tm-text);
-    font-family: Ubuntu, sans-serif;
-    font-size: 11px;
-  }
-
-  .tm-action-hand-drawer {
-    position: absolute;
-    z-index: 13;
-    inset: 30px 8px 8px;
-    min-height: 0;
-    display: grid;
-    grid-template-rows: 34px minmax(0, 1fr);
-    border: 1px solid var(--tm-control-border-hover);
-    border-radius: 7px;
-    background: rgba(8, 9, 10, 0.98);
-    box-shadow: 0 -16px 38px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
-  }
-
-  .tm-action-hand-header {
-    min-width: 0;
-    padding: 0 8px 0 11px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    border-bottom: 1px solid var(--tm-border-soft);
-    color: var(--tm-accent);
-    font-family: Prototype, sans-serif;
-    font-size: 13px;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  .tm-action-hand-header > div {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .tm-action-hand-header small {
-    color: var(--tm-muted);
-    font-family: Ubuntu, sans-serif;
-    font-size: 11px;
-  }
-
-  .tm-action-hand-close {
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
-    min-height: 24px;
-  }
-
-  .tm-action-hand-gallery {
-    min-width: 0;
-    min-height: 0;
-    padding: 10px 10px 14px;
-    display: flex;
-    flex-flow: row nowrap;
-    align-items: flex-start;
-    gap: 10px;
-    overflow: auto hidden;
-  }
-
-  .tm-action-hand-gallery > .cardbox {
-    flex: 0 0 212px;
-    width: 212px;
-    height: 326px;
-    margin: 0;
-    overflow: visible;
-  }
-
-  .tm-action-hand-gallery > .cardbox > .card-container {
-    margin: 0;
-    transform: scale(0.87);
-    transform-origin: top left;
   }
 
   .tm-board-stage .tm-extension-panel--turmoil {
@@ -7810,13 +7828,14 @@
 
   .tm-action-workbench .wf-component--select-colony > .wf-component-title.nofloat,
   .tm-action-workbench .wf-component--select-colony > .wf-component-title {
-    flex: 1 1 280px;
-    width: auto;
-    max-width: none;
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .tm-action-workbench .wf-component--select-colony > .tm-colony-trade-status {
-    flex: 999 1 520px;
+    flex: 0 0 100%;
   }
 
   .tm-action-workbench .wf-component--select-card > .wf-component-actions.nofloat,
@@ -7843,8 +7862,20 @@
   }
 
   .tm-action-workbench .wf-component--select-card > label.cardbox:has(.colony-card) {
-    height: 164px;
-    min-height: 164px;
+    flex: 0 0 238px;
+    width: 238px;
+    min-width: 238px;
+    height: 140px;
+    min-height: 140px;
+    order: 1;
+  }
+}
+
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-colony) {
+  --tm-bottom-height: clamp(456px, 52vh, 500px);
+
+  @media (max-height: 820px) {
+    --tm-bottom-height: 430px;
   }
 }
 
@@ -7963,6 +7994,35 @@
   .tm-board-stage .board-cont {
     transform-origin: center center;
   }
+
+  // These are the deliberate card/list scroll roots. Keep their identity and
+  // scrollbar allocation stable while descendants hover or receive focus.
+  .tm-card-desk,
+  .tm-card-strip,
+  .tm-action-workbench,
+  .tm-action-workbench .wf-component--select-card,
+  .tm-action-workbench .tm-project-card-chooser,
+  .tm-log-preview-desk .card-panel,
+  .tm-player-log-preview .card-panel,
+  .tm-modal-body,
+  .tm-modal .tm-card-gallery {
+    overflow-anchor: none;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  // Tall-card expansion is useful in a full gallery, but in compact/action
+  // surfaces it changes layout beneath the pointer and can move the scroll
+  // anchor. Keep long content inside the card's existing content viewport.
+  .tm-card-strip .card-container.card-hover-tall:not(.card-standard-project):hover .card-content:not(.global-event-card-content):not(.card-content-corporation),
+  .tm-action-workbench .card-container.card-hover-tall:not(.card-standard-project):hover .card-content:not(.global-event-card-content):not(.card-content-corporation),
+  .tm-log-preview-desk .card-container.card-hover-tall:not(.card-standard-project):hover .card-content:not(.global-event-card-content):not(.card-content-corporation),
+  .tm-player-log-preview .card-container.card-hover-tall:not(.card-standard-project):hover .card-content:not(.global-event-card-content):not(.card-content-corporation) {
+    height: 226px !important;
+    min-height: 0;
+    overflow: hidden auto !important;
+    padding-bottom: 0;
+  }
 }
 
 #player-home.tm-player-table.tm-player-table--magnify-cards,
@@ -7973,9 +8033,8 @@
   }
 
   .filterDiv.card-container {
-    transition: transform 140ms ease, filter 140ms ease, box-shadow 140ms ease;
+    transition: filter 140ms ease, box-shadow 140ms ease;
     transform-origin: center top;
-    will-change: transform;
   }
 
   .cardbox > .card-container,
@@ -7990,58 +8049,12 @@
     z-index: 520;
   }
 
-  .tm-bottom-tray:has(.card-container:hover),
-  .tm-bottom-tray:has(.card-container:focus-within),
-  .tm-bottom-tray > section:has(.card-container:hover),
-  .tm-bottom-tray > section:has(.card-container:focus-within),
-  .tm-card-desk:has(.card-container:hover),
-  .tm-card-desk:has(.card-container:focus-within),
-  .tm-card-zone:has(.card-container:hover),
-  .tm-card-zone:has(.card-container:focus-within),
-  .tm-card-strip:has(.card-container:hover),
-  .tm-card-strip:has(.card-container:focus-within),
-  .tm-action-workbench:has(.card-container:hover),
-  .tm-action-workbench:has(.card-container:focus-within),
-  .tm-action-workbench > div:has(.card-container:hover),
-  .tm-action-workbench > div:has(.card-container:focus-within),
-  .wf-command-detail:has(.card-container:hover),
-  .wf-command-detail:has(.card-container:focus-within),
-  .wf-component--select-card:has(.card-container:hover),
-  .wf-component--select-card:has(.card-container:focus-within),
-  .tm-project-card-chooser:has(.card-container:hover),
-  .tm-project-card-chooser:has(.card-container:focus-within),
-  .tm-log-preview-desk:has(.card-container:hover),
-  .tm-log-preview-desk:has(.card-container:focus-within),
-  .tm-log-preview-desk .card-panel:has(.card-container:hover),
-  .tm-log-preview-desk .card-panel:has(.card-container:focus-within),
-  .tm-modal:has(.card-container:hover),
-  .tm-modal:has(.card-container:focus-within),
-  .tm-modal-body:has(.card-container:hover),
-  .tm-modal-body:has(.card-container:focus-within),
-  .tm-card-gallery:has(.card-container:hover),
-  .tm-card-gallery:has(.card-container:focus-within) {
-    overflow: visible;
-  }
-
-  .tm-bottom-tray > section:has(.card-container:hover),
-  .tm-bottom-tray > section:has(.card-container:focus-within),
-  .tm-card-desk:has(.card-container:hover),
-  .tm-card-desk:has(.card-container:focus-within),
-  .tm-action-workbench:has(.card-container:hover),
-  .tm-action-workbench:has(.card-container:focus-within),
-  .tm-modal-card-section:has(.card-container:hover),
-  .tm-modal-card-section:has(.card-container:focus-within) {
-    z-index: 430;
-  }
-
   .filterDiv.card-container:hover,
   .filterDiv.card-container:focus-within {
     filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.55));
   }
 
-  .tm-action-workbench .tm-project-card-chooser,
-  .tm-action-workbench .tm-project-card-chooser:has(.card-container:hover),
-  .tm-action-workbench .tm-project-card-chooser:has(.card-container:focus-within) {
+  .tm-action-workbench .tm-project-card-chooser {
     overflow: auto hidden;
   }
 
@@ -8054,45 +8067,41 @@
     z-index: 3;
   }
 
-  .filterDiv.card-container:hover .card-content:not(.global-event-card-content),
-  .filterDiv.card-container:focus-within .card-content:not(.global-event-card-content) {
-    height: auto !important;
-    min-height: 218px;
-    overflow: visible !important;
-    padding-bottom: 8px;
-  }
-
+  // Compact trays keep their resting geometry. Magnification here used to
+  // invalidate Chrome's live scroll container and could anchor-scroll a waiting
+  // player to a different card simply by moving the pointer.
   .tm-card-strip:not(.tm-card-strip--drawer) > .cardbox:hover > .card-container,
   .tm-card-strip:not(.tm-card-strip--drawer) > .cardbox:focus-within > .card-container,
   .tm-card-strip:not(.tm-card-strip--drawer) .sortable-cards .cardbox:hover > .card-container,
   .tm-card-strip:not(.tm-card-strip--drawer) .sortable-cards .cardbox:focus-within > .card-container {
-    transform: scale(0.84) !important;
-  }
-
-  .tm-card-strip:not(.tm-card-strip--drawer) > .cardbox > .cards-stack-first:hover > .card-container,
-  .tm-card-strip:not(.tm-card-strip--drawer) > .cardbox > .cards-stack-first:focus-within > .card-container,
-  .tm-card-strip:not(.tm-card-strip--drawer) > .cardbox > .cards-stack:hover > .card-container,
-  .tm-card-strip:not(.tm-card-strip--drawer) > .cardbox > .cards-stack:focus-within > .card-container {
-    transform: scale(0.84) !important;
-  }
-
-  .tm-card-gallery > .cardbox:hover > .card-container,
-  .tm-card-gallery > .cardbox:focus-within > .card-container {
-    transform: scale(0.96) !important;
-  }
-
-  .tm-player-dossier-cards .tm-card-gallery > .cardbox:hover > .card-container,
-  .tm-player-dossier-cards .tm-card-gallery > .cardbox:focus-within > .card-container {
-    transform: scale(0.88) !important;
+    transform: scale(0.72) !important;
   }
 
   .tm-log-preview-desk .log-panel-card:hover > .card-container,
-  .tm-log-preview-desk .log-panel-card:focus-within > .card-container,
+  .tm-log-preview-desk .log-panel-card:focus-within > .card-container {
+    transform: scale(0.72) !important;
+  }
+
   .tm-player-log-preview .log-panel-card:hover > .card-container,
-  .tm-player-log-preview .log-panel-card:focus-within > .card-container,
+  .tm-player-log-preview .log-panel-card:focus-within > .card-container {
+    transform: scale(0.54) !important;
+  }
+
+  // Full overlays retain their resting card size as well: the old enlarged
+  // transform exceeded each gallery slot and overlapped adjacent cards.
+  .tm-modal .tm-card-gallery > .cardbox:hover > .card-container,
+  .tm-modal .tm-card-gallery > .cardbox:focus-within > .card-container {
+    transform: scale(0.84) !important;
+  }
+
+  .tm-modal .tm-player-dossier-cards .tm-card-gallery > .cardbox:hover > .card-container,
+  .tm-modal .tm-player-dossier-cards .tm-card-gallery > .cardbox:focus-within > .card-container {
+    transform: scale(0.76) !important;
+  }
+
   .tm-modal--log .log-panel-card:hover > .card-container,
   .tm-modal--log .log-panel-card:focus-within > .card-container {
-    transform: scale(0.78) !important;
+    transform: scale(0.66) !important;
   }
 
   .player_home_block--setup .wf-component--select-card > label.cardbox:hover > input[type="checkbox"] + .filterDiv.card-container,
@@ -8104,50 +8113,34 @@
     transform: scale(0.92) !important;
   }
 
-  .tm-action-workbench .wf-component--select-card > label.cardbox:hover > input[type="checkbox"] + .filterDiv.card-container,
-  .tm-action-workbench .wf-component--select-card > label.cardbox:focus-within > input[type="checkbox"] + .filterDiv.card-container,
-  .tm-action-workbench .wf-component--select-card > label.cardbox:hover > input[type="radio"] + .filterDiv.card-container,
-  .tm-action-workbench .wf-component--select-card > label.cardbox:focus-within > input[type="radio"] + .filterDiv.card-container,
-  .tm-action-workbench .wf-component--select-card > label.cardbox:hover > .filterDiv.card-container,
-  .tm-action-workbench .wf-component--select-card > label.cardbox:focus-within > .filterDiv.card-container {
-    transform: scale(1) !important;
+  .tm-action-workbench .wf-component--select-card:not(.wf-component--blue-card-action) > label.cardbox:hover > .filterDiv.card-container,
+  .tm-action-workbench .wf-component--select-card:not(.wf-component--blue-card-action) > label.cardbox:focus-within > .filterDiv.card-container {
+    transform: scale(0.9) !important;
   }
 
-  .tm-action-workbench .wf-component--blue-card-action > label.cardbox:hover > input[type="checkbox"] + .filterDiv.card-container,
-  .tm-action-workbench .wf-component--blue-card-action > label.cardbox:focus-within > input[type="checkbox"] + .filterDiv.card-container,
-  .tm-action-workbench .wf-component--blue-card-action > label.cardbox:hover > input[type="radio"] + .filterDiv.card-container,
-  .tm-action-workbench .wf-component--blue-card-action > label.cardbox:focus-within > input[type="radio"] + .filterDiv.card-container,
   .tm-action-workbench .wf-component--blue-card-action > label.cardbox:hover > .filterDiv.card-container,
   .tm-action-workbench .wf-component--blue-card-action > label.cardbox:focus-within > .filterDiv.card-container {
-    transform: scale(1) !important;
+    transform: scale(0.87) !important;
   }
 
-  .tm-project-card-option:hover > .cardbox.card-container,
-  .tm-project-card-option:focus-within > .cardbox.card-container {
-    transform: scale(1.1) !important;
+  @media (max-height: 820px) {
+    .tm-action-workbench .wf-component--blue-card-action > label.cardbox:hover > .filterDiv.card-container,
+    .tm-action-workbench .wf-component--blue-card-action > label.cardbox:focus-within > .filterDiv.card-container {
+      transform: scale(0.83) !important;
+    }
   }
 
-  .tm-project-card-option--standard:hover > .cardbox.card-container,
-  .tm-project-card-option--standard:focus-within > .cardbox.card-container {
-    transform: scale(1.04) !important;
-  }
-
-  &.tm-player-table--acting .wf-command-detail .tm-project-card-option:hover > .cardbox.card-container,
-  &.tm-player-table--acting .wf-command-detail .tm-project-card-option:focus-within > .cardbox.card-container {
-    transform: scale(1.08) !important;
-  }
-
-  &.tm-player-table--acting .wf-command-detail .tm-project-card-option--standard:hover > .cardbox.card-container,
-  &.tm-player-table--acting .wf-command-detail .tm-project-card-option--standard:focus-within > .cardbox.card-container {
-    transform: scale(1.02) !important;
+  @media (min-width: 1800px) and (min-height: 1000px) {
+    .tm-modal--log .log-panel-card:hover > .card-container,
+    .tm-modal--log .log-panel-card:focus-within > .card-container {
+      transform: scale(0.78) !important;
+    }
   }
 }
 
 #player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--two-row-actions:has(.tm-action-workbench .tm-project-payment),
 .preferences_magnify_cards #player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--two-row-actions:has(.tm-action-workbench .tm-project-payment) {
-  .tm-action-workbench .tm-project-card-chooser,
-  .tm-action-workbench .tm-project-card-chooser:has(.card-container:hover),
-  .tm-action-workbench .tm-project-card-chooser:has(.card-container:focus-within) {
+  .tm-action-workbench .tm-project-card-chooser {
     box-sizing: border-box;
     width: min(100%, 1240px);
     max-height: 584px;

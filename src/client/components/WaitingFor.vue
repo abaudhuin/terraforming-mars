@@ -1,6 +1,6 @@
 <template>
   <div>
-  <template v-if="waitingfor === undefined || waitingfor.optional">
+  <template v-if="showPassiveStatus && (waitingfor === undefined || waitingfor.optional)">
     <div class="tm-passive-waiting-message">
       <span v-if="waitingfor === undefined">{{ $t('Not your turn') }}</span>
       <span v-else>{{ $t('Waiting for other players') }}</span>
@@ -37,10 +37,7 @@ import {InputResponse} from '@/common/inputs/InputResponse';
 import {INVALID_RUN_ID, AppErrorResponse} from '@/common/app/AppErrorId';
 import {gameDocumentTitle} from '../utils/documentTitle';
 import {setFaviconStatus, setFaviconTurnFrame} from '@/client/utils/favicon';
-
-let ui_update_timeout_id: number | undefined;
-let documentTitleTimer: number | undefined;
-let animationFrame = 0;
+import {setTranslationContext} from '@/client/directives/i18n';
 
 // The spinning ◑◒◐◓ symbol used to indicate it's your turn.
 const TURN_SEQUENCE = '◑◒◐◓';
@@ -55,6 +52,10 @@ function isDesktopBrowser(): boolean {
 type DataModel = {
   suspend: boolean,
   savedPlayerView: PlayerViewModel | undefined;
+  updateTimeoutId: number | undefined;
+  documentTitleTimer: number | undefined;
+  animationFrame: number;
+  waitingRequest: XMLHttpRequest | undefined;
 }
 
 const CANNOT_CONTACT_SERVER = 'Unable to reach the server. It may be restarting or down for maintenance.';
@@ -70,11 +71,19 @@ export default defineComponent({
       type: Object as () => PlayerInputModel | undefined,
       default: undefined,
     },
+    showPassiveStatus: {
+      type: Boolean,
+      default: true,
+    },
   },
   data(): DataModel {
     return {
       suspend: false,
       savedPlayerView: undefined,
+      updateTimeoutId: undefined,
+      documentTitleTimer: undefined,
+      animationFrame: 0,
+      waitingRequest: undefined,
     };
   },
   methods: {
@@ -83,17 +92,17 @@ export default defineComponent({
         return;
       }
 
-      animationFrame = (animationFrame + 1) % TURN_SEQUENCE.length;
+      this.animationFrame = (this.animationFrame + 1) % TURN_SEQUENCE.length;
       const experimental = getPreferences().experimental_ui;
       // The favicon annotation is an experimental feature.
       if (experimental) {
-        setFaviconTurnFrame(animationFrame);
+        setFaviconTurnFrame(this.animationFrame);
       }
       // Existing behavior spins the symbol in the document title. With
       // experimental UI on a desktop browser we show it only in the tab favicon
       // instead; otherwise keep animating the title.
       if (!(experimental && isDesktopBrowser())) {
-        document.title = TURN_SEQUENCE[animationFrame] + ' ' + gameDocumentTitle(this.playerView.game);
+        document.title = TURN_SEQUENCE[this.animationFrame] + ' ' + gameDocumentTitle(this.playerView.game);
       }
     },
     onsave(out: InputResponse) {
@@ -149,11 +158,11 @@ export default defineComponent({
     updatePlayerView(playerView: PlayerViewModel | undefined) {
       if (this.suspend === false) {
         const root = vueRoot(this);
-        root.screen = 'empty';
         root.playerView = playerView;
-        root.playerkey++;
-        root.screen = 'player-home';
-        if (this.playerView.game.phase === 'end' && window.location.pathname !== paths.THE_END) {
+        if (playerView !== undefined) {
+          setTranslationContext(playerView);
+        }
+        if (playerView?.game.phase === 'end' && window.location.pathname !== paths.THE_END) {
           window.location = window.location as any as (string & Location);
         }
         this.savedPlayerView = undefined;
@@ -164,18 +173,21 @@ export default defineComponent({
     waitForUpdate() {
       const vueApp = this;
       const root = vueRoot(this);
-      clearTimeout(ui_update_timeout_id);
+      this.clearUpdateTimer();
       const askForUpdate = () => {
         const params = new URLSearchParams(window.location.search);
         params.set('gameAge', String(this.playerView.game.gameAge));
         params.set('undoCount', String(this.playerView.game.undoCount));
         params.set('_cb', String(Date.now()));
         const xhr = new XMLHttpRequest();
+        this.waitingRequest = xhr;
         xhr.open('GET', paths.API_WAITING_FOR + '?' + params.toString());
         xhr.onerror = function() {
+          vueApp.waitingRequest = undefined;
           root.showAlert('Error fetching state', CANNOT_CONTACT_SERVER, () => vueApp.waitForUpdate());
         };
         xhr.onload = () => {
+          this.waitingRequest = undefined;
           if (xhr.status === statusCode.ok) {
             const result = xhr.response as WaitingForModel;
             if (result.result === 'GO') {
@@ -202,7 +214,36 @@ export default defineComponent({
         xhr.responseType = 'json';
         xhr.send();
       };
-      ui_update_timeout_id = window.setTimeout(askForUpdate, raw_settings.waitingForTimeout);
+      this.updateTimeoutId = window.setTimeout(askForUpdate, raw_settings.waitingForTimeout);
+    },
+    clearUpdateTimer() {
+      window.clearTimeout(this.updateTimeoutId);
+      this.updateTimeoutId = undefined;
+    },
+    clearDocumentTitleTimer() {
+      window.clearInterval(this.documentTitleTimer);
+      this.documentTitleTimer = undefined;
+    },
+    abortWaitingRequest() {
+      const request = this.waitingRequest;
+      this.waitingRequest = undefined;
+      request?.abort();
+    },
+    syncWaitState() {
+      document.title = gameDocumentTitle(this.playerView.game);
+      if (getPreferences().experimental_ui) {
+        setFaviconStatus(this.waitingfor !== undefined ? 'turn' : 'idle');
+      }
+
+      this.clearUpdateTimer();
+      this.clearDocumentTitleTimer();
+      this.abortWaitingRequest();
+      if (this.waitingfor === undefined || this.waitingfor.optional) {
+        this.waitForUpdate();
+      }
+      if (this.playerView.players.length > 1 && this.waitingfor !== undefined && !this.waitingfor.optional) {
+        this.documentTitleTimer = window.setInterval(() => this.animateTitle(), 1000);
+      }
     },
     notify() {
       if (getPreferences().enable_sounds) {
@@ -244,17 +285,20 @@ export default defineComponent({
     },
   },
   mounted() {
-    document.title = gameDocumentTitle(this.playerView.game);
-    if (getPreferences().experimental_ui) {
-      setFaviconStatus(this.waitingfor !== undefined ? 'turn' : 'idle');
-    }
-    window.clearInterval(documentTitleTimer);
-    if (this.waitingfor === undefined || this.waitingfor.optional) {
-      this.waitForUpdate();
-    }
-    if (this.playerView.players.length > 1 && this.waitingfor !== undefined && !this.waitingfor.optional) {
-      documentTitleTimer = window.setInterval(() => this.animateTitle(), 1000);
-    }
+    this.syncWaitState();
+  },
+  beforeUnmount() {
+    this.clearUpdateTimer();
+    this.clearDocumentTitleTimer();
+    this.abortWaitingRequest();
+  },
+  watch: {
+    playerView() {
+      this.syncWaitState();
+    },
+    waitingfor() {
+      this.syncWaitState();
+    },
   },
   computed: {
     Phase(): typeof Phase {

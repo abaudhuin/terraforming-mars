@@ -12,6 +12,8 @@ RUN apk add --no-cache --virtual .gyp python3 py3-setuptools make g++ \
 
 WORKDIR /usr/src/app
 
+RUN npm install -g npm@11.18.0
+
 # Install dependencies first, to cache the image.
 COPY ["package.json", "package-lock.json", "./"]
 
@@ -23,10 +25,11 @@ RUN --mount=type=cache,target=/root/.npm npm ci --prefer-offline
 FROM install AS builder
 
 # Copy only the files required by the production build.
-COPY ["tsconfig.json", "tsconfig.vue-tsc.json", "rspack.config.mjs", "./"]
+COPY ["tsconfig.json", "vite.config.mjs", "./"]
 COPY ["src/tsconfig.json", "./src/tsconfig.json"]
 COPY ["src", "./src"]
 COPY ["assets", "./assets"]
+COPY ["scripts", "./scripts"]
 
 # Run building
 ARG SOURCE_VERSION=unknown
@@ -57,7 +60,7 @@ USER tfm
 
 # Copy required files.
 
-COPY ["package.json", "package-lock.json", "./"]
+COPY --chown=tfm:nogroup ["package.json", "package-lock.json", "./"]
 
 # Copy dependencies from intermediate image
 COPY --from=installprod /usr/src/app/node_modules ./node_modules

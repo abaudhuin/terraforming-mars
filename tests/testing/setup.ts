@@ -28,22 +28,41 @@ const FAKE_DATABASE: IDatabase = {
   getSessions: () => Promise.resolve([]),
 };
 
-let databaseUnderTest: IDatabase = FAKE_DATABASE;
+type ServerTestState = {
+  databaseUnderTest: IDatabase,
+  defaultGameLoader?: IGameLoader,
+  gameLoaderUnderTest?: IGameLoader,
+  initialized: boolean,
+};
+
+const testGlobal = globalThis as {__tmServerTestState?: ServerTestState};
+const testState = testGlobal.__tmServerTestState ??= {
+  databaseUnderTest: FAKE_DATABASE,
+  initialized: false,
+};
+testState.databaseUnderTest = FAKE_DATABASE;
+
 export function restoreTestDatabase() {
   setTestDatabase(FAKE_DATABASE);
 }
 export function setTestDatabase(db: IDatabase) {
-  databaseUnderTest = db;
+  testState.databaseUnderTest = db;
 }
-Database.getInstance = () => databaseUnderTest;
+Database.getInstance = () => testState.databaseUnderTest;
 
-const defaultGameLoader = GameLoader.getInstance();
-let gameLoaderUnderTest: IGameLoader = GameLoader.getInstance();
+if (testState.defaultGameLoader === undefined) {
+  testState.defaultGameLoader = GameLoader.getInstance();
+  testState.gameLoaderUnderTest = testState.defaultGameLoader;
+}
 export function restoreTestGameLoader() {
-  setTestGameLoader(defaultGameLoader);
+  setTestGameLoader(testState.defaultGameLoader!);
 }
 export function setTestGameLoader(gameLoader: IGameLoader) {
-  gameLoaderUnderTest = gameLoader;
+  testState.gameLoaderUnderTest = gameLoader;
 }
-GameLoader.getInstance = () => gameLoaderUnderTest;
-globalInitialize();
+GameLoader.getInstance = () => testState.gameLoaderUnderTest!;
+
+if (testState.initialized !== true) {
+  globalInitialize();
+  testState.initialized = true;
+}

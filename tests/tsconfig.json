@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "outDir": "../build/tests",
-        "types": ["node", "mocha", "chai"]
+        "types": ["node", "vitest/globals", "chai"]
     },
     "extends": "../tsconfig.json",
     "include": [

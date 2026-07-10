@@ -11,7 +11,7 @@
             <div v-if="showProductionProtectedIcon" class="shield_production_protection"></div>
             <div v-if="showResourceProtectionIcon" class="shield_resource_protection"></div>
           </div>
-          <div v-if="showResourceValue()" class="resource_icon--megacredit-value" data-test="resource-value">{{ value }}</div>
+          <div v-if="showResourceValue()" class="resource_icon--megacredit-value" data-test="resource-value">{{ value }}M€</div>
       </div>
   </div>
 </template>
@@ -21,7 +21,6 @@
 import {defineComponent} from 'vue';
 import {DEFAULT_STEEL_VALUE, DEFAULT_TITANIUM_VALUE} from '@/common/constants';
 import {Resource} from '@/common/Resource';
-import {getPreferences} from '@/client/utils/PreferencesManager';
 import {Protection} from '@/common/models/PlayerModel';
 
 export default defineComponent({
@@ -59,13 +58,11 @@ export default defineComponent({
   },
   methods: {
     showResourceValue(): boolean {
-      const learnerModeOn = getPreferences().learner_mode;
-
       switch (this.type) {
       case Resource.STEEL:
-        return learnerModeOn || this.value > DEFAULT_STEEL_VALUE;
+        return this.value > DEFAULT_STEEL_VALUE;
       case Resource.TITANIUM:
-        return learnerModeOn || this.value > DEFAULT_TITANIUM_VALUE;
+        return this.value > DEFAULT_TITANIUM_VALUE;
       case Resource.HEAT:
         return this.value > 0;
       default:

@@ -5,6 +5,7 @@ import {MockResponse} from './HttpMocks';
 import {RouteTestScaffolding} from './RouteTestScaffolding';
 import {statusCode} from '../../src/common/http/statusCode';
 class FileApiMock extends FileAPI {
+  public generatedAssets = new Set<string>();
   public counts = {
     readFile: 0,
     readFileSync: 0,
@@ -21,8 +22,11 @@ class FileApiMock extends FileAPI {
     this.counts.readFile++;
     return Promise.resolve(Buffer.from('data: ' + path));
   }
-  public override existsSync(_path: string): boolean {
+  public override existsSync(path: string): boolean {
     this.counts.existsSync++;
+    if (path.startsWith('build/assets/')) {
+      return this.generatedAssets.has(path);
+    }
     return true;
   }
 }
@@ -183,6 +187,16 @@ describe('ServeAsset', () => {
     await scaffolding.get(instance, res);
     expect(res.content).contains('data: ');
     expect(res.headers.get('Cache-Control')).eq('public, max-age=14400, s-maxage=86400');
+  });
+
+  it('serves generated Vite assets before static assets', async () => {
+    fileApi.generatedAssets.add('build/assets/CardList.css');
+    instance = new ServeAsset(undefined, false, fileApi);
+    scaffolding.url = '/assets/CardList.css';
+    scaffolding.req.headers['accept-encoding'] = '';
+    await scaffolding.get(instance, res);
+    expect(res.content).eq('data: build/assets/CardList.css');
+    expect(res.headers.get('Content-Type')).eq('text/css');
   });
 
   it('returns cache headers and etag on not modified responses', async () => {
