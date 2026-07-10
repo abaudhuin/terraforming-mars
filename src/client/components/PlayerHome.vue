@@ -97,7 +97,7 @@
           <PlayersOverview :playerView="playerView" @open-player="openPlayer" v-trim-whitespace/>
         </aside>
 
-        <section class="tm-board-stage" ref="boardStage">
+        <section class="tm-board-stage">
           <button type="button" class="tm-board-expand-button tm-icon-control tm-icon-control--expand" @click="openOverlay('board')" :aria-label="$t('Expand board')">
             <span aria-hidden="true"></span>
           </button>
@@ -105,6 +105,8 @@
             :game="game"
             :tileView="tileView"
             :players="playerView.players"
+            :fitBottomInset="48"
+            :maxBoardScale="1.48"
             @toggleTileView="cycleTileView()"
           />
 
@@ -118,10 +120,14 @@
             <a name="colonies" class="player_home_anchor hotkey-target"></a>
             <div class="colonies-fleets-cont">
               <div class="colonies-player-fleets" v-for="colonyPlayer in playerView.players" :key="colonyPlayer.color">
-                <div :class="'colonies-fleet colonies-fleet-'+ colonyPlayer.color" v-for="idx in getFleetsCountRange(colonyPlayer)" :key="idx"></div>
+                <span class="colonies-fleet-owner" :class="'player_bg_color_' + colonyPlayer.color">{{ colonyPlayer.name }}</span>
+                <span class="colonies-fleet-token" aria-hidden="true">
+                  <span :class="'colonies-fleet colonies-fleet-'+ colonyPlayer.color"></span>
+                </span>
+                <strong class="colonies-fleet-count">{{ getAvailableFleetCount(colonyPlayer) }}/{{ colonyPlayer.fleetSize }}</strong>
               </div>
             </div>
-            <div class="player_home_colony_cont">
+            <div class="player_home_colony_cont" @wheel="scrollColoniesHorizontally">
               <div class="player_home_colony" v-for="colony in game.colonies" :key="colony.name">
                 <Colony :colony="colony" :active="colony.isActive"/>
               </div>
@@ -134,31 +140,45 @@
             v-if="!isActivityRailCollapsed"
             type="button"
             class="tm-layout-resize-handle tm-layout-resize-handle--activity"
-            :aria-label="$t('Resize activity log')"
+            :aria-label="$t('Resize logs')"
             @pointerdown="startActivityResize"></button>
-          <div class="tm-panel-heading">
-            <span v-i18n>Activity</span>
-            <button v-if="!isActivityRailCollapsed" type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye" @click="openOverlay('log')" :aria-label="$t('Open game log')">
-              <span aria-hidden="true"></span>
-            </button>
+          <div v-if="isActivityRailCollapsed" class="tm-panel-heading tm-log-collapsed-heading">
+            <span v-i18n>Logs</span>
             <button
               type="button"
-              class="tm-panel-icon-button tm-icon-control tm-icon-control--activity-toggle"
-              :class="{'tm-icon-control--activity-toggle-open': isActivityRailCollapsed}"
+              class="tm-panel-icon-button tm-icon-control tm-icon-control--activity-toggle tm-icon-control--activity-toggle-open"
               @click="toggleActivityRail"
-              :aria-expanded="!isActivityRailCollapsed"
-              :aria-label="isActivityRailCollapsed ? $t('Show activity') : $t('Hide activity')">
+              :aria-expanded="false"
+              :aria-label="$t('Show logs')">
               <span aria-hidden="true"></span>
             </button>
           </div>
           <LogPanel
-            v-if="!isActivityRailCollapsed"
+            v-else
             :viewModel="playerView"
             :color="thisPlayer.color"
             :step="game.step"
             :recentHistory="true"
+            headerTitle="Logs"
             cardPanelMode="emit"
-            @preview-message="openActivityLogPreview"/>
+            @preview-message="openActivityLogPreview">
+            <template #header-actions>
+              <div class="tm-log-header-actions">
+                <button v-if="!isActivityRailCollapsed" type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye" @click="openOverlay('log')" :aria-label="$t('Open game log')">
+                  <span aria-hidden="true"></span>
+                </button>
+                <button
+                  type="button"
+                  class="tm-panel-icon-button tm-icon-control tm-icon-control--activity-toggle"
+                  :class="{'tm-icon-control--activity-toggle-open': isActivityRailCollapsed}"
+                  @click="toggleActivityRail"
+                  :aria-expanded="!isActivityRailCollapsed"
+                  :aria-label="$t('Hide logs')">
+                  <span aria-hidden="true"></span>
+                </button>
+              </div>
+            </template>
+          </LogPanel>
         </aside>
       </main>
 
@@ -171,10 +191,10 @@
         <section v-if="showActivityLogPreview && activityPreviewMessage" class="tm-log-preview-desk">
           <header class="tm-log-preview-header">
             <div>
-              <span v-i18n>Activity detail</span>
+              <span v-i18n>Log detail</span>
               <small v-i18n>from the game log</small>
             </div>
-            <button type="button" class="tm-log-preview-close tm-icon-control tm-icon-control--close" @click="closeActivityLogPreview" :aria-label="$t('Close activity detail')">
+            <button type="button" class="tm-log-preview-close tm-icon-control tm-icon-control--close" @click="closeActivityLogPreview" :aria-label="$t('Close log detail')">
               <span aria-hidden="true"></span>
             </button>
           </header>
@@ -187,10 +207,6 @@
         <template v-else>
         <section v-if="hasPlayerInput" class="tm-action-workbench player_home_block--actions" tabindex="-1">
           <a name="actions" class="player_home_anchor"></a>
-          <div class="tm-panel-heading">
-            <span v-i18n>Actions</span>
-            <span class="tm-compat-text">Actions</span>
-          </div>
           <WaitingFor v-if="game.phase !== 'end'" :playerView="playerView" :waitingfor="playerView.waitingFor"/>
         </section>
         <WaitingFor
@@ -300,6 +316,7 @@
                 :game="game"
                 :tileView="tileView"
                 :players="playerView.players"
+                :maxBoardScale="1.65"
                 @toggleTileView="cycleTileView()"
               />
             </div>
@@ -387,8 +404,8 @@
                   </header>
                   <section v-if="playerLogPreviewMessage" class="tm-player-log-preview">
                     <header class="tm-player-log-preview-header">
-                      <span v-i18n>Activity detail</span>
-                      <button type="button" class="tm-icon-control tm-icon-control--close" @click="closePlayerLogPreview" :aria-label="$t('Close activity detail')">
+                      <span v-i18n>Log detail</span>
+                      <button type="button" class="tm-icon-control tm-icon-control--close" @click="closePlayerLogPreview" :aria-label="$t('Close log detail')">
                         <span aria-hidden="true"></span>
                       </button>
                     </header>
@@ -427,7 +444,7 @@
                 </section>
 
                 <section class="tm-player-dossier-log">
-                  <h3 v-i18n>Activity</h3>
+                  <h3 v-i18n>Logs</h3>
                   <LogPanel
                     :viewModel="playerView"
                     :color="selectedPlayer.color"
@@ -500,9 +517,6 @@ type PlayerHomeModel = {
   bottomTrayHeight: number | undefined;
   activityRailWidth: number | undefined;
   resizeTarget: ResizeTarget;
-  boardFitZoom: number | undefined;
-  boardFitYOffset: number | undefined;
-  boardResizeObserver: ResizeObserver | undefined;
   activityPreviewMessage: LogMessage | undefined;
   playerLogPreviewMessage: LogMessage | undefined;
 }
@@ -581,9 +595,6 @@ export default defineComponent({
       bottomTrayHeight: readStoredLayoutDimension(layoutStorageKeys.bottomTrayHeight),
       activityRailWidth: readStoredLayoutDimension(layoutStorageKeys.activityRailWidth),
       resizeTarget: undefined,
-      boardFitZoom: undefined,
-      boardFitYOffset: undefined,
-      boardResizeObserver: undefined,
       activityPreviewMessage: undefined,
       playerLogPreviewMessage: undefined,
     };
@@ -630,6 +641,7 @@ export default defineComponent({
       return {
         'tm-player-table': true,
         'tm-player-table--second-pass': true,
+        'tm-player-table--refined': true,
         'tm-player-table--with-turmoil': this.game.turmoil !== undefined,
         'tm-player-table--acting': this.isPlayerActing(this.playerView),
         'tm-player-table--passive': !this.isPlayerActing(this.playerView),
@@ -648,12 +660,6 @@ export default defineComponent({
       }
       if (this.activityRailWidth !== undefined) {
         style['--tm-activity-width'] = `${this.activityRailWidth}px`;
-      }
-      if (this.boardFitZoom !== undefined) {
-        style['--tm-board-fit-zoom'] = this.boardFitZoom.toFixed(3);
-      }
-      if (this.boardFitYOffset !== undefined) {
-        style['--tm-board-fit-y-offset'] = `${this.boardFitYOffset}px`;
       }
       return style;
     },
@@ -814,13 +820,11 @@ export default defineComponent({
 
   mounted() {
     document.addEventListener('keydown', this.handleGlobalKeydown);
-    this.$nextTick(this.installBoardFitObserver);
   },
 
   beforeUnmount() {
     document.removeEventListener('keydown', this.handleGlobalKeydown);
     this.removeLayoutResizeListeners();
-    this.removeBoardFitObserver();
   },
 
   methods: {
@@ -871,52 +875,6 @@ export default defineComponent({
     removeLayoutResizeListeners(): void {
       window.removeEventListener('pointermove', this.updateLayoutResize);
       window.removeEventListener('pointerup', this.stopLayoutResize);
-    },
-    installBoardFitObserver(): void {
-      const boardStage = this.$refs.boardStage;
-      if (!(boardStage instanceof HTMLElement)) {
-        return;
-      }
-      this.removeBoardFitObserver();
-      if (typeof ResizeObserver !== 'undefined') {
-        this.boardResizeObserver = new ResizeObserver(this.updateBoardFit);
-        this.boardResizeObserver.observe(boardStage);
-      }
-      window.addEventListener('resize', this.updateBoardFit);
-      this.updateBoardFit();
-    },
-    removeBoardFitObserver(): void {
-      this.boardResizeObserver?.disconnect();
-      this.boardResizeObserver = undefined;
-      window.removeEventListener('resize', this.updateBoardFit);
-    },
-    updateBoardFit(): void {
-      const boardStage = this.$refs.boardStage;
-      if (!(boardStage instanceof HTMLElement)) {
-        return;
-      }
-      const rect = boardStage.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) {
-        return;
-      }
-
-      const boardNaturalWidth = 700;
-      const boardNaturalHeight = 700;
-      const horizontalPadding = 28;
-      const verticalPadding = 28;
-      const fitByWidth = (rect.width - horizontalPadding) / boardNaturalWidth;
-      const fitByHeight = (rect.height - verticalPadding) / boardNaturalHeight;
-      const maxZoom = window.innerHeight < 820 ? 1.16 : 1.48;
-      const minZoom = window.innerHeight < 820 ? 0.30 : 0.42;
-      const zoom = this.clampLayoutValue(Math.min(fitByWidth, fitByHeight) * 1000, minZoom * 1000, maxZoom * 1000) / 1000;
-      const yOffset = 0;
-
-      if (this.boardFitZoom !== zoom) {
-        this.boardFitZoom = zoom;
-      }
-      if (this.boardFitYOffset !== yOffset) {
-        this.boardFitYOffset = yOffset;
-      }
     },
     handleGlobalKeydown(event: KeyboardEvent): void {
       if (event.key !== 'Escape') {
@@ -1097,12 +1055,20 @@ export default defineComponent({
         window.setTimeout(() => actions.classList.remove('tm-region-pulse'), 900);
       }
     },
-    getFleetsCountRange(player: PublicPlayerModel): Array<number> {
-      const fleetsRange = [];
-      for (let i = 0; i < player.fleetSize - player.tradesThisGeneration; i++) {
-        fleetsRange.push(i);
+    getAvailableFleetCount(player: PublicPlayerModel): number {
+      return Math.max(0, (player.fleetSize ?? 0) - (player.tradesThisGeneration ?? 0));
+    },
+    scrollColoniesHorizontally(event: WheelEvent): void {
+      const scroller = event.currentTarget;
+      if (!(scroller instanceof HTMLElement) || scroller.scrollWidth <= scroller.clientWidth) {
+        return;
       }
-      return fleetsRange;
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      const previous = scroller.scrollLeft;
+      scroller.scrollLeft += delta;
+      if (scroller.scrollLeft !== previous) {
+        event.preventDefault();
+      }
     },
     toggle(type: ToggleableCardType): void {
       this[typeToDataModel[type].key] = !this[typeToDataModel[type].key];

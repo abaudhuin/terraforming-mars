@@ -2,15 +2,16 @@
   <div class="log-container" :class="{'log-container--compact': compactHeader, 'log-container--filtered': playerFilter !== undefined, 'log-container--external-preview': cardPanelMode === 'emit', 'log-container--has-preview': selectedMessage !== undefined && cardPanelMode === 'inline'}">
     <div class="log-generations">
       <h2 :class="getTitleClasses()">
-          <span v-i18n>Game log</span>
+          <span>{{ $t(headerTitle) }}</span>
       </h2>
       <div class="log-gen-title"  v-i18n>Gen: </div>
       <div class="log-gen-numbers">
-        <div v-for="n in getGenerationsRange()" :key="n" :class="getClassesGenIndicator(n)" @click.prevent="selectGeneration(n)">
+        <button type="button" v-for="n in getGenerationsRange()" :key="n" :class="getClassesGenIndicator(n)" :aria-pressed="n === selectedGeneration" @click.prevent="selectGeneration(n)">
           {{ n }}
-        </div>
+        </button>
       </div>
       <span class="label-additional" v-if="players.length === 1"><span :class="lastGenerationClass()" v-i18n>of {{lastSoloGeneration}}</span></span>
+      <slot name="header-actions"></slot>
     </div>
     <div class="panel log-panel">
       <div ref="scrollablePanel" class="panel-body">
@@ -76,6 +77,11 @@ export default defineComponent({
       type: Boolean,
       required: false,
       default: false,
+    },
+    headerTitle: {
+      type: String,
+      required: false,
+      default: 'Game log',
     },
     fallbackToAllWhenFilteredEmpty: {
       type: Boolean,
@@ -159,7 +165,7 @@ export default defineComponent({
       }
     },
     selectGeneration(gen: number): void {
-      if (gen !== this.selectedGeneration) {
+      if (gen !== this.selectedGeneration || this.showingRecentHistory) {
         this.selectedMessage = undefined;
         this.showingRecentHistory = false;
         this.getLogsForGeneration(gen);

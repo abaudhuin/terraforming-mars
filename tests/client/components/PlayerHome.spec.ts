@@ -89,7 +89,31 @@ describe('PlayerHome', () => {
     });
 
     expect(wrapper.find('.tm-action-workbench').exists()).to.be.true;
+    expect(wrapper.find('.tm-action-workbench > .tm-panel-heading').exists()).to.be.false;
     expect(wrapper.find('.tm-passive-sync').exists()).to.be.false;
+  });
+
+  it('uses a single-line Logs rail and clamps available colony fleets', () => {
+    const thisPlayer = fakePublicPlayerModel({
+      tableau: [{name: CardName.ACQUIRED_COMPANY}],
+      fleetSize: 2,
+      tradesThisGeneration: 3,
+    });
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {
+        methods: {
+          getVisibilityState: () => true,
+          setVisibilityState: () => {},
+        },
+      } as any,
+      props: {
+        playerView: fakePlayerViewModel({thisPlayer, players: [thisPlayer]}),
+      },
+    });
+
+    expect(wrapper.findComponent({name: 'LogPanel'}).props('headerTitle')).to.eq('Logs');
+    expect((wrapper.vm as any).getAvailableFleetCount(thisPlayer)).to.eq(0);
   });
 
   it('preserves an open overlay when a refreshed player model arrives', async () => {

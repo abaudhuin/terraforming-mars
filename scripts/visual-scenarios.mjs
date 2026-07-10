@@ -102,6 +102,7 @@ const moonUnderworldDelta = {
 
 const primaryExtensionShots = [
   'colonies-open',
+  'colonies-scrolled',
   'colonies-selected',
   'venus-track',
   'ares-hazards',
@@ -112,6 +113,7 @@ const primaryExtensionShots = [
 
 const coloniesVenusPathfindersShots = [
   'colonies-open',
+  'colonies-scrolled',
   'colonies-selected',
   'venus-track',
   'pathfinders-open',
@@ -1473,6 +1475,25 @@ async function collectMetrics(page) {
         scrollTop: element.scrollTop,
       }));
     });
+    const boardFits = [...document.querySelectorAll('.tm-mars-board-surface')]
+      .map((surface) => {
+        const canvas = surface.querySelector('.tm-board-fit-canvas');
+        if (canvas === null) return null;
+        const surfaceRect = surface.getBoundingClientRect();
+        const canvasRect = canvas.getBoundingClientRect();
+        if (surfaceRect.width === 0 || surfaceRect.height === 0 || canvasRect.width === 0 || canvasRect.height === 0) return null;
+        return {
+          surface: elementRect(surface),
+          canvas: elementRect(canvas),
+          clipped: {
+            left: Math.max(0, Math.round(surfaceRect.left - canvasRect.left)),
+            top: Math.max(0, Math.round(surfaceRect.top - canvasRect.top)),
+            right: Math.max(0, Math.round(canvasRect.right - surfaceRect.right)),
+            bottom: Math.max(0, Math.round(canvasRect.bottom - surfaceRect.bottom)),
+          },
+        };
+      })
+      .filter((item) => item !== null);
     return {
       url: location.href,
       title: document.title,
@@ -1495,7 +1516,9 @@ async function collectMetrics(page) {
       cardContentOverflows,
       colonyChoiceClipping,
       workflowActionClipping,
+      boardFits,
       scrollables,
+      colonyWheelScroll: globalThis.__tmVisualColonyWheelScroll ?? null,
       hoverScrollStability: globalThis.__tmVisualHoverScrollStability ?? null,
       statePreservation: globalThis.__tmVisualStatePreservation ?? null,
     };
@@ -1768,7 +1791,7 @@ async function openCardsOverlay(page) {
 
 async function openLogOverlay(page) {
   if (await openModal(page, 'Log')) return true;
-  return clickIfPresent(page, '.tm-activity-rail .tm-panel-icon-button');
+  return clickIfPresent(page, '.tm-activity-rail .tm-icon-control--eye');
 }
 
 async function openBoardOverlay(page) {
@@ -1792,6 +1815,26 @@ async function scrollSelector(page, selector, direction = 'bottom') {
   }, direction);
   await page.waitForTimeout(200);
   return true;
+}
+
+async function scrollColoniesWithWheel(page) {
+  const opened = await openExtensionSummary(page, ['.tm-table-leaf--colonies > summary', '.tm-extension-panel--colonies > summary', 'details:has-text("Colonies") > summary']);
+  if (!opened) return false;
+  const locator = page.locator('.player_home_colony_cont:visible').first();
+  if (await locator.count() === 0) return false;
+  const before = await locator.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+    scrollLeft: element.scrollLeft,
+  }));
+  await locator.hover();
+  await page.mouse.wheel(0, 480);
+  await page.waitForTimeout(250);
+  const after = await locator.evaluate((element) => element.scrollLeft);
+  await page.evaluate((result) => {
+    globalThis.__tmVisualColonyWheelScroll = result;
+  }, {...before, after});
+  return before.scrollWidth <= before.clientWidth || after > before.scrollLeft;
 }
 
 async function resizeLayout(page) {
@@ -1998,6 +2041,7 @@ const allShotDefinitions = [
   {name: 'milestones-awards-hover', seat: 'active', prepare: (page) => hoverIfPresent(page, '.tm-ma-panel-summary, .tm-ma-panel button, .milestone-award-inline'), coverageTags: ['milestones-awards', 'hover-focus', 'button-affordance']},
   {name: 'milestones-awards-open', seat: 'active', prepare: (page) => clickIfPresent(page, '.tm-ma-panel-summary') || clickTextIfPresent(page, 'Milestones'), coverageTags: ['milestones-awards', 'compact-open', 'claimed-funded-state']},
   {name: 'colonies-open', seat: 'active', prepare: (page) => openExtensionSummary(page, ['.tm-table-leaf--colonies > summary', '.tm-extension-panel--colonies > summary', 'details:has-text("Colonies") > summary']), coverageTags: ['colonies', 'compact-open', 'extension-panel']},
+  {name: 'colonies-scrolled', seat: 'active', prepare: scrollColoniesWithWheel, coverageTags: ['colonies', 'horizontal-scroll', 'chrome-wheel', 'extension-panel']},
   {name: 'colonies-selected', seat: 'active', prepare: async (page) => {
     const opened = await openExtensionSummary(page, ['.tm-table-leaf--colonies > summary', '.tm-extension-panel--colonies > summary', 'details:has-text("Colonies") > summary']);
     if (!opened) return false;
@@ -2336,6 +2380,16 @@ function collectVisualNotes(summary) {
     if ((metrics.workflowActionClipping ?? []).length > 0) {
       const titles = metrics.workflowActionClipping.map((item) => item.title).slice(0, 4).join(', ');
       notes.push({...context, message: `workflow action buttons exceed command detail: ${titles}`});
+    }
+    for (const boardFit of metrics.boardFits ?? []) {
+      if (Object.values(boardFit.clipped).some((value) => value > 1)) {
+        notes.push({...context, message: `board paint is clipped by its viewport: ${JSON.stringify(boardFit)}`});
+      }
+    }
+    if (metrics.colonyWheelScroll !== null &&
+        metrics.colonyWheelScroll.scrollWidth > metrics.colonyWheelScroll.clientWidth + 2 &&
+        metrics.colonyWheelScroll.after <= metrics.colonyWheelScroll.scrollLeft + 1) {
+      notes.push({...context, message: `colony wheel did not move horizontal scroll: ${JSON.stringify(metrics.colonyWheelScroll)}`});
     }
     const unstableHoverRoots = (metrics.hoverScrollStability?.delta ?? []).filter((item) => (
       Math.abs(item.scrollTop) > 1 || Math.abs(item.scrollLeft) > 1 || item.overflowChanged

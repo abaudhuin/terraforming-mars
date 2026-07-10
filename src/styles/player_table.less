@@ -7447,7 +7447,7 @@
   .tm-board-stage .tm-table-leaf--colonies[open] .colonies-player-fleets {
     width: auto;
     min-width: 32px;
-    height: 32px;
+    height: 36px;
     display: inline-flex;
     align-items: flex-start;
   }
@@ -8161,3 +8161,430 @@
   }
 }
 /* stylelint-enable no-duplicate-selectors */
+
+// The board owns its fit canvas so the table and full-screen board use the
+// same painted bounds. The 718x608 canvas includes the labels and tracks that
+// protrude outside the legacy 670x573 board root.
+.tm-game-board-view .tm-mars-board-surface {
+  position: relative;
+  width: 718px;
+  height: 608px;
+  overflow: hidden;
+}
+
+.tm-board-fit-canvas {
+  position: absolute;
+  width: 718px;
+  height: 608px;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.tm-board-fit-canvas > .board-cont {
+  position: absolute !important;
+  top: 28px;
+  left: 25px;
+  margin: 0 !important;
+  zoom: 1 !important;
+  transform: none !important;
+  transform-origin: center center !important;
+}
+
+#player-home.tm-player-table.tm-player-table--refined:not(.tm-player-table--setup) {
+  .tm-board-stage > .tm-game-board-view,
+  .tm-board-stage .tm-mars-board-surface,
+  .tm-board-modal-stage > .tm-game-board-view,
+  .tm-board-modal-stage .tm-mars-board-surface {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .tm-board-stage .tm-mars-board-surface {
+    place-items: initial;
+  }
+
+  .tm-action-workbench {
+    background: transparent;
+  }
+
+  .tm-action-workbench > div,
+  .tm-action-workbench .wf-root {
+    min-height: 0;
+    height: 100%;
+  }
+
+  // Paid colony trades are one compound action. Keep payment and commit on a
+  // shared command row, then give the colony cards the remaining space.
+  .tm-action-workbench .wf-command-detail > .wf-options:has(> .wf-component--trade-colony) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 40px minmax(0, 1fr);
+    gap: 7px 10px;
+  }
+
+  .tm-action-workbench .wf-command-detail > .wf-options:has(> .wf-component--trade-colony) > .wf-options--simple-choices {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .tm-action-workbench .wf-command-detail > .wf-options:has(> .wf-component--trade-colony) > .wf-options--simple-choices .wf-command-grid {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: auto hidden;
+  }
+
+  .tm-action-workbench .wf-command-detail > .wf-options:has(> .wf-component--trade-colony) > .wf-action {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    min-height: 40px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: flex;
+    align-items: center;
+    background: transparent;
+  }
+
+  .tm-action-workbench .wf-command-detail > .wf-options:has(> .wf-component--trade-colony) > .wf-action .btn {
+    min-width: 132px;
+    height: 36px;
+    min-height: 36px;
+    margin: 0;
+  }
+
+  .tm-action-workbench .wf-command-detail > .wf-options:has(> .wf-component--trade-colony) > .wf-component--trade-colony {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .tm-action-workbench .wf-component--select-colony {
+    min-width: 0;
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 7px 10px;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .tm-action-workbench .wf-component--select-colony > .wf-component-title {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+  }
+
+  .tm-action-workbench .wf-component--select-colony > .tm-colony-card-strip {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .tm-action-workbench .wf-component--select-colony > .wf-component-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .tm-action-workbench .wf-component--trade-colony {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .tm-action-workbench .wf-component--trade-colony > .tm-colony-trade-status {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .tm-action-workbench .wf-component--trade-colony > .tm-colony-card-strip {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .tm-action-workbench .tm-colony-card-strip {
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    padding: 2px 4px 10px 1px;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: flex-start;
+    gap: 10px;
+    overflow: auto hidden;
+    overscroll-behavior-inline: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .tm-action-workbench .tm-colony-card-strip > .tm-colony-card-option {
+    flex: 0 0 238px;
+    width: 238px;
+    height: 140px;
+    min-width: 238px;
+    min-height: 140px;
+    margin: 0;
+    overflow: visible;
+    scroll-snap-align: start;
+  }
+
+  .tm-action-workbench .tm-colony-card-strip > .tm-colony-card-option > input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .tm-action-workbench .tm-colony-card-strip > .tm-colony-card-option > .colony-card,
+  .tm-action-workbench .tm-colony-card-strip > .tm-colony-card-option:hover > .colony-card,
+  .tm-action-workbench .tm-colony-card-strip > .tm-colony-card-option:focus-within > .colony-card {
+    margin: 0;
+    transform: scale(0.49) !important;
+    transform-origin: top left;
+  }
+
+  .tm-action-workbench .tm-colony-trade-status {
+    min-height: 42px;
+    padding: 3px 7px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border-color: rgba(255, 204, 100, 0.24);
+    background: rgba(255, 204, 100, 0.055);
+  }
+
+  .tm-action-workbench .tm-colony-trade-fleet-board {
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+  }
+
+  .tm-action-workbench .tm-colony-player-fleets {
+    min-height: 34px;
+    padding: 1px 6px 1px 2px;
+  }
+
+  .tm-action-workbench .tm-colony-selection-a11y {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  // One compact log toolbar replaces the old Activity heading plus a second
+  // generation row.
+  .tm-activity-rail {
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .tm-activity-rail .log-container {
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .tm-activity-rail .log-generations {
+    min-height: 32px;
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .tm-activity-rail .log-title {
+    display: block;
+    margin: 0;
+    padding: 0;
+    color: var(--tm-accent);
+    font-family: Prototype, sans-serif;
+    font-size: 15px;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .tm-activity-rail .log-gen-title {
+    margin: 0;
+  }
+
+  .tm-activity-rail .log-gen-numbers {
+    max-height: 26px;
+    overflow: auto hidden;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+  }
+
+  .tm-activity-rail .log-gen-numbers::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tm-activity-rail .log-gen-indicator {
+    border: 1px solid var(--tm-control-border);
+    background: var(--tm-control-bg);
+    color: var(--tm-text);
+    font-family: Prototype, sans-serif;
+    cursor: pointer;
+  }
+
+  .tm-activity-rail .log-gen-indicator--selected {
+    border-color: var(--tm-border);
+    background: rgba(255, 255, 255, 0.88);
+    color: #272727;
+  }
+
+  .tm-log-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .tm-log-header-actions .tm-panel-icon-button {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .tm-activity-rail .log-panel {
+    height: 100%;
+  }
+
+  &.tm-player-table--activity-collapsed .tm-activity-rail .tm-log-collapsed-heading {
+    min-height: 0;
+    margin: 0;
+  }
+
+  &.tm-player-table--activity-collapsed .tm-activity-rail .tm-log-collapsed-heading > span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  .tm-icon-control--activity-toggle > span {
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l6 6-6 6M12 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 6l6 6-6 6M12 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  .tm-icon-control--activity-toggle-open > span {
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6l-6 6 6 6M12 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6l-6 6 6 6M12 6l-6 6 6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  // The opened panel is a constrained single-column grid. Its card row owns
+  // horizontal overflow, so trackpads, shift-wheel, and the wheel bridge work.
+  .tm-board-stage .tm-table-leaf--colonies[open] {
+    height: min(246px, calc(100% - 24px));
+    max-height: min(246px, calc(100% - 24px));
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 44px minmax(0, 1fr);
+  }
+
+  .tm-board-stage .tm-table-leaf--colonies[open] .tm-table-leaf-summary {
+    padding-right: 44px;
+  }
+
+  .tm-board-stage .tm-table-leaf--colonies[open] .colonies-fleets-cont {
+    top: 4px;
+    left: 100px;
+    right: 44px;
+    width: auto;
+    max-width: none;
+    height: 36px;
+    padding: 2px 5px;
+    flex-wrap: nowrap;
+    gap: 5px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: auto hidden;
+    scrollbar-width: none;
+  }
+
+  .tm-board-stage .tm-table-leaf--colonies[open] .colonies-fleets-cont::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tm-board-stage .tm-table-leaf--colonies[open] .colonies-player-fleets {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 0;
+    height: 32px;
+    padding: 1px 5px 1px 2px;
+    border: 1px solid var(--tm-control-border);
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .tm-board-stage .tm-table-leaf--colonies[open] .colonies-fleet-owner {
+    max-width: 74px;
+    padding: 3px 5px;
+    border-radius: 4px;
+    color: white;
+    font-family: Prototype, sans-serif;
+    font-size: 10px;
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tm-board-stage .tm-table-leaf--colonies[open] .colonies-fleet-token {
+    position: relative;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    display: block;
+    overflow: hidden;
+  }
+
+  .tm-board-stage .tm-table-leaf--colonies[open] .colonies-fleet-token > .colonies-fleet {
+    transform: scale(0.49);
+    transform-origin: top left;
+    margin: 0;
+  }
+
+  .tm-board-stage .tm-table-leaf--colonies[open] .colonies-fleet-count {
+    min-width: 28px;
+    height: 22px;
+    padding: 0 5px;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    background: rgba(255, 204, 100, 0.13);
+    color: var(--tm-accent);
+    font-family: Prototype, sans-serif;
+    font-size: 11px;
+    line-height: 1;
+  }
+
+  .tm-board-stage .tm-table-leaf--colonies[open] .player_home_colony_cont {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+    padding: 9px 10px 12px;
+    box-sizing: border-box;
+    overflow: auto hidden;
+    overscroll-behavior-inline: contain;
+    scrollbar-gutter: stable;
+    scroll-snap-type: x proximity;
+  }
+
+  .tm-board-stage .tm-table-leaf--colonies[open] .player_home_colony {
+    scroll-snap-align: start;
+  }
+}

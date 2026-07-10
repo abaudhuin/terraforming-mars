@@ -31,6 +31,29 @@ describe('LogPanel', () => {
     wrapper.unmount();
   });
 
+  it('renders a custom title, generation buttons, and header actions on one row', async () => {
+    const wrapper = shallowMount(LogPanel, {
+      ...globalConfig,
+      props: {
+        viewModel: fakeViewModel(),
+        color: 'blue',
+        headerTitle: 'Logs',
+      },
+      slots: {
+        'header-actions': '<button class="test-log-action">Open</button>',
+      },
+    });
+
+    const header = wrapper.find('.log-generations');
+    expect(header.find('.log-title').text()).to.eq('Logs');
+    expect(header.find('.test-log-action').exists()).to.be.true;
+    expect(header.findAll('button.log-gen-indicator')).to.not.be.empty;
+    const generation = header.find('button.log-gen-indicator');
+    await generation.trigger('click');
+    expect(generation.attributes('aria-pressed')).to.eq('true');
+    wrapper.unmount();
+  });
+
   it('keeps requests and scroll containers independent across panel instances', () => {
     const calls: Array<{signal: AbortSignal}> = [];
     (global as any).fetch = (_url: string, options: {signal: AbortSignal}) => {

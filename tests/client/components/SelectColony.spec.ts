@@ -23,9 +23,11 @@ describe('SelectColony', () => {
       },
     });
     expect(wrapper.exists()).to.be.true;
+    expect(wrapper.find('.wf-component-title').text()).to.eq('Select a colony');
   });
 
-  it('shows trade fleet state and visiting fleets for colony trades', () => {
+  it('shows a compact self fleet state without redundant trade instructions', async () => {
+    let response: unknown;
     const wrapper = shallowMount(SelectColony, {
       ...globalConfig,
       props: {
@@ -65,7 +67,7 @@ describe('SelectColony', () => {
             },
           ],
         },
-        onsave: () => {},
+        onsave: (value: unknown) => response = value,
         showsave: true,
         showtitle: true,
       },
@@ -73,9 +75,16 @@ describe('SelectColony', () => {
 
     expect(wrapper.find('.tm-colony-trade-status').exists()).to.be.true;
     expect(wrapper.find('.tm-colony-fleet-count').text()).to.contain('1/2');
-    expect(wrapper.findAll('.tm-colony-player-fleets')).to.have.length(2);
-    expect(wrapper.findAll('.tm-colony-fleet-count')[1].text()).to.contain('1/1');
-    expect(wrapper.find('.tm-colony-visitor-chip').text()).to.contain(ColonyName.CALLISTO);
+    expect(wrapper.findAll('.tm-colony-player-fleets')).to.have.length(1);
+    expect(wrapper.find('.tm-colony-trade-title').exists()).to.be.false;
+    expect(wrapper.find('.tm-colony-selected-summary').exists()).to.be.false;
+    expect(wrapper.find('.tm-colony-visitor-list').exists()).to.be.false;
+    expect(wrapper.find('.tm-colony-card-strip').exists()).to.be.true;
     expect(wrapper.find('.tm-colony-visitor-badge').text()).to.contain('blue');
+
+    await wrapper.find('input[type="radio"]').setValue(true);
+    expect(wrapper.find('.tm-colony-card-selected-mark').exists()).to.be.true;
+    await wrapper.findComponent({name: 'AppButton'}).trigger('click');
+    expect(response).to.deep.eq({type: 'colony', colonyName: ColonyName.CALLISTO});
   });
 });

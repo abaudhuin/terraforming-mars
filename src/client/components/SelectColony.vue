@@ -3,17 +3,10 @@
     <div v-if="showtitle === true && !isTradeAction" class="nofloat wf-component-title">{{ $t(playerinput.title) }}</div>
 
     <div v-if="isTradeAction" class="tm-colony-trade-status">
-      <div class="tm-colony-trade-heading">
-        <span class="tm-colony-trade-title">{{ $t(playerinput.title) }}</span>
-        <div class="tm-colony-selected-summary" :class="{'tm-colony-selected-summary--empty': selectedColony === undefined}">
-          <span v-if="selectedColony !== undefined">{{ selectedColony }}</span>
-          <span v-else v-i18n>No colony selected</span>
-        </div>
-      </div>
-
+      <span class="tm-colony-trade-status-label" v-i18n>Fleet</span>
       <div class="tm-colony-trade-fleet-board">
         <div
-          v-for="row in fleetPreviewRows"
+          v-for="row in selfFleetPreviewRows"
           :key="row.color"
           class="tm-colony-player-fleets"
           :class="{'tm-colony-player-fleets--self': row.isSelf}">
@@ -31,33 +24,26 @@
           <span class="tm-colony-fleet-count">{{ row.availableFleetCount }}/{{ row.fleetSize }}</span>
         </div>
       </div>
+      <span class="tm-colony-selection-a11y" aria-live="polite">{{ selectedColony === undefined ? $t('No colony selected') : selectedColony }}</span>
+    </div>
 
-      <div v-if="visitedColonies.length > 0" class="tm-colony-visitor-list">
-        <span class="tm-colony-trade-status-label" v-i18n>Visiting</span>
-        <span v-for="colony in visitedColonies" :key="colony.name" class="tm-colony-visitor-chip">
+    <div class="tm-colony-card-strip">
+      <label
+        v-for="colony in (playerinput.coloniesModel || [])"
+        class="cardbox tm-colony-card-option"
+        :class="colonyOptionClass(colony)"
+        :key="colony.name">
+        <input type="radio" v-model="selectedColony" :value="colony.name" :aria-label="$t('Select') + ' ' + colony.name" >
+        <span v-if="colony.visitor !== undefined" class="tm-colony-visitor-badge" :title="visitorTitle(colony)">
           <span class="tm-colony-fleet-token tm-colony-fleet-token--visitor">
             <span class="colonies-fleet" :class="visitorFleetClass(colony)"></span>
           </span>
-          <span>{{ colony.name }}</span>
+          <span>{{ colony.visitor }}</span>
         </span>
-      </div>
+        <span v-if="selectedColony === colony.name" class="tm-colony-card-selected-mark" v-i18n>Selected</span>
+        <Colony :colony="colony"/>
+      </label>
     </div>
-
-    <label
-      v-for="colony in (playerinput.coloniesModel || [])"
-      class="cardbox tm-colony-card-option"
-      :class="colonyOptionClass(colony)"
-      :key="colony.name">
-      <input type="radio" v-model="selectedColony" :value="colony.name" :aria-label="$t('Select') + ' ' + colony.name" >
-      <span v-if="colony.visitor !== undefined" class="tm-colony-visitor-badge" :title="visitorTitle(colony)">
-        <span class="tm-colony-fleet-token tm-colony-fleet-token--visitor">
-          <span class="colonies-fleet" :class="visitorFleetClass(colony)"></span>
-        </span>
-        <span>{{ colony.visitor }}</span>
-      </span>
-      <span v-if="selectedColony === colony.name" class="tm-colony-card-selected-mark" v-i18n>Selected</span>
-      <Colony :colony="colony"/>
-    </label>
     <div v-if="showsave === true" class="nofloat wf-component-actions">
       <AppButton @click="saveData" :title="playerinput.buttonLabel" :disabled="!canSave()"/>
     </div>
@@ -179,8 +165,8 @@ export default defineComponent({
 
       return rows.sort((a, b) => Number(b.isSelf) - Number(a.isSelf));
     },
-    visitedColonies(): ReadonlyArray<ColonyModel> {
-      return (this.playerinput.coloniesModel || []).filter((colony) => colony.visitor !== undefined);
+    selfFleetPreviewRows(): Array<FleetPreviewRow> {
+      return this.fleetPreviewRows.filter((row) => row.isSelf);
     },
   },
 });

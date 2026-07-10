@@ -1,7 +1,7 @@
 <template>
     <!-- <div :class="recedeIfInactive"> -->
     <!-- Show the background, tooltip, and other setup -->
-    <div class="filterDiv colony-card colonies tooltip tooltip-bottom" :class="backgroundClass" :data-tooltip="tooltip" v-i18n>
+    <div class="filterDiv colony-card colonies" :class="backgroundClass" :title="tooltip" v-i18n>
 
     <!-- Show colony ship if somebody is visiting -->
     <div v-if="colony.visitor !== undefined" class="colony-spaceship">
