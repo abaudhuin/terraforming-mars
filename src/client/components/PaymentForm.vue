@@ -19,8 +19,9 @@
     </template>
   </div>
 
-  <div v-if="warning !== undefined" class="tm-warning">
-    <label class="label label-error">{{ $t(warning) }}</label>
+  <div v-if="warning !== undefined" class="tm-warning tm-payment-warning" role="alert">
+    <span class="tm-payment-warning-icon" aria-hidden="true">!</span>
+    <span>{{ $t(warning) }}</span>
   </div>
 
   <div v-if="showsave" class="payments_save">
@@ -187,7 +188,7 @@ export default defineComponent({
       }
       const delta = this.totalSpent() - this.cost;
       if (delta < 0) {
-        this.warning = 'Haven\'t spent enough';
+        this.warning = `Add ${-delta} M€ more to continue`;
         return;
       }
       if (delta > 0) {

@@ -37,6 +37,7 @@ describe('Colony', () => {
 
     expect(wrapper.find('.colony-spaceship').exists()).to.be.false;
     expect(wrapper.find('.colony-visitor-chip').exists()).to.be.true;
+    expect(wrapper.find('.colony-visitor-chip').attributes('title')).to.contain('red');
     expect(wrapper.find('.colony-visitor-chip .colonies-fleet-red').exists()).to.be.true;
   });
 });

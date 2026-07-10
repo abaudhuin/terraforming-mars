@@ -95,6 +95,11 @@
       <main class="tm-table-main">
         <aside class="tm-player-rail" id="shortkey-playersoverview">
           <PlayersOverview :playerView="playerView" @open-player="openPlayer" v-trim-whitespace/>
+          <button
+            type="button"
+            class="tm-layout-resize-handle tm-layout-resize-handle--player"
+            :aria-label="$t('Resize player panel')"
+            @pointerdown="startPlayerResize"></button>
         </aside>
 
         <section class="tm-board-stage">
@@ -143,7 +148,6 @@
             :aria-label="$t('Resize logs')"
             @pointerdown="startActivityResize"></button>
           <div v-if="isActivityRailCollapsed" class="tm-panel-heading tm-log-collapsed-heading">
-            <span v-i18n>Logs</span>
             <button
               type="button"
               class="tm-panel-icon-button tm-icon-control tm-icon-control--activity-toggle tm-icon-control--activity-toggle-open"
@@ -152,6 +156,7 @@
               :aria-label="$t('Show logs')">
               <span aria-hidden="true"></span>
             </button>
+            <span v-i18n>Logs</span>
           </div>
           <LogPanel
             v-else
@@ -185,10 +190,20 @@
       <section class="tm-bottom-tray" :class="{'tm-bottom-tray--log-preview': showActivityLogPreview}">
         <button
           type="button"
+          class="tm-bottom-tray-toggle tm-panel-icon-button tm-icon-control"
+          :class="isBottomTrayCollapsed ? 'tm-icon-control--bottom-open' : 'tm-icon-control--bottom-close'"
+          @click="toggleBottomTray"
+          :aria-expanded="!isBottomTrayCollapsed"
+          :aria-label="$t(isBottomTrayCollapsed ? 'Show bottom panel' : 'Hide bottom panel')">
+          <span aria-hidden="true"></span>
+        </button>
+        <button
+          v-if="!isBottomTrayCollapsed"
+          type="button"
           class="tm-layout-resize-handle tm-layout-resize-handle--bottom"
           :aria-label="$t('Resize bottom panel')"
           @pointerdown="startBottomResize"></button>
-        <section v-if="showActivityLogPreview && activityPreviewMessage" class="tm-log-preview-desk">
+        <section v-if="!isBottomTrayCollapsed && showActivityLogPreview && activityPreviewMessage" class="tm-log-preview-desk">
           <header class="tm-log-preview-header">
             <div>
               <span v-i18n>Log detail</span>
@@ -204,7 +219,7 @@
           <CardPanel :message="activityPreviewMessage" :players="playerView.players" :showClose="false"/>
         </section>
 
-        <template v-else>
+        <template v-else-if="!isBottomTrayCollapsed">
         <section v-if="hasPlayerInput" class="tm-action-workbench player_home_block--actions" tabindex="-1">
           <a name="actions" class="player_home_anchor"></a>
           <WaitingFor v-if="game.phase !== 'end'" :playerView="playerView" :waitingfor="playerView.waitingFor"/>
@@ -507,6 +522,7 @@ type PlayerHomeModel = {
   showAutomatedCards: boolean;
   showEventCards: boolean;
   isActivityRailCollapsed: boolean;
+  isBottomTrayCollapsed: boolean;
   activeOverlay: OverlayKind;
   selectedPlayerColor: Color | undefined;
   cardOverlayFocus: CardOverlayFocus;
@@ -516,6 +532,7 @@ type PlayerHomeModel = {
   cardOverlaySort: CardOverlaySort;
   bottomTrayHeight: number | undefined;
   activityRailWidth: number | undefined;
+  playerRailWidth: number | undefined;
   resizeTarget: ResizeTarget;
   activityPreviewMessage: LogMessage | undefined;
   playerLogPreviewMessage: LogMessage | undefined;
@@ -526,7 +543,7 @@ type CardOverlayFocus = 'balanced' | 'hand' | 'played';
 type CardOverlayFilter = 'all' | 'playable' | 'affordable' | 'warnings';
 type CardOverlayGroup = 'none' | 'type' | 'tag';
 type CardOverlaySort = 'table' | 'cost';
-type ResizeTarget = 'bottom' | 'activity' | undefined;
+type ResizeTarget = 'bottom' | 'activity' | 'player' | undefined;
 
 type ToggleableCardType = 'HAND' | 'ACTIVE' | 'AUTOMATED' | 'EVENT';
 type ToggleStateKey = 'showHand' | 'showActiveCards' | 'showAutomatedCards' | 'showEventCards';
@@ -534,7 +551,9 @@ type ToggleStateKey = 'showHand' | 'showActiveCards' | 'showAutomatedCards' | 's
 const layoutStorageKeys = {
   bottomTrayHeight: 'tm-player-table-bottom-tray-height',
   activityRailWidth: 'tm-player-table-activity-rail-width',
+  playerRailWidth: 'tm-player-table-player-rail-width',
   activityRailCollapsed: 'tm-player-table-activity-rail-collapsed',
+  bottomTrayCollapsed: 'tm-player-table-bottom-tray-collapsed',
 } as const;
 const twoRowActionTrayHeight = 540;
 
@@ -585,6 +604,7 @@ export default defineComponent({
       showAutomatedCards: !preferences.hide_automated_cards,
       showEventCards: !preferences.hide_event_cards,
       isActivityRailCollapsed: readStoredLayoutBoolean(layoutStorageKeys.activityRailCollapsed),
+      isBottomTrayCollapsed: readStoredLayoutBoolean(layoutStorageKeys.bottomTrayCollapsed),
       activeOverlay: 'none',
       selectedPlayerColor: undefined,
       cardOverlayFocus: 'balanced',
@@ -594,6 +614,7 @@ export default defineComponent({
       cardOverlaySort: 'table',
       bottomTrayHeight: readStoredLayoutDimension(layoutStorageKeys.bottomTrayHeight),
       activityRailWidth: readStoredLayoutDimension(layoutStorageKeys.activityRailWidth),
+      playerRailWidth: readStoredLayoutDimension(layoutStorageKeys.playerRailWidth),
       resizeTarget: undefined,
       activityPreviewMessage: undefined,
       playerLogPreviewMessage: undefined,
@@ -647,6 +668,7 @@ export default defineComponent({
         'tm-player-table--passive': !this.isPlayerActing(this.playerView),
         'tm-player-table--magnify-cards': getPreferences().magnify_cards,
         'tm-player-table--activity-collapsed': this.isActivityRailCollapsed,
+        'tm-player-table--bottom-collapsed': this.isBottomTrayCollapsed,
         'tm-player-table--two-row-actions':
           this.bottomTrayHeight !== undefined && this.bottomTrayHeight >= twoRowActionTrayHeight,
         [`tm-player-table--input-${this.inputKind}`]: true,
@@ -660,6 +682,9 @@ export default defineComponent({
       }
       if (this.activityRailWidth !== undefined) {
         style['--tm-activity-width'] = `${this.activityRailWidth}px`;
+      }
+      if (this.playerRailWidth !== undefined) {
+        style['--tm-player-width'] = `${this.playerRailWidth}px`;
       }
       return style;
     },
@@ -840,6 +865,9 @@ export default defineComponent({
     startActivityResize(event: PointerEvent): void {
       this.beginLayoutResize('activity', event);
     },
+    startPlayerResize(event: PointerEvent): void {
+      this.beginLayoutResize('player', event);
+    },
     beginLayoutResize(target: Exclude<ResizeTarget, undefined>, event: PointerEvent): void {
       event.preventDefault();
       this.resizeTarget = target;
@@ -860,6 +888,10 @@ export default defineComponent({
         const maxWidth = Math.min(820, Math.max(280, window.innerWidth - 620));
         this.activityRailWidth = this.clampLayoutValue(window.innerWidth - event.clientX - 8, 220, maxWidth);
       }
+      if (this.resizeTarget === 'player') {
+        const maxWidth = Math.min(620, Math.max(360, window.innerWidth - 760));
+        this.playerRailWidth = this.clampLayoutValue(event.clientX - 8, 260, maxWidth);
+      }
     },
     stopLayoutResize(): void {
       const target = this.resizeTarget;
@@ -868,6 +900,9 @@ export default defineComponent({
       }
       if (target === 'activity') {
         storeLayoutDimension(layoutStorageKeys.activityRailWidth, this.activityRailWidth);
+      }
+      if (target === 'player') {
+        storeLayoutDimension(layoutStorageKeys.playerRailWidth, this.playerRailWidth);
       }
       this.resizeTarget = undefined;
       this.removeLayoutResizeListeners();
@@ -947,6 +982,13 @@ export default defineComponent({
         this.closeActivityLogPreview();
       }
       storeLayoutBoolean(layoutStorageKeys.activityRailCollapsed, this.isActivityRailCollapsed);
+    },
+    toggleBottomTray(): void {
+      this.isBottomTrayCollapsed = !this.isBottomTrayCollapsed;
+      if (this.isBottomTrayCollapsed) {
+        this.closeActivityLogPreview();
+      }
+      storeLayoutBoolean(layoutStorageKeys.bottomTrayCollapsed, this.isBottomTrayCollapsed);
     },
     openPlayer(color: Color): void {
       this.selectedPlayerColor = color;

@@ -35,9 +35,9 @@
 
 .colony-visitor-chip {
   flex: 0 0 auto;
-  width: 40px;
-  height: 32px;
-  margin-top: 5px;
+  width: 46px;
+  height: 40px;
+  margin-top: 1px;
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 6px;
   display: inline-grid;
@@ -47,15 +47,21 @@
 }
 
 .colony-visitor-chip-icon {
-  width: 28px;
-  height: 28px;
-  display: block;
+  position: relative;
+  width: 40px;
+  height: 38px;
+  display: grid;
+  place-items: center;
   overflow: hidden;
 }
 
 .colony-visitor-chip-icon > .colonies-fleet {
-  transform: scale(0.4);
-  transform-origin: top left;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  transform: translate(-50%, -50%) scale(0.56);
+  transform-origin: center;
 }
 
 .colony-content {

@@ -311,6 +311,8 @@ describe('PaymentForm', () => {
 
     expect(wrapper.emitted('save')).to.not.exist;
     expect(wrapper.find('.tm-warning').exists()).is.true;
+    expect(wrapper.find('.tm-payment-warning').text()).to.contain('Add 5 M€ more to continue');
+    expect(wrapper.find('.tm-payment-warning').attributes('role')).to.eq('alert');
   });
 
   it('clicking save shows warning when spending more than available units', async () => {

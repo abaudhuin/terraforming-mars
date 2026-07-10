@@ -116,6 +116,36 @@ describe('PlayerHome', () => {
     expect((wrapper.vm as any).getAvailableFleetCount(thisPlayer)).to.eq(0);
   });
 
+  it('persists independently collapsible and resizable table panels', async () => {
+    const thisPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}]});
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {
+        methods: {
+          getVisibilityState: () => true,
+          setVisibilityState: () => {},
+        },
+      } as any,
+      props: {
+        playerView: fakePlayerViewModel({thisPlayer, players: [thisPlayer]}),
+      },
+    });
+
+    expect(wrapper.find('.tm-layout-resize-handle--player').exists()).to.be.true;
+    expect(wrapper.find('.tm-bottom-tray-toggle').attributes('aria-expanded')).to.eq('true');
+
+    await wrapper.find('.tm-bottom-tray-toggle').trigger('click');
+
+    expect(wrapper.classes()).to.include('tm-player-table--bottom-collapsed');
+    expect(wrapper.find('.tm-bottom-tray-toggle').attributes('aria-expanded')).to.eq('false');
+    expect(localStorage.getItem('tm-player-table-bottom-tray-collapsed')).to.eq('true');
+
+    (wrapper.vm as any).playerRailWidth = 418;
+    (wrapper.vm as any).resizeTarget = 'player';
+    (wrapper.vm as any).stopLayoutResize();
+    expect(localStorage.getItem('tm-player-table-player-rail-width')).to.eq('418');
+  });
+
   it('preserves an open overlay when a refreshed player model arrives', async () => {
     const thisPlayer = fakePublicPlayerModel({
       tableau: [{name: CardName.ACQUIRED_COMPANY}],
