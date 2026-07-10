@@ -15,6 +15,7 @@ type Encoding = 'gzip' | 'br';
 const DEFAULT_ASSET_CACHE_MAX_AGE_SECONDS = 14400;
 const DEFAULT_EDGE_ASSET_CACHE_MAX_AGE_SECONDS = 86400;
 const VERSIONED_ASSET_CACHE_MAX_AGE_SECONDS = 31536000;
+const CONTENT_HASHED_ASSET = /(?:^|\/)[^/]+-[A-Za-z0-9_-]{8,}\.[^/]+$/;
 
 function isPathInside(root: string, file: string): boolean {
   const relative = path.relative(root, file);
@@ -153,6 +154,11 @@ export class ServeAsset extends Handler {
   private toFile(urlPath: string, encodings: Set<Encoding>): { file?: string, encoding?: Encoding } {
     switch (urlPath) {
     case 'assets/index.html':
+      if (this.fileApi.existsSync('build/index.html')) {
+        return {file: 'build/index.html'};
+      }
+      return {file: urlPath};
+
     case 'assets/Prototype.ttf':
     case 'assets/Prototype-ru.ttf':
     case 'assets/Prototype-pl.ttf':
@@ -226,7 +232,7 @@ export class ServeAsset extends Handler {
       return;
     }
 
-    if (url.searchParams.has('v')) {
+    if (url.searchParams.has('v') || CONTENT_HASHED_ASSET.test(urlPath)) {
       res.setHeader('Cache-Control', `public, max-age=${this.versionedCacheAgeSeconds}, immutable`);
       return;
     }

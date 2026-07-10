@@ -1,5 +1,7 @@
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
+import {readFile} from 'node:fs/promises';
 
 import {defineConfig} from 'vite';
 import Vue from 'unplugin-vue/vite';
@@ -36,6 +38,42 @@ export default css;
 `,
         map: {version: 3, sources: [], names: [], mappings: ''},
       };
+    },
+  };
+}
+
+function assetIndexPlugin() {
+  return {
+    name: 'terraforming-mars:asset-index',
+    async generateBundle(_options, bundle) {
+      const chunks = Object.values(bundle).filter((item) => item.type === 'chunk');
+      const main = chunks.find((chunk) => chunk.name === 'main');
+      const vendors = chunks.find((chunk) => chunk.name === 'vendors');
+      if (main === undefined || vendors === undefined) {
+        throw new Error('Expected main and vendors in the client bundle');
+      }
+
+      const styles = await readFile(path.resolve(__dirname, 'build/styles.css')).catch(() => Buffer.from('development'));
+      const assetVersion = createHash('sha256')
+        .update(styles)
+        .update(main.code)
+        .update(vendors.code)
+        .digest('hex')
+        .slice(0, 16);
+      const template = await readFile(path.resolve(__dirname, 'assets/index.html'), 'utf8');
+      const placeholders = ['__TM_ASSET_VERSION__', '__TM_MAIN_FILE__', '__TM_VENDORS_FILE__'];
+      if (placeholders.some((placeholder) => !template.includes(placeholder))) {
+        throw new Error('assets/index.html is missing an asset placeholder');
+      }
+
+      this.emitFile({
+        type: 'asset',
+        fileName: 'index.html',
+        source: template
+          .replaceAll('__TM_ASSET_VERSION__', assetVersion)
+          .replaceAll('__TM_MAIN_FILE__', main.fileName)
+          .replaceAll('__TM_VENDORS_FILE__', vendors.fileName),
+      });
     },
   };
 }
@@ -81,6 +119,7 @@ export default defineConfig(({mode}) => {
         },
       }),
       vueStyleInjectPlugin(),
+      assetIndexPlugin(),
     ],
     css: {
       preprocessorOptions: {
@@ -107,17 +146,9 @@ export default defineConfig(({mode}) => {
         },
         output: {
           format: 'esm',
-          entryFileNames: (chunk) => `${chunk.name}.js`,
-          chunkFileNames: (chunk) => {
-            if (chunk.name === 'vendors') {
-              return 'vendors.js';
-            }
-            if (chunk.name.endsWith('-runtime')) {
-              return 'chunks/vite-runtime.js';
-            }
-            return 'chunks/[name].js';
-          },
-          assetFileNames: 'assets/[name][extname]',
+          entryFileNames: (chunk) => chunk.name === 'sw' ? 'sw.js' : 'chunks/[name]-[hash].js',
+          chunkFileNames: 'chunks/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash][extname]',
           manualChunks(id) {
             if (id.includes('/node_modules/')) {
               return 'vendors';

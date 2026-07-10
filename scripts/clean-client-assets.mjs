@@ -1,6 +1,7 @@
 import {rm, mkdir} from 'node:fs/promises';
 
 const clientOutputs = [
+  'build/index.html',
   'build/main.js',
   'build/main.js.map',
   'build/main.js.gz',

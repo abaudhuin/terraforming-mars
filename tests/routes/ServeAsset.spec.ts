@@ -6,6 +6,7 @@ import {RouteTestScaffolding} from './RouteTestScaffolding';
 import {statusCode} from '../../src/common/http/statusCode';
 class FileApiMock extends FileAPI {
   public generatedAssets = new Set<string>();
+  public missingFiles = new Set<string>();
   public counts = {
     readFile: 0,
     readFileSync: 0,
@@ -24,6 +25,9 @@ class FileApiMock extends FileAPI {
   }
   public override existsSync(path: string): boolean {
     this.counts.existsSync++;
+    if (this.missingFiles.has(path)) {
+      return false;
+    }
     if (path.startsWith('build/assets/')) {
       return this.generatedAssets.has(path);
     }
@@ -69,6 +73,23 @@ describe('ServeAsset', () => {
     expect(res.content.startsWith('<!DOCTYPE html>'));
     expect(res.headers.get('Cache-Control')).eq('private, no-store, no-cache, must-revalidate, max-age=0, s-maxage=0');
     expect(res.headers.get('Pragma')).eq('no-cache');
+  });
+
+  it('serves the generated asset-versioned index when available', async () => {
+    instance = new ServeAsset(undefined, false, fileApi);
+    scaffolding.url = '/assets/index.html';
+    scaffolding.req.headers['accept-encoding'] = '';
+    await scaffolding.get(instance, res);
+    expect(res.content).eq('data: build/index.html');
+  });
+
+  it('falls back to the source index before a client build exists', async () => {
+    fileApi.missingFiles.add('build/index.html');
+    instance = new ServeAsset(undefined, false, fileApi);
+    scaffolding.url = '/assets/index.html';
+    scaffolding.req.headers['accept-encoding'] = '';
+    await scaffolding.get(instance, res);
+    expect(res.content).eq('data: assets/index.html');
   });
 
   it('styles.css', async () => {
@@ -236,6 +257,14 @@ describe('ServeAsset', () => {
     expect(res.content).eq('data: build/chunks/player-home.js');
   });
 
+  it('content-hashed chunks use an immutable cache policy', async () => {
+    instance = new ServeAsset(undefined, false, fileApi);
+    scaffolding.url = '/chunks/PlayerHome-a1b2c3d4.js';
+    scaffolding.req.headers['accept-encoding'] = '';
+    await scaffolding.get(instance, res);
+    expect(res.headers.get('Cache-Control')).eq('public, max-age=31536000, immutable');
+  });
+
   it('chunk js.map file', async () => {
     instance = new ServeAsset(undefined, false, fileApi);
     scaffolding.url = '/chunks/player-home.js.map';
@@ -253,7 +282,10 @@ describe('ServeAsset', () => {
   });
 
   it('serves all script sources referenced in index.html', async () => {
-    const html = fs.readFileSync('assets/index.html', 'utf8');
+    const html = fs.readFileSync('assets/index.html', 'utf8')
+      .replaceAll('__TM_ASSET_VERSION__', 'test-version')
+      .replaceAll('__TM_VENDORS_FILE__', 'chunks/vendors-a1b2c3d4.js')
+      .replaceAll('__TM_MAIN_FILE__', 'chunks/main-a1b2c3d4.js');
     const srcs = [...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map((m) => m[1]);
     expect(srcs).to.not.be.empty;
     for (const src of srcs) {
