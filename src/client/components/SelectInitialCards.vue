@@ -167,7 +167,7 @@ export default defineComponent({
       return this.$t('Mulligan') + ` ${count} → ${count - 1}`;
     },
     poolKey(option: SelectCardModel): string {
-      return option.cards.map((card) => card.name).join('|');
+      return (option.cards ?? []).map((card) => card.name).join('|');
     },
     noop() {
       throw new Error('should not be called');

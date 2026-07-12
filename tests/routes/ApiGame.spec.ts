@@ -84,6 +84,12 @@ describe('ApiGame', () => {
           'includeFanMA': false,
           'initialDraftVariant': false,
           'ceosDraftVariant': false,
+          'mulligan': {
+            'ceo': false,
+            'corporation': false,
+            'prelude': false,
+            'project': false,
+          },
           'politicalAgendasExtension': 'Standard',
           'preludeDraftVariant': false,
           'randomMA': 'No randomization',
