@@ -1,5 +1,5 @@
 <template>
-      <div :class="getClasses()" tabindex="0">
+      <div :class="getClasses()" :data-player-color="player.color" tabindex="0">
         <div class="player-status-and-res">
         <div class="player-status">
           <div class="player-info-details">

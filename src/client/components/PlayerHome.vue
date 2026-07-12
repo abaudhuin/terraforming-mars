@@ -143,7 +143,7 @@
             :aria-label="$t('Resize logs')"
             @pointerdown="startActivityResize"></button>
           <div v-if="isActivityRailCollapsed" class="tm-panel-heading tm-log-collapsed-heading">
-            <span v-i18n>Logs</span>
+            <span v-i18n>Activity</span>
             <button
               type="button"
               class="tm-panel-icon-button tm-icon-control tm-icon-control--activity-toggle tm-icon-control--activity-toggle-open"
@@ -153,32 +153,47 @@
               <span aria-hidden="true"></span>
             </button>
           </div>
-          <LogPanel
-            v-else
-            :viewModel="playerView"
-            :color="thisPlayer.color"
-            :step="game.step"
-            :recentHistory="true"
-            headerTitle="Logs"
-            cardPanelMode="emit"
-            @preview-message="openActivityLogPreview">
-            <template #header-actions>
+          <div v-else class="tm-activity-workspace">
+            <header class="tm-activity-modebar">
+              <div class="tm-activity-mode-tabs" role="group" :aria-label="$t('Activity view')">
+                <button type="button" :class="{'tm-activity-mode-tab--active': activityMode === 'focus'}" :aria-pressed="activityMode === 'focus'" @click="setActivityMode('focus')" v-i18n>Focus</button>
+                <button type="button" :class="{'tm-activity-mode-tab--active': activityMode === 'history'}" :aria-pressed="activityMode === 'history'" @click="setActivityMode('history')" v-i18n>History</button>
+              </div>
               <div class="tm-log-header-actions">
-                <button v-if="!isActivityRailCollapsed" type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye" @click="openOverlay('log')" :aria-label="$t('Open game log')">
+                <button type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye" @click="openOverlay('log')" :aria-label="$t('Open game log')">
                   <span aria-hidden="true"></span>
                 </button>
                 <button
                   type="button"
                   class="tm-panel-icon-button tm-icon-control tm-icon-control--activity-toggle"
-                  :class="{'tm-icon-control--activity-toggle-open': isActivityRailCollapsed}"
                   @click="toggleActivityRail"
-                  :aria-expanded="!isActivityRailCollapsed"
-                  :aria-label="$t('Hide logs')">
+                  :aria-expanded="true"
+                  :aria-label="$t('Hide activity')">
                   <span aria-hidden="true"></span>
                 </button>
               </div>
-            </template>
-          </LogPanel>
+            </header>
+            <ActionSpotlight
+              v-if="activityMode === 'focus'"
+              :key="feedbackEpoch"
+              :messages="activityMessages"
+              :viewModel="playerView"
+              :resourceDeltas="resourceDeltas"
+              :globalDeltas="globalDeltas"/>
+            <LogPanel
+              v-show="activityMode === 'history'"
+              :viewModel="playerView"
+              :color="thisPlayer.color"
+              :step="game.step"
+              :gameAge="game.gameAge"
+              :recentHistory="true"
+              :liveUpdates="true"
+              :messageLimit="8"
+              headerTitle="History"
+              cardPanelMode="emit"
+              @activity-update="handleActivityUpdate"
+              @preview-message="openActivityLogPreview"/>
+          </div>
         </aside>
       </main>
 
@@ -325,7 +340,8 @@
               v-if="activeOverlay === 'log'"
               :viewModel="playerView"
               :color="thisPlayer.color"
-              :step="game.step"/>
+              :step="game.step"
+              :gameAge="game.gameAge"/>
 
             <div
               v-else-if="activeOverlay === 'cards'"
@@ -449,6 +465,7 @@
                     :viewModel="playerView"
                     :color="selectedPlayer.color"
                     :step="game.step"
+                    :gameAge="game.gameAge"
                     :playerFilter="selectedPlayer.color"
                     :fallbackToAllWhenFilteredEmpty="true"
                     :recentHistory="true"
@@ -475,6 +492,7 @@ import PlayersOverview from '@/client/components/overview/PlayersOverview.vue';
 import WaitingFor from '@/client/components/WaitingFor.vue';
 import Colony from '@/client/components/colonies/Colony.vue';
 import LogPanel from '@/client/components/logpanel/LogPanel.vue';
+import ActionSpotlight from '@/client/components/logpanel/ActionSpotlight.vue';
 import LogMessageComponent from '@/client/components/logpanel/LogMessageComponent.vue';
 import CardPanel from '@/client/components/logpanel/CardPanel.vue';
 import GameBoardView from '@/client/components/GameBoardView.vue';
@@ -500,6 +518,11 @@ import {HomeMixin} from '@/client/mixins/HomeMixin';
 import {GlobalParameter} from '@/common/GlobalParameter';
 import {Color} from '@/common/Color';
 import {LogMessage} from '@/common/logs/LogMessage';
+import {LogMessageDataType} from '@/common/logs/LogMessageDataType';
+import {LogMessageType} from '@/common/logs/LogMessageType';
+import {ActionFeedback, getActionFeedback, GlobalDelta, ResourceDelta} from '@/client/utils/ActionFeedback';
+import {ColonyName} from '@/common/colonies/ColonyName';
+import {SpaceId} from '@/common/Types';
 
 type PlayerHomeModel = {
   showHand: boolean;
@@ -519,6 +542,14 @@ type PlayerHomeModel = {
   resizeTarget: ResizeTarget;
   activityPreviewMessage: LogMessage | undefined;
   playerLogPreviewMessage: LogMessage | undefined;
+  activityMode: ActivityMode;
+  activityMessages: Array<LogMessage>;
+  resourceDeltas: Array<ResourceDelta>;
+  globalDeltas: Array<GlobalDelta>;
+  feedbackSpaces: Array<SpaceId>;
+  feedbackColonies: Array<ColonyName>;
+  feedbackEpoch: number;
+  feedbackClearTimer: number | undefined;
 }
 
 type OverlayKind = 'none' | 'board' | 'cards' | 'log' | 'player';
@@ -527,6 +558,8 @@ type CardOverlayFilter = 'all' | 'playable' | 'affordable' | 'warnings';
 type CardOverlayGroup = 'none' | 'type' | 'tag';
 type CardOverlaySort = 'table' | 'cost';
 type ResizeTarget = 'bottom' | 'activity' | undefined;
+type ActivityMode = 'focus' | 'history';
+type ActivityUpdate = {messages: Array<LogMessage>, isInitial: boolean};
 
 type ToggleableCardType = 'HAND' | 'ACTIVE' | 'AUTOMATED' | 'EVENT';
 type ToggleStateKey = 'showHand' | 'showActiveCards' | 'showAutomatedCards' | 'showEventCards';
@@ -535,6 +568,7 @@ const layoutStorageKeys = {
   bottomTrayHeight: 'tm-player-table-bottom-tray-height',
   activityRailWidth: 'tm-player-table-activity-rail-width',
   activityRailCollapsed: 'tm-player-table-activity-rail-collapsed',
+  activityMode: 'tm-player-table-activity-mode',
 } as const;
 const twoRowActionTrayHeight = 540;
 
@@ -567,6 +601,13 @@ function storeLayoutBoolean(key: string, value: boolean): void {
   localStorage.setItem(key, String(value));
 }
 
+function readActivityMode(): ActivityMode {
+  if (typeof localStorage === 'undefined') {
+    return 'focus';
+  }
+  return localStorage.getItem(layoutStorageKeys.activityMode) === 'history' ? 'history' : 'focus';
+}
+
 const typeToDataModel: Record<ToggleableCardType, {key: ToggleStateKey, preference: keyof Preferences}> = {
   HAND: {key: 'showHand', preference: 'hide_hand'},
   ACTIVE: {key: 'showActiveCards', preference: 'hide_active_cards'},
@@ -597,6 +638,14 @@ export default defineComponent({
       resizeTarget: undefined,
       activityPreviewMessage: undefined,
       playerLogPreviewMessage: undefined,
+      activityMode: readActivityMode(),
+      activityMessages: [],
+      resourceDeltas: [],
+      globalDeltas: [],
+      feedbackSpaces: [],
+      feedbackColonies: [],
+      feedbackEpoch: 0,
+      feedbackClearTimer: undefined,
     };
   },
   watch: {
@@ -616,6 +665,13 @@ export default defineComponent({
       if (active) {
         this.activityPreviewMessage = undefined;
       }
+    },
+    playerView: {
+      handler(next: PlayerViewModel, previous: PlayerViewModel | undefined) {
+        if (previous !== undefined && previous.game.gameAge !== next.game.gameAge) {
+          this.applyActionFeedback(getActionFeedback(previous, next));
+        }
+      },
     },
   },
   props: {
@@ -804,6 +860,7 @@ export default defineComponent({
     WaitingFor,
     Colony,
     LogPanel,
+    ActionSpotlight,
     LogMessageComponent,
     CardPanel,
     GameBoardView,
@@ -825,9 +882,93 @@ export default defineComponent({
   beforeUnmount() {
     document.removeEventListener('keydown', this.handleGlobalKeydown);
     this.removeLayoutResizeListeners();
+    if (this.feedbackClearTimer !== undefined) {
+      window.clearTimeout(this.feedbackClearTimer);
+    }
+    this.clearSurfaceFeedback();
   },
 
   methods: {
+    setActivityMode(mode: ActivityMode): void {
+      this.activityMode = mode;
+      localStorage.setItem(layoutStorageKeys.activityMode, mode);
+    },
+    handleActivityUpdate(update: ActivityUpdate): void {
+      const messages = update.messages.filter((message) => message.type !== LogMessageType.NEW_GENERATION);
+      this.activityMessages = messages;
+      this.feedbackEpoch += 1;
+      if (!update.isInitial) {
+        const spaces: Array<SpaceId> = [];
+        const colonies: Array<ColonyName> = [];
+        for (const message of messages) {
+          for (const datum of message.data) {
+            if (datum.type === LogMessageDataType.SPACE) {
+              spaces.push(datum.value);
+            } else if (datum.type === LogMessageDataType.COLONY) {
+              colonies.push(datum.value);
+            }
+          }
+        }
+        this.feedbackSpaces = Array.from(new Set(this.feedbackSpaces.concat(spaces)));
+        this.feedbackColonies = Array.from(new Set(this.feedbackColonies.concat(colonies)));
+        this.queueSurfaceFeedback();
+      }
+    },
+    applyActionFeedback(feedback: ActionFeedback): void {
+      if (feedback.resources.length === 0 && feedback.globals.length === 0 && feedback.spaces.length === 0 && feedback.colonies.length === 0) {
+        return;
+      }
+      this.resourceDeltas = feedback.resources;
+      this.globalDeltas = feedback.globals;
+      this.feedbackSpaces = feedback.spaces;
+      this.feedbackColonies = feedback.colonies;
+      this.feedbackEpoch += 1;
+      this.queueSurfaceFeedback();
+    },
+    queueSurfaceFeedback(): void {
+      this.$nextTick(() => this.showSurfaceFeedback());
+      if (this.feedbackClearTimer !== undefined) {
+        window.clearTimeout(this.feedbackClearTimer);
+      }
+      this.feedbackClearTimer = window.setTimeout(() => {
+        this.resourceDeltas = [];
+        this.globalDeltas = [];
+        this.feedbackSpaces = [];
+        this.feedbackColonies = [];
+        this.clearSurfaceFeedback();
+        this.feedbackClearTimer = undefined;
+      }, 4800);
+    },
+    showSurfaceFeedback(): void {
+      this.clearSurfaceFeedback();
+      const root = this.$el as HTMLElement;
+      for (const spaceId of this.feedbackSpaces) {
+        root.querySelectorAll<HTMLElement>('.board-log-highlight').forEach((element) => {
+          if (element.getAttribute('data_log_highlight_id') === spaceId) {
+            element.classList.add('tm-feedback-highlight');
+          }
+        });
+      }
+      root.querySelectorAll<HTMLElement>('[data-colony-name]').forEach((element) => {
+        if (this.feedbackColonies.includes(element.dataset.colonyName as ColonyName)) {
+          element.classList.add('tm-feedback-pulse');
+        }
+      });
+      for (const delta of this.resourceDeltas) {
+        root.querySelectorAll<HTMLElement>('[data-player-color] [data-resource]').forEach((element) => {
+          const playerElement = element.closest<HTMLElement>('[data-player-color]');
+          if (playerElement?.dataset.playerColor === delta.playerColor && element.dataset.resource === delta.resource) {
+            element.classList.add('tm-feedback-pulse');
+          }
+        });
+      }
+    },
+    clearSurfaceFeedback(): void {
+      const root = this.$el as HTMLElement | undefined;
+      root?.querySelectorAll('.tm-feedback-highlight, .tm-feedback-pulse').forEach((element) => {
+        element.classList.remove('tm-feedback-highlight', 'tm-feedback-pulse');
+      });
+    },
     isPlayerActing(playerView: PlayerViewModel) : boolean {
       return playerView.players.length > 1 && playerView.waitingFor !== undefined && !playerView.waitingFor.optional;
     },
