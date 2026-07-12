@@ -107,6 +107,7 @@ const primaryExtensionShots = [
   'venus-track',
   'ares-hazards',
   'pathfinders-open',
+  'pathfinders-scrolled',
   'ceo-cards',
   'tools-open',
 ];
@@ -117,6 +118,7 @@ const coloniesVenusPathfindersShots = [
   'colonies-selected',
   'venus-track',
   'pathfinders-open',
+  'pathfinders-scrolled',
   'overlay-board',
   'overlay-players',
   'overlay-log',
@@ -2052,6 +2054,13 @@ const allShotDefinitions = [
   {name: 'ares-hazards', seat: 'active', prepare: showAresHazards, coverageTags: ['ares', 'hazards', 'global-parameter']},
   {name: 'ceo-cards', seat: 'active', prepare: showCeoCards, coverageTags: ['ceos', 'cards', 'tableau', 'ceo-action-state']},
   {name: 'pathfinders-open', seat: 'active', prepare: (page) => openExtensionSummary(page, ['.tm-extension-panel--pathfinders > summary', 'details:has-text("Pathfinders") > summary']), coverageTags: ['pathfinders', 'planetary-tracks', 'extension-panel']},
+  {name: 'pathfinders-scrolled', seat: 'active', prepare: async (page) => {
+    const panel = page.locator('.tm-extension-panel--pathfinders').first();
+    if (await panel.count() === 0) return false;
+    const isOpen = await panel.evaluate((element) => element.hasAttribute('open'));
+    if (!isOpen && !await openExtensionSummary(page, ['.tm-extension-panel--pathfinders > summary', 'details:has-text("Pathfinders") > summary'])) return false;
+    return scrollSelector(page, '.tm-extension-panel--pathfinders[open] .tm-extension-panel-body--pathfinders');
+  }, coverageTags: ['pathfinders', 'planetary-tracks', 'vertical-scroll', 'extension-panel']},
   {name: 'turmoil-open', seat: 'active', prepare: (page) => openExtensionSummary(page, ['.tm-extension-panel--turmoil > summary', 'details:has-text("Turmoil") > summary']), coverageTags: ['turmoil', 'delegates', 'global-events', 'extension-panel']},
   {name: 'moon-open', seat: 'active', prepare: (page) => openExtensionSummary(page, ['.tm-extension-panel--moon > summary', 'details:has-text("Moon") > summary']), coverageTags: ['moon', 'moon-board', 'moon-rates', 'extension-panel']},
   {name: 'underworld-open', seat: 'active', prepare: openUnderworldSurface, coverageTags: ['underworld', 'underground-tokens', 'corruption', 'board-tokens', 'player-tokens']},

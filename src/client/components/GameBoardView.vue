@@ -36,20 +36,41 @@
       </details>
 
       <details v-if="game.moon" class="tm-extension-panel tm-extension-panel--moon">
-        <summary v-i18n>Moon</summary>
+        <summary>
+          <span class="tm-extension-panel-title" v-i18n>Moon</span>
+          <span class="tm-extension-panel-close tm-icon-control tm-icon-control--close" aria-hidden="true">
+            <span></span>
+          </span>
+        </summary>
         <a class="hotkey-target"></a>
-        <MoonBoard :model="game.moon" :tileView="tileView" id="shortkey-moonBoard"/>
+        <div class="tm-extension-panel-body tm-extension-panel-body--moon">
+          <MoonBoard :model="game.moon" :tileView="tileView" id="shortkey-moonBoard"/>
+        </div>
       </details>
 
       <details v-if="game.gameOptions.expansions.pathfinders" class="tm-extension-panel tm-extension-panel--pathfinders">
-        <summary v-i18n>Tracks</summary>
+        <summary>
+          <span class="tm-extension-panel-title" v-i18n>Tracks</span>
+          <span class="tm-extension-panel-close tm-icon-control tm-icon-control--close" aria-hidden="true">
+            <span></span>
+          </span>
+        </summary>
         <a class="hotkey-target"></a>
-        <PlanetaryTracks :tracks="game.pathfinders" :gameOptions="game.gameOptions"/>
+        <div class="tm-extension-panel-body tm-extension-panel-body--pathfinders" @wheel="scrollPathfindersHorizontally">
+          <PlanetaryTracks :tracks="game.pathfinders" :gameOptions="game.gameOptions"/>
+        </div>
       </details>
 
       <details v-if="game.gameOptions.expansions.deltaProject" class="tm-extension-panel tm-extension-panel--delta">
-        <summary v-i18n>Delta</summary>
-        <DeltaProjectBoard :players="players"/>
+        <summary>
+          <span class="tm-extension-panel-title" v-i18n>Delta</span>
+          <span class="tm-extension-panel-close tm-icon-control tm-icon-control--close" aria-hidden="true">
+            <span></span>
+          </span>
+        </summary>
+        <div class="tm-extension-panel-body tm-extension-panel-body--delta">
+          <DeltaProjectBoard :players="players"/>
+        </div>
       </details>
     </div>
 
@@ -161,6 +182,21 @@ export default defineComponent({
     }
   },
   methods: {
+    scrollPathfindersHorizontally(event: WheelEvent) {
+      const scroller = event.currentTarget;
+      if (!(scroller instanceof HTMLElement) || scroller.scrollWidth <= scroller.clientWidth) {
+        return;
+      }
+      const hasVerticalOverflow = scroller.scrollHeight > scroller.clientHeight + 1;
+      if (!event.shiftKey && hasVerticalOverflow) {
+        return;
+      }
+      if (!event.shiftKey && Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+        return;
+      }
+      event.preventDefault();
+      scroller.scrollLeft += event.deltaX || event.deltaY;
+    },
     installBoardFit(): void {
       const viewport = this.$refs.boardViewport;
       if (viewport instanceof HTMLElement && typeof ResizeObserver !== 'undefined') {
