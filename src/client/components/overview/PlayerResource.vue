@@ -1,5 +1,5 @@
 <template>
-  <div class="resource_item" :class="mainCSS">
+  <div class="resource_item" :class="mainCSS" :data-resource="type">
       <div class="resource_item_stock">
           <i class="resource_icon tooltip tooltip-bottom" :class="iconCSS" :data-tooltip="resourceTypeTooltip"></i>
           <div class="resource_item_stock_count" data-test="stock-count">{{ count }}</div>

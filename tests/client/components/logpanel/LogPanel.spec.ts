@@ -93,12 +93,12 @@ describe('LogPanel', () => {
     second.unmount();
   });
 
-  it('refreshes on step changes without resetting manual scroll', async () => {
+  it('refreshes on game activity without resetting manual scroll', async () => {
     const responses: Array<(response: Response) => void> = [];
     (global as any).fetch = () => new Promise<Response>((resolve) => responses.push(resolve));
     const wrapper = shallowMount(LogPanel, {
       ...globalConfig,
-      props: {viewModel: fakeViewModel(), color: 'blue', step: 0},
+      props: {viewModel: fakeViewModel(), color: 'blue', step: 0, gameAge: 0},
     });
     const panel = wrapper.find('.panel-body').element as HTMLElement;
     Object.defineProperty(panel, 'scrollHeight', {configurable: true, value: 100});
@@ -112,7 +112,7 @@ describe('LogPanel', () => {
     await flushPromises();
     expect(panel.scrollTop).to.equal(10);
 
-    await wrapper.setProps({step: 1});
+    await wrapper.setProps({gameAge: 1});
     expect(responses).to.have.length(1);
     panel.scrollTop = 12;
     responses.shift()!({
@@ -123,13 +123,58 @@ describe('LogPanel', () => {
     expect(panel.scrollTop).to.equal(12);
 
     panel.scrollTop = 80;
-    await wrapper.setProps({step: 2});
+    await wrapper.setProps({gameAge: 2});
     responses.shift()!({
       ok: true,
       json: () => Promise.resolve([new LogMessage(LogMessageType.DEFAULT, 'latest', [])]),
     } as Response);
     await flushPromises();
     expect(panel.scrollTop).to.equal(100);
+    wrapper.unmount();
+  });
+
+  it('limits compact history without changing the fetched log', async () => {
+    (global as any).fetch = () => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve([
+        new LogMessage(LogMessageType.DEFAULT, 'one', []),
+        new LogMessage(LogMessageType.DEFAULT, 'two', []),
+        new LogMessage(LogMessageType.DEFAULT, 'three', []),
+      ]),
+    });
+    const wrapper = shallowMount(LogPanel, {
+      ...globalConfig,
+      props: {viewModel: fakeViewModel(), color: 'blue', messageLimit: 2},
+    });
+    await flushPromises();
+
+    expect((wrapper.vm as any).messages).to.have.length(3);
+    expect((wrapper.vm as any).visibleMessages.map((message: LogMessage) => message.message)).to.deep.eq(['two', 'three']);
+    wrapper.unmount();
+  });
+
+  it('publishes a compact activity bundle for the focus view', async () => {
+    const responses: Array<(response: Response) => void> = [];
+    (global as any).fetch = () => new Promise<Response>((resolve) => responses.push(resolve));
+    const wrapper = shallowMount(LogPanel, {
+      ...globalConfig,
+      props: {viewModel: fakeViewModel(), color: 'blue', step: 0, liveUpdates: true},
+    });
+    const messages = [
+      new LogMessage(LogMessageType.DEFAULT, 'one', []),
+      new LogMessage(LogMessageType.DEFAULT, 'two', []),
+      new LogMessage(LogMessageType.DEFAULT, 'three', []),
+      new LogMessage(LogMessageType.DEFAULT, 'four', []),
+      new LogMessage(LogMessageType.DEFAULT, 'five', []),
+    ];
+
+    responses.shift()!({ok: true, json: () => Promise.resolve(messages)} as Response);
+    await flushPromises();
+
+    const activityUpdate = wrapper.emitted('activity-update');
+    expect(activityUpdate).to.have.length(1);
+    expect((activityUpdate![0][0] as any).messages.map((message: LogMessage) => message.message)).to.deep.eq(['one', 'two', 'three', 'four', 'five']);
+    expect((activityUpdate![0][0] as any).isInitial).to.be.true;
     wrapper.unmount();
   });
 });
