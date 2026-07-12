@@ -9,6 +9,7 @@ import {Units} from '../Units';
 import {twoWayDifference} from '../utils/utils';
 import {AresGlobalParametersResponse} from './AresGlobalParametersResponse';
 import {Payment} from './Payment';
+import {MulliganCategory} from '../game/Mulligan';
 
 function matches(response: any, fields: Array<string>) {
   return twoWayDifference(Object.keys(response), fields).length === 0;
@@ -47,6 +48,15 @@ export interface SelectInitialCardsResponse {
 
 export function isSelectInitialCardsResponse(response: InputResponse): response is SelectInitialCardsResponse {
   return response.type === 'initialCards' && matches(response, ['type', 'responses']);
+}
+
+export interface InitialCardsMulliganResponse {
+  type: 'initialCardsMulligan',
+  category: MulliganCategory;
+}
+
+export function isInitialCardsMulliganResponse(response: InputResponse): response is InitialCardsMulliganResponse {
+  return response.type === 'initialCardsMulligan' && matches(response, ['type', 'category']);
 }
 
 export interface SelectCardResponse {
@@ -213,6 +223,7 @@ export type InputResponse =
   AndOptionsResponse |
   OrOptionsResponse |
   SelectInitialCardsResponse |
+  InitialCardsMulliganResponse |
   SelectAmountResponse |
   DeltaProjectInputResponse |
   SelectCardResponse |

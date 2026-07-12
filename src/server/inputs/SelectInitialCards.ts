@@ -7,8 +7,11 @@ import {CardName} from '../../common/cards/CardName';
 import {SelectInitialCardsModel} from '../../common/models/PlayerInputModel';
 import {InputError} from './InputError';
 import {OptionsInput} from './OptionsPlayerInput';
-import {InputResponse, isSelectInitialCardsResponse} from '../../common/inputs/InputResponse';
+import {InputResponse, isInitialCardsMulliganResponse, isSelectInitialCardsResponse} from '../../common/inputs/InputResponse';
 import {PlayerInput} from '../PlayerInput';
+import {MulliganCategory, MULLIGAN_CATEGORIES} from '../../common/game/Mulligan';
+import {ICard} from '../cards/ICard';
+import {Deck} from '../cards/Deck';
 
 type Inputs = {
   corp: PlayerInput | undefined,
@@ -134,10 +137,16 @@ export class SelectInitialCards extends OptionsInput<undefined> {
       buttonLabel: this.buttonLabel,
       type: 'initialCards',
       options: this.options.map((option) => option.toModel(player)),
+      mulliganCategories: MULLIGAN_CATEGORIES.filter((category) => this.canMulligan(category)),
     };
   }
 
   public process(input: InputResponse, player: IPlayer) {
+    if (isInitialCardsMulliganResponse(input)) {
+      this.mulligan(input.category);
+      player.setWaitingFor(this);
+      return undefined;
+    }
     if (!isSelectInitialCardsResponse(input)) {
       throw new InputError('Not a valid SelectInitialCardsResponse');
     }
@@ -148,5 +157,65 @@ export class SelectInitialCards extends OptionsInput<undefined> {
       player.defer(this.options[i].process(input.responses[i], player));
     }
     return this.cb(undefined);
+  }
+
+  private canMulligan(category: MulliganCategory): boolean {
+    if (!this.player.game.gameOptions.mulligan[category] || this.player.mulliganedCategories.has(category)) {
+      return false;
+    }
+    switch (category) {
+    case 'project': return this.player.dealtProjectCards.length > 1;
+    case 'corporation': return this.player.dealtCorporationCards.length > 1;
+    case 'prelude': return this.player.dealtPreludeCards.length > 2;
+    case 'ceo': return this.player.dealtCeoCards.length > 1;
+    }
+  }
+
+  private mulligan(category: MulliganCategory): void {
+    if (!this.canMulligan(category)) {
+      throw new InputError(`Mulligan is not available for ${category} cards`);
+    }
+
+    const game = this.player.game;
+    switch (category) {
+    case 'project':
+      this.replacePool(this.player.dealtProjectCards, game.projectDeck);
+      break;
+    case 'corporation':
+      this.replacePool(this.player.dealtCorporationCards, game.corporationDeck);
+      break;
+    case 'prelude':
+      this.replacePool(this.player.dealtPreludeCards, game.preludeDeck, (card) => card.name === CardName.MERGER);
+      break;
+    case 'ceo':
+      this.replacePool(this.player.dealtCeoCards, game.ceoDeck);
+      break;
+    }
+
+    this.player.mulliganedCategories.add(category);
+    const labels: Record<MulliganCategory, string> = {
+      project: 'project cards',
+      corporation: 'corporations',
+      prelude: 'Preludes',
+      ceo: 'CEOs',
+    };
+    game.log('${0} took a mulligan and redrew ${1} ${2}', (b) => b.player(this.player).number(this.poolSize(category)).rawString(labels[category]));
+  }
+
+  private replacePool<T extends ICard>(pool: Array<T>, deck: Deck<T>, preserve: (card: T) => boolean = () => false): void {
+    const preservedCards = pool.filter(preserve);
+    const oldCards = pool.filter((card) => !preserve(card));
+    const replacements = deck.drawNOrThrow(this.player.game, pool.length - preservedCards.length - 1);
+    pool.splice(0, pool.length, ...preservedCards, ...replacements);
+    deck.discard(...oldCards);
+  }
+
+  private poolSize(category: MulliganCategory): number {
+    switch (category) {
+    case 'project': return this.player.dealtProjectCards.length;
+    case 'corporation': return this.player.dealtCorporationCards.length;
+    case 'prelude': return this.player.dealtPreludeCards.length;
+    case 'ceo': return this.player.dealtCeoCards.length;
+    }
   }
 }

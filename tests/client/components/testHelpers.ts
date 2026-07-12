@@ -12,6 +12,7 @@ import {Tag} from '@/common/cards/Tag';
 import {Protection} from '@/common/models/PlayerModel';
 import {DEFAULT_EXPANSIONS} from '@/common/cards/GameModule';
 import {PoliticalAgendasModel} from '@/common/models/TurmoilModel';
+import {NO_MULLIGAN} from '@/common/game/Mulligan';
 import {SpectatorModel} from '@/common/models/SpectatorModel';
 
 function emptyProtection(): Record<Resource, Protection> {
@@ -69,6 +70,7 @@ export function fakeGameOptionsModel(overrides?: RecursivePartial<GameOptionsMod
     requiresVenusTrackCompletion: false,
     twoCorpsVariant: false,
     undoOption: false,
+    mulligan: {...NO_MULLIGAN},
     ...overrides,
   } as GameOptionsModel;
 }

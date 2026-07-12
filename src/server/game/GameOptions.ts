@@ -7,6 +7,7 @@ import {RandomMAOptionType} from '../../common/ma/RandomMAOptionType';
 import {AgendaStyle} from '../../common/turmoil/Types';
 import {Expansion} from '../../common/cards/GameModule';
 import {EscapeVelocityOptions} from '../../common/game/NewGameConfig';
+import {MulliganOptions, NO_MULLIGAN} from '../../common/game/Mulligan';
 
 export type GameOptions = {
   boardName: BoardName;
@@ -74,6 +75,7 @@ export type GameOptions = {
   altVenusBoard: boolean;
   escapeVelocity?: EscapeVelocityOptions;
   twoCorpsVariant: boolean;
+  mulligan: MulliganOptions;
 }
 
 export const DEFAULT_GAME_OPTIONS: GameOptions = {
@@ -145,4 +147,5 @@ export const DEFAULT_GAME_OPTIONS: GameOptions = {
   undoOption: false,
   venusNextExtension: false,
   twoCorpsVariant: false,
+  mulligan: {...NO_MULLIGAN},
 };

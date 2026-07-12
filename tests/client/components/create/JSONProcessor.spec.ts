@@ -159,6 +159,8 @@ const TEMPLATE_EXPECTED: CreateGameModel = {
   startingPreludes: 4,
   preludeDraftVariant: false,
   ceosDraftVariant: false,
+  mulliganEnabled: false,
+  mulligan: {project: false, corporation: false, prelude: false, ceo: false},
 };
 
 const cases: Array<Case> = [

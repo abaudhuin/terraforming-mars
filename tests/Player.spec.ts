@@ -227,6 +227,15 @@ describe('Player', () => {
     const json = player.serialize();
     expect(json.pickedCorporationCard).eq('Saturn Systems');
   });
+  it('serialization preserves spent mulligan categories', () => {
+    const player = new Player('blue', 'blue', false, 0, 'p-blue');
+    player.mulliganedCategories.add('project');
+    player.mulliganedCategories.add('corporation');
+
+    const restored = Player.deserialize(player.serialize());
+
+    expect(Array.from(restored.mulliganedCategories)).to.have.members(['project', 'corporation']);
+  });
   it('serialization test', () => {
     const json: SerializedPlayer = {
       id: 'p-blue',

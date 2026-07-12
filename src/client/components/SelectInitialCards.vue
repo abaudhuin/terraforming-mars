@@ -30,7 +30,11 @@
       <label v-if="warning !== undefined" class="label label-error">{{ $t(warning) }}</label>
       <AppButton :disabled="!valid" v-if="showsave" @click="saveIfConfirmed" type="submit" :title="playerinput.buttonLabel"/>
     </div>
-    <SelectCard :playerView="playerView" :playerinput="corpCardOption" :showtitle="true" :onsave="noop" @cardschanged="corporationChanged" />
+    <div v-if="canMulligan('corporation')" class="initial-card-mulligan">
+      <span v-i18n>One redraw available for this pool.</span>
+      <button type="button" class="initial-card-mulligan__button" @click="mulligan('corporation')">{{ mulliganLabel('corporation', corpCardOption.cards.length) }}</button>
+    </div>
+    <SelectCard :key="poolKey(corpCardOption)" :playerView="playerView" :playerinput="corpCardOption" :showtitle="true" :onsave="noop" @cardschanged="corporationChanged" />
     <div v-if="playerCanChooseAridor" class="player_home_colony_cont">
       <div v-i18n>These are the colony tiles Aridor may choose from:</div>
       <div class="discarded-colonies-for-aridor">
@@ -39,9 +43,21 @@
         </div>
       </div>
     </div>
-    <SelectCard v-if="hasPrelude" :playerView="playerView" :playerinput="preludeCardOption" :onsave="noop" :showtitle="true" @cardschanged="preludesChanged" />
-    <SelectCard v-if="hasCeo" :playerView="playerView" :playerinput="ceoCardOption" :onsave="noop" :showtitle="true" @cardschanged="ceosChanged" />
-    <SelectCard :playerView="playerView" :playerinput="projectCardOption" :onsave="noop" :showtitle="true" @cardschanged="cardsChanged" />
+    <div v-if="hasPrelude && canMulligan('prelude')" class="initial-card-mulligan">
+      <span v-i18n>One redraw available for this pool.</span>
+      <button type="button" class="initial-card-mulligan__button" @click="mulligan('prelude')">{{ mulliganLabel('prelude', preludeCardOption.cards.length) }}</button>
+    </div>
+    <SelectCard v-if="hasPrelude" :key="poolKey(preludeCardOption)" :playerView="playerView" :playerinput="preludeCardOption" :onsave="noop" :showtitle="true" @cardschanged="preludesChanged" />
+    <div v-if="hasCeo && canMulligan('ceo')" class="initial-card-mulligan">
+      <span v-i18n>One redraw available for this pool.</span>
+      <button type="button" class="initial-card-mulligan__button" @click="mulligan('ceo')">{{ mulliganLabel('ceo', ceoCardOption.cards.length) }}</button>
+    </div>
+    <SelectCard v-if="hasCeo" :key="poolKey(ceoCardOption)" :playerView="playerView" :playerinput="ceoCardOption" :onsave="noop" :showtitle="true" @cardschanged="ceosChanged" />
+    <div v-if="canMulligan('project')" class="initial-card-mulligan">
+      <span v-i18n>One redraw available for this pool.</span>
+      <button type="button" class="initial-card-mulligan__button" @click="mulligan('project')">{{ mulliganLabel('project', projectCardOption.cards.length) }}</button>
+    </div>
+    <SelectCard :key="poolKey(projectCardOption)" :playerView="playerView" :playerinput="projectCardOption" :onsave="noop" :showtitle="true" @cardschanged="cardsChanged" />
     <template v-if="selectedCorporations.length === 1">
       <div><span v-i18n>Starting Megacredits:</span> <div class="megacredits">{{getStartingMegacredits()}}</div></div>
       <div v-if="hasPrelude"><span v-i18n>After Preludes:</span> <div class="megacredits">{{getStartingMegacredits() + getAfterPreludes()}}</div></div>
@@ -66,13 +82,14 @@ import SelectCard from '@/client/components/SelectCard.vue';
 import ConfirmDialog from '@/client/components/common/ConfirmDialog.vue';
 import {getPreferences, Preferences, PreferencesManager} from '@/client/utils/PreferencesManager';
 import {Tag} from '@/common/cards/Tag';
-import {SelectInitialCardsResponse} from '@/common/inputs/InputResponse';
+import {InitialCardsMulliganResponse, SelectInitialCardsResponse} from '@/common/inputs/InputResponse';
 import {CardType} from '@/common/cards/CardType';
 import Colony from '@/client/components/colonies/Colony.vue';
 import {ColonyName} from '@/common/colonies/ColonyName';
 import {ColonyModel, simpleColonyModel} from '@/common/models/ColonyModel';
 import * as titles from '@/common/inputs/SelectInitialCards';
 import {sum} from '@/common/utils/utils';
+import {MulliganCategory} from '@/common/game/Mulligan';
 
 
 type DataModel = {
@@ -102,7 +119,7 @@ export default defineComponent({
       required: true,
     },
     onsave: {
-      type: Function as unknown as () => (out: SelectInitialCardsResponse) => void,
+      type: Function as unknown as () => (out: SelectInitialCardsResponse | InitialCardsMulliganResponse) => void,
       required: true,
     },
     showsave: {
@@ -135,6 +152,23 @@ export default defineComponent({
     };
   },
   methods: {
+    canMulligan(category: MulliganCategory): boolean {
+      return (this.playerinput.mulliganCategories ?? []).includes(category);
+    },
+    mulligan(category: MulliganCategory) {
+      this.selectedCards = [];
+      this.selectedCeos = [];
+      this.selectedCorporations = [];
+      this.selectedPreludes = [];
+      this.validate();
+      this.onsave({type: 'initialCardsMulligan', category});
+    },
+    mulliganLabel(_category: MulliganCategory, count: number): string {
+      return this.$t('Mulligan') + ` ${count} → ${count - 1}`;
+    },
+    poolKey(option: SelectCardModel): string {
+      return option.cards.map((card) => card.name).join('|');
+    },
     noop() {
       throw new Error('should not be called');
     },

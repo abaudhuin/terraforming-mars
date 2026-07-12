@@ -7,6 +7,7 @@ import {RandomMAOptionType} from '../ma/RandomMAOptionType';
 import {AgendaStyle} from '../turmoil/Types';
 import {GameId} from '../Types';
 import {Expansion} from '../cards/GameModule';
+import {MulliganOptions} from './Mulligan';
 
 export type BoardNameType = BoardName | RandomBoardOption;
 
@@ -81,4 +82,5 @@ export interface NewGameConfig {
   customCeos: Array<CardName>;
   startingCeos: number;
   startingPreludes: number;
+  mulligan?: MulliganOptions;
 }

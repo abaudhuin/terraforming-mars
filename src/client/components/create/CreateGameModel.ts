@@ -5,6 +5,7 @@ import {GameId} from '@/common/Types';
 import {AgendaStyle} from '@/common/turmoil/Types';
 import {BoardNameType, NewPlayerModel} from '@/common/game/NewGameConfig';
 import {Expansion} from '@/common/cards/GameModule';
+import {MulliganOptions} from '@/common/game/Mulligan';
 
 export type CreateGameModel = {
   /* A checkbox when selected selects all official expansions */
@@ -14,6 +15,8 @@ export type CreateGameModel = {
   bannedCards: Array<CardName>;
   board: BoardNameType;
   ceosDraftVariant: boolean | undefined;
+  mulliganEnabled: boolean;
+  mulligan: MulliganOptions;
   clonedGameId: GameId | undefined;
   customCeos: Array<CardName>;
   customColonies: Array<ColonyName>;

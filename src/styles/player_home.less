@@ -885,6 +885,34 @@ each(@players, {
 }
 
 .select-initial-cards {
+  .initial-card-mulligan {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin: 14px 0 -2px;
+    color: #aaa;
+    font-size: 14px;
+  }
+
+  .initial-card-mulligan__button {
+    padding: 7px 12px;
+    border: 1px solid #c98236;
+    border-radius: 5px;
+    background: #241a11;
+    color: #ffd58c;
+    font-family: Prototype, sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .initial-card-mulligan__button:hover,
+  .initial-card-mulligan__button:focus-visible {
+    border-color: #ffd58c;
+    background: #382718;
+    outline: none;
+  }
+
   .megacredits {
     display: inline-block;
     font-size: 26px;

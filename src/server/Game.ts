@@ -84,6 +84,7 @@ import {BoardName} from '../common/boards/BoardName';
 import {SpaceType} from '../common/boards/SpaceType';
 import {ICard} from './cards/ICard';
 import {generateGameName} from './GameName';
+import {NO_MULLIGAN} from '../common/game/Mulligan';
 
 // Can be overridden by tests
 let createGameLog: () => Array<LogMessage> = () => [];
@@ -276,7 +277,11 @@ export class Game implements IGame, Logger {
         deltaProject: partialOptions.deltaProjectExpansion ?? false,
       };
     }
-    const gameOptions = {...DEFAULT_GAME_OPTIONS, ...partialOptions};
+    const gameOptions = {
+      ...DEFAULT_GAME_OPTIONS,
+      ...partialOptions,
+      mulligan: {...NO_MULLIGAN, ...partialOptions.mulligan},
+    };
 
     if (gameOptions.clonedGamedId !== undefined) {
       throw new Error('Cloning should not come through this execution path.');
@@ -1694,7 +1699,11 @@ export class Game implements IGame, Logger {
   }
 
   public static deserialize(d: SerializedGame): Game {
-    const gameOptions = d.gameOptions;
+    const gameOptions = {
+      ...DEFAULT_GAME_OPTIONS,
+      ...d.gameOptions,
+      mulligan: {...NO_MULLIGAN, ...d.gameOptions.mulligan},
+    };
     gameOptions.boardName = normalizeBoardName(gameOptions.boardName);
     const players = d.players.map((element) => Player.deserialize(element));
     const first = players.find((player) => player.id === d.first);

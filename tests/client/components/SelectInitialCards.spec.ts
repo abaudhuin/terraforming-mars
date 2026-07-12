@@ -9,6 +9,7 @@ import {Preferences} from '@/client/utils/PreferencesManager';
 import * as titles from '@/common/inputs/SelectInitialCards';
 import {SelectCardModel} from '@/common/models/PlayerInputModel';
 import {CardModel} from '@/common/models/CardModel';
+import {MulliganCategory} from '@/common/game/Mulligan';
 
 let savedData: InputResponse | undefined;
 
@@ -144,6 +145,23 @@ describe('SelectInitialCards', () => {
     const button = getButton(component);
     expect(button.attributes().disabled).not.to.be.undefined;
   });
+
+  it('shows contextual mulligan actions and sends the selected category', async () => {
+    const component = createComponent(
+      [CardName.ECOLINE, CardName.HELION],
+      [CardName.ANTS, CardName.COMET_AIMING, CardName.DIRIGIBLES],
+      undefined,
+      undefined,
+      ['corporation', 'project']);
+
+    const mulliganButtons = component.findAll('.initial-card-mulligan__button');
+    expect(mulliganButtons).has.length(2);
+    expect(mulliganButtons[0].text()).contains('2 → 1');
+    expect(mulliganButtons[1].text()).contains('3 → 2');
+
+    await mulliganButtons[1].trigger('click');
+    expect(savedData).to.deep.eq({type: 'initialCardsMulligan', category: 'project'});
+  });
 });
 
 function getButton(component: VueWrapper<InstanceType<typeof SelectInitialCards>>) {
@@ -154,7 +172,7 @@ function getConfirmDialog(component: VueWrapper<InstanceType<typeof SelectInitia
   return component.vm.$refs.confirmation as InstanceType<typeof ConfirmDialog>;
 }
 
-function createComponent(corpCards: Array<CardName>, projectCards: Array<CardName>, preludeCards?: Array<CardName>, ceoCards?: Array<CardName>) {
+function createComponent(corpCards: Array<CardName>, projectCards: Array<CardName>, preludeCards?: Array<CardName>, ceoCards?: Array<CardName>, mulliganCategories: Array<MulliganCategory> = []) {
   const toObject = (cards: Array<CardName>) => cards.map((name) => {
     return {name} as CardModel;
   });
@@ -223,6 +241,7 @@ function createComponent(corpCards: Array<CardName>, projectCards: Array<CardNam
       playerinput: {
         title: 'selectInitialCards',
         options,
+        mulliganCategories,
       },
       onsave: function(data: SelectInitialCardsResponse) {
         savedData = data;
