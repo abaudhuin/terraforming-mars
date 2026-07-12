@@ -1,7 +1,7 @@
 <template>
     <!-- <div :class="recedeIfInactive"> -->
     <!-- Show the background, tooltip, and other setup -->
-    <div class="filterDiv colony-card colonies" :class="backgroundClass" :title="tooltip" v-i18n>
+    <div class="filterDiv colony-card colonies" :class="backgroundClass" :data-colony-name="colony.name" :title="tooltip" v-i18n>
 
     <!-- show the large title on top -->
     <div class="colony-card-title-div">

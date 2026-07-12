@@ -6,6 +6,7 @@ import {fakePlayerViewModel, fakePublicPlayerModel} from './testHelpers';
 import {FakeLocalStorage} from './FakeLocalStorage';
 import raw_settings from '@/genfiles/settings.json';
 import {CardName} from '@/common/cards/CardName';
+import {Resource} from '@/common/Resource';
 
 describe('PlayerHome', () => {
   let localStorage: FakeLocalStorage;
@@ -93,7 +94,7 @@ describe('PlayerHome', () => {
     expect(wrapper.find('.tm-passive-sync').exists()).to.be.false;
   });
 
-  it('uses a single-line Logs rail and clamps available colony fleets', () => {
+  it('uses a Focus/History activity rail and clamps available colony fleets', () => {
     const thisPlayer = fakePublicPlayerModel({
       tableau: [{name: CardName.ACQUIRED_COMPANY}],
       fleetSize: 2,
@@ -112,7 +113,9 @@ describe('PlayerHome', () => {
       },
     });
 
-    expect(wrapper.findComponent({name: 'LogPanel'}).props('headerTitle')).to.eq('Logs');
+    expect(wrapper.findComponent({name: 'ActionSpotlight'}).exists()).to.be.true;
+    expect(wrapper.findComponent({name: 'LogPanel'}).props('headerTitle')).to.eq('History');
+    expect(wrapper.findAll('.tm-activity-mode-tabs button').map((button) => button.text())).to.deep.eq(['Focus', 'History']);
     expect((wrapper.vm as any).getAvailableFleetCount(thisPlayer)).to.eq(0);
   });
 
@@ -151,5 +154,42 @@ describe('PlayerHome', () => {
 
     expect((wrapper.vm as any).activeOverlay).to.eq('cards');
     expect(wrapper.find('.tm-modal--cards').exists()).to.be.true;
+  });
+
+  it('detects live feedback when game age changes without a step change', async () => {
+    const initialPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}], megacredits: 10});
+    const refreshedPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}], megacredits: 15});
+    const initialView = fakePlayerViewModel({
+      thisPlayer: initialPlayer,
+      players: [initialPlayer],
+    });
+    initialView.game.gameAge = 10;
+    initialView.game.step = 7;
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {
+        methods: {getVisibilityState: () => true, setVisibilityState: () => {}},
+      } as any,
+      props: {playerView: initialView},
+    });
+
+    await wrapper.setProps({
+      playerView: {
+        ...initialView,
+        thisPlayer: refreshedPlayer,
+        players: [refreshedPlayer],
+        game: {...initialView.game, gameAge: 11},
+      },
+    });
+
+    expect((wrapper.vm as any).playerView.game.step).to.eq(7);
+    expect((wrapper.vm as any).resourceDeltas).to.deep.include({
+      playerColor: refreshedPlayer.color,
+      playerName: refreshedPlayer.name,
+      resource: Resource.MEGACREDITS,
+      amount: 5,
+      production: 0,
+    });
+    wrapper.unmount();
   });
 });

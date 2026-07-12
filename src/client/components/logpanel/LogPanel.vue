@@ -30,6 +30,7 @@
 import {defineComponent} from 'vue';
 import {paths} from '@/common/app/paths';
 import {LogMessage} from '@/common/logs/LogMessage';
+import {LogMessageType} from '@/common/logs/LogMessageType';
 import {LogMessageDataType} from '@/common/logs/LogMessageDataType';
 import {PublicPlayerModel, ViewModel} from '@/common/models/PlayerModel';
 import {playerColorClass} from '@/common/utils/utils';
@@ -68,6 +69,11 @@ export default defineComponent({
       required: false,
       default: 0,
     },
+    gameAge: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
     playerFilter: {
       type: String as () => Color | undefined,
       required: false,
@@ -98,8 +104,18 @@ export default defineComponent({
       required: false,
       default: 'inline',
     },
+    messageLimit: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    liveUpdates: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
-  emits: ['preview-message'],
+  emits: ['preview-message', 'activity-update'],
   data(): LogPanelModel {
     return {
       messages: [],
@@ -139,6 +155,7 @@ export default defineComponent({
       const previewable = this.cardPanelMode !== 'off' && this.messageHasPreview(message);
       return {
         'log-message--selected': previewable && this.cardPanelMode === 'inline' && this.selectedMessage === message,
+        'log-message--generation': message.type === LogMessageType.NEW_GENERATION,
       };
     },
     spaceClicked(spaceId: SpaceId) {
@@ -202,8 +219,15 @@ export default defineComponent({
             return;
           }
           const scrollState = this.getScrollState();
+          const isInitial = messages.length === 0;
           messages.splice(0, messages.length);
           messages.push(...data);
+          if (this.liveUpdates) {
+            this.$emit('activity-update', {
+              messages: data.slice(-8),
+              isInitial,
+            });
+          }
           if (getPreferences().enable_sounds && window.location.search.includes('experimental=1') ) {
             SoundManager.newLog();
           }
@@ -298,21 +322,25 @@ export default defineComponent({
       return this.viewModel.players;
     },
     visibleMessages(): Array<LogMessage> {
+      let result: Array<LogMessage>;
       if (this.playerFilter === undefined) {
-        return this.messages;
-      }
-      const player = this.players.find((p) => p.color === this.playerFilter);
-      const filteredMessages = this.messages.filter((message) => {
-        if (player?.id !== undefined && message.playerId === player.id) {
-          return true;
+        result = this.messages;
+      } else {
+        const player = this.players.find((p) => p.color === this.playerFilter);
+        const filteredMessages = this.messages.filter((message) => {
+          if (player?.id !== undefined && message.playerId === player.id) {
+            return true;
+          }
+          return message.data.some((entry) =>
+            entry.type === LogMessageDataType.PLAYER && entry.value === this.playerFilter);
+        });
+        if (filteredMessages.length === 0 && this.fallbackToAllWhenFilteredEmpty) {
+          result = this.messages;
+        } else {
+          result = filteredMessages;
         }
-        return message.data.some((entry) =>
-          entry.type === LogMessageDataType.PLAYER && entry.value === this.playerFilter);
-      });
-      if (filteredMessages.length === 0 && this.fallbackToAllWhenFilteredEmpty) {
-        return this.messages;
       }
-      return filteredMessages;
+      return this.messageLimit > 0 ? result.slice(-this.messageLimit) : result;
     },
     id(): ParticipantId | undefined {
       return this.viewModel.id;
@@ -333,7 +361,7 @@ export default defineComponent({
     this.logAbortController = undefined;
   },
   watch: {
-    step() {
+    gameAge() {
       this.refreshForStepChange();
     },
   },

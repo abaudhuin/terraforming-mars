@@ -1025,6 +1025,619 @@
   }
 }
 
+// Activity rail refinement: one visual event in Focus, quiet one-line rows in
+// History, and only the rail itself acting as a container.
+#player-home.tm-player-table.tm-player-table--refined:not(.tm-player-table--setup) {
+  .tm-activity-workspace {
+    grid-template-rows: 34px minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .tm-activity-modebar {
+    padding: 0 2px 4px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .tm-activity-mode-tabs {
+    gap: 14px;
+  }
+
+  .tm-activity-mode-tabs > button {
+    min-height: 28px;
+    padding: 4px 1px 3px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(243, 238, 228, 0.52);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+
+  .tm-activity-mode-tabs > button:hover,
+  .tm-activity-mode-tabs > button:focus-visible {
+    border: 0;
+    color: var(--tm-text);
+  }
+
+  .tm-activity-mode-tabs > .tm-activity-mode-tab--active {
+    border: 0;
+    background: transparent;
+    color: var(--tm-accent);
+    box-shadow: inset 0 -1px var(--tm-accent);
+  }
+
+  .tm-activity-modebar .tm-log-header-actions {
+    gap: 1px;
+  }
+
+  .tm-activity-modebar .tm-panel-icon-button {
+    width: 27px;
+    height: 27px;
+    min-width: 27px;
+    min-height: 27px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    opacity: 0.58;
+  }
+
+  .tm-activity-modebar .tm-panel-icon-button:hover,
+  .tm-activity-modebar .tm-panel-icon-button:focus-visible {
+    border: 0;
+    background: transparent;
+    opacity: 1;
+  }
+
+  .tm-action-spotlight {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    padding: 10px 5px 6px;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    gap: 9px;
+    overflow: hidden auto;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .tm-action-spotlight-header {
+    width: 100%;
+    min-height: 25px;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 7px;
+  }
+
+  .tm-action-spotlight-actor {
+    max-width: 112px;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+
+  .tm-action-spotlight-deltas {
+    min-width: 0;
+    margin-left: auto;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 3px;
+  }
+
+  .tm-action-delta {
+    min-height: 23px;
+    padding: 2px 5px;
+    gap: 2px;
+    border: 0;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.055);
+    font-size: 10px;
+  }
+
+  .tm-action-delta .resource_icon {
+    width: 17px;
+    height: 17px;
+    background-size: 17px;
+  }
+
+  .tm-action-delta--global {
+    padding-left: 5px;
+    border: 0;
+    color: var(--tm-accent);
+  }
+
+  .tm-action-spotlight-messages {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 6px 2px;
+    display: block;
+    overflow: hidden;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .tm-action-spotlight-messages li {
+    display: block;
+    overflow: hidden;
+    color: rgba(243, 238, 228, 0.8);
+    font-size: 11px;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tm-action-spotlight-messages li > span:first-child,
+  .tm-action-spotlight-messages .log-player {
+    display: none;
+  }
+
+  .tm-action-spotlight-messages .log-card,
+  .tm-action-spotlight-messages .log-space-id {
+    font-size: 10px;
+  }
+
+  .tm-action-spotlight-object {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 3px 0 6px;
+    display: flex;
+    justify-content: center;
+    overflow: auto hidden;
+  }
+
+  .tm-action-spotlight-object .card-panel {
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .tm-action-spotlight-object .log-panel-card {
+    flex: 0 0 172px;
+    width: 172px;
+    height: 228px;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .tm-action-spotlight-object .log-panel-card > .card-container {
+    transform: scale(0.67);
+    transform-origin: top left;
+  }
+
+  .tm-action-spotlight-object .log-panel-card > .card-standard-project {
+    transform: scale(0.73);
+  }
+
+  .tm-action-spotlight-object .log-panel-card.colony-card,
+  .tm-action-spotlight-object .log-panel-card > .colony-card {
+    transform: scale(0.34);
+    transform-origin: top left;
+  }
+
+  .tm-action-spotlight-empty {
+    flex: 1;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    color: rgba(243, 238, 228, 0.22);
+    font-size: 18px;
+  }
+
+  .tm-activity-workspace > .log-container .log-generations {
+    display: none;
+  }
+
+  .tm-activity-workspace > .log-container,
+  .tm-activity-workspace > .log-container .log-panel {
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .tm-activity-workspace > .log-container .log-panel > .panel-body {
+    height: 100%;
+    padding: 4px 2px 10px;
+    overflow: hidden auto;
+    mask-image: linear-gradient(to bottom, transparent, #000 12px, #000 calc(100% - 8px), transparent);
+  }
+
+  .tm-activity-workspace > .log-container .log-panel ul {
+    display: flex;
+    flex-flow: column;
+    gap: 0;
+  }
+
+  .tm-activity-workspace > .log-container .log-panel li {
+    display: block;
+    min-width: 0;
+    margin: 0;
+    padding: 5px 1px;
+    overflow: hidden;
+    color: rgba(243, 238, 228, 0.5);
+    font-family: Ubuntu, sans-serif;
+    font-size: 11px;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tm-activity-workspace > .log-container .log-panel li:nth-last-child(-n + 4) {
+    color: rgba(243, 238, 228, 0.88);
+  }
+
+  .tm-activity-workspace > .log-container .log-panel .log-message--generation {
+    display: none;
+  }
+
+  .tm-activity-workspace > .log-container .log-panel li > span:first-child {
+    display: none;
+  }
+
+  .tm-activity-workspace > .log-container .log-panel .log-player,
+  .tm-activity-workspace > .log-container .log-panel .log-card,
+  .tm-activity-workspace > .log-container .log-panel .log-space-id {
+    padding: 1px 3px;
+    font-size: 9px;
+  }
+
+  .tm-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+// Action Focus experiment: the activity rail becomes a live table-memory lens
+// while History remains available in the same stable region.
+#player-home.tm-player-table:not(.tm-player-table--setup) {
+  .tm-activity-workspace {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    display: grid;
+    grid-template-rows: 38px minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  .tm-activity-modebar {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 7px;
+    padding: 3px 4px 3px 6px;
+    border: 1px solid var(--tm-border-soft);
+    border-radius: 8px;
+    background: rgba(6, 12, 17, 0.82);
+  }
+
+  .tm-activity-mode-tabs {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .tm-activity-mode-tabs > button {
+    min-height: 27px;
+    padding: 4px 9px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--tm-muted);
+    font-family: Prototype, sans-serif;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .tm-activity-mode-tabs > button:hover,
+  .tm-activity-mode-tabs > button:focus-visible {
+    border-color: var(--tm-control-border);
+    color: var(--tm-text);
+    outline: none;
+  }
+
+  .tm-activity-mode-tabs > .tm-activity-mode-tab--active {
+    border-color: rgba(255, 204, 100, 0.38);
+    background: rgba(255, 204, 100, 0.13);
+    color: var(--tm-accent);
+    box-shadow: inset 0 -2px rgba(255, 204, 100, 0.45);
+  }
+
+  .tm-activity-workspace > .log-container {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .tm-action-spotlight {
+    --tm-focus-glow: rgba(255, 204, 100, 0.26);
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    align-content: start;
+    gap: 9px;
+    overflow: hidden auto;
+    border: 1px solid rgba(255, 204, 100, 0.2);
+    border-radius: 10px;
+    background:
+      radial-gradient(circle at 86% 3%, rgba(255, 204, 100, 0.105), transparent 34%),
+      linear-gradient(155deg, rgba(21, 30, 37, 0.98), rgba(7, 13, 18, 0.98));
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.045), 0 10px 24px rgba(0, 0, 0, 0.2);
+    animation: tm-focus-arrive 360ms ease-out both;
+  }
+
+  .tm-action-spotlight-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .tm-action-spotlight-header > div {
+    min-width: 0;
+    display: flex;
+    flex-flow: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .tm-action-spotlight-kicker {
+    color: var(--tm-accent);
+    font-family: Prototype, sans-serif;
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .tm-action-spotlight-actor {
+    max-width: 100%;
+    padding: 3px 7px;
+    border-radius: 4px;
+    color: #fff;
+    font-family: Ubuntu, sans-serif;
+    font-size: 13px;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tm-action-spotlight-actor--table {
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--tm-text);
+  }
+
+  .tm-action-spotlight-pulse {
+    position: relative;
+    width: 10px;
+    height: 10px;
+    flex: 0 0 10px;
+    border-radius: 50%;
+    background: var(--tm-accent);
+    box-shadow: 0 0 0 0 var(--tm-focus-glow);
+    animation: tm-focus-beacon 1800ms ease-out 2;
+  }
+
+  .tm-action-spotlight-messages {
+    min-width: 0;
+    margin: 0;
+    padding: 7px 8px;
+    display: flex;
+    flex-flow: column;
+    gap: 5px;
+    border-left: 2px solid rgba(255, 204, 100, 0.38);
+    border-radius: 0 6px 6px 0;
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .tm-action-spotlight-messages li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--tm-text);
+    font-family: Ubuntu, sans-serif;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .tm-action-spotlight-messages li > span:first-child {
+    display: none;
+  }
+
+  .tm-action-spotlight-messages .log-card,
+  .tm-action-spotlight-messages .log-player,
+  .tm-action-spotlight-messages .log-space-id {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .tm-action-spotlight-deltas {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .tm-action-delta {
+    min-height: 29px;
+    padding: 3px 7px 3px 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--tm-text);
+    font-family: Prototype, sans-serif;
+    font-size: 11px;
+    animation: tm-delta-pop 440ms cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+  }
+
+  .tm-action-delta-player {
+    width: 6px;
+    height: 20px;
+    border-radius: 999px;
+  }
+
+  .tm-action-delta .resource_icon {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    background-size: 20px;
+  }
+
+  .tm-action-delta small {
+    color: var(--tm-muted);
+    font-family: Ubuntu, sans-serif;
+    font-size: 9px;
+  }
+
+  .tm-action-delta--global {
+    padding-left: 8px;
+    border-color: rgba(255, 204, 100, 0.23);
+    color: var(--tm-accent);
+  }
+
+  .tm-action-spotlight-object {
+    min-width: 0;
+    min-height: 0;
+    overflow: auto hidden;
+    padding: 4px 2px 10px;
+    scrollbar-gutter: stable;
+  }
+
+  .tm-action-spotlight-object .card-panel {
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+  }
+
+  .tm-action-spotlight-object .log-panel-card {
+    flex: 0 0 212px;
+    width: 212px;
+    height: 272px;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .tm-action-spotlight-object .log-panel-card > .card-container {
+    transform: scale(0.83);
+    transform-origin: top left;
+  }
+
+  .tm-action-spotlight-object .log-panel-card.colony-card,
+  .tm-action-spotlight-object .log-panel-card > .colony-card {
+    transform: scale(0.43);
+    transform-origin: top left;
+  }
+
+  .tm-action-spotlight-empty {
+    padding: 22px 10px;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--tm-muted);
+    font-family: Ubuntu, sans-serif;
+    text-align: center;
+  }
+
+  .tm-action-spotlight-empty strong {
+    color: var(--tm-text);
+    font-family: Prototype, sans-serif;
+    font-size: 13px;
+    text-transform: uppercase;
+  }
+
+  .tm-feedback-highlight {
+    opacity: 1;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: tm-board-feedback 3200ms ease-out both;
+  }
+
+  .tm-feedback-pulse {
+    position: relative;
+    z-index: 2;
+    animation: tm-surface-feedback 2800ms ease-out both;
+  }
+}
+
+@keyframes tm-focus-arrive {
+  from { opacity: 0.35; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tm-focus-beacon {
+  0% { box-shadow: 0 0 0 0 rgba(255, 204, 100, 0.42); }
+  70%, 100% { box-shadow: 0 0 0 13px rgba(255, 204, 100, 0); }
+}
+
+@keyframes tm-delta-pop {
+  from { opacity: 0; transform: translateY(5px) scale(0.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes tm-board-feedback {
+  0% { box-shadow: 0 0 0 0 rgba(255, 222, 102, 0), inset 0 0 0 2px rgba(255, 255, 255, 0); }
+  14% { box-shadow: 0 0 0 13px rgba(255, 222, 102, 0.42), inset 0 0 0 4px #fff1a6; }
+  42% { box-shadow: 0 0 28px 10px rgba(255, 184, 50, 0.34), inset 0 0 0 3px #ffd05f; }
+  100% { box-shadow: 0 0 0 0 rgba(255, 184, 50, 0), inset 0 0 0 2px rgba(255, 208, 95, 0); }
+}
+
+@keyframes tm-surface-feedback {
+  0% { filter: brightness(1); transform: scale(1); }
+  12% { filter: brightness(1.55) drop-shadow(0 0 8px rgba(255, 219, 112, 0.82)); transform: scale(1.08); }
+  38% { filter: brightness(1.18) drop-shadow(0 0 4px rgba(255, 219, 112, 0.4)); transform: scale(1.025); }
+  100% { filter: brightness(1); transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #player-home.tm-player-table:not(.tm-player-table--setup) {
+    .tm-action-spotlight,
+    .tm-action-spotlight-pulse,
+    .tm-action-delta,
+    .tm-feedback-highlight,
+    .tm-feedback-pulse {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+}
+
 /* stylelint-disable no-duplicate-selectors */
 .topmost-player-home .notice {
   display: none;

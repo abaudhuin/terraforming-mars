@@ -2057,7 +2057,11 @@ const allShotDefinitions = [
   {name: 'underworld-open', seat: 'active', prepare: openUnderworldSurface, coverageTags: ['underworld', 'underground-tokens', 'corruption', 'board-tokens', 'player-tokens']},
   {name: 'delta-open', seat: 'active', prepare: (page) => openExtensionSummary(page, ['.tm-extension-panel--delta > summary', '.tm-extension-panel--deltaProject > summary', 'details:has-text("Delta") > summary']), coverageTags: ['delta-project', 'extension-panel']},
   {name: 'tools-open', seat: 'active', prepare: (page) => clickIfPresent(page, '.tm-utility-menu > summary'), coverageTags: ['tools-menu', 'utility-panel']},
-  {name: 'activity-scrolled', seat: 'active', prepare: (page) => scrollSelector(page, '.tm-activity-rail .log-panel > .panel-body'), coverageTags: ['log', 'compact-log', 'scrolled-list']},
+  {name: 'activity-scrolled', seat: 'active', prepare: async (page) => {
+    await clickTextIfPresent(page, 'History');
+    await page.waitForTimeout(180);
+    return scrollSelector(page, '.tm-activity-rail .log-panel > .panel-body');
+  }, coverageTags: ['log', 'compact-log', 'scrolled-list']},
   {name: 'player-rail-scrolled', seat: 'active', prepare: (page) => scrollSelector(page, '.tm-player-rail'), coverageTags: ['player-rail', 'scrolled-list', 'five-players']},
   {name: 'resized-layout', seat: 'active', prepare: resizeLayout, coverageTags: ['resizing', 'activity-rail', 'cards-tray', 'layout-mechanics']},
   {name: 'bottom-tray-enlarged', seat: 'active', prepare: (page) => resizeBottomTray(page, -120), coverageTags: ['cards-tray', 'resizing']},
