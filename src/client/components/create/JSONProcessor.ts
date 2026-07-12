@@ -71,6 +71,8 @@ export class JSONProcessor {
     this.model.playersCount = players.length;
     this.model.showBannedCards = this.bannedCards.length > 0;
     this.model.showIncludedCards = this.includedCards.length > 0;
+    const mulligan = json.mulligan as JSONObject | undefined;
+    this.model.mulliganEnabled = mulligan !== undefined && Object.values(mulligan).some((value) => value === true);
 
     const oldExpansionFields: Record<Expansion, string> = {
       corpera: json_constants.CORPORATEERA,

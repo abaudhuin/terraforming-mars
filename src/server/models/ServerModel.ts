@@ -452,6 +452,7 @@ export class Server {
       requiresVenusTrackCompletion: options.requiresVenusTrackCompletion,
       twoCorpsVariant: options.twoCorpsVariant,
       undoOption: options.undoOption,
+      mulligan: options.mulligan ?? {project: false, corporation: false, prelude: false, ceo: false},
     };
   }
 

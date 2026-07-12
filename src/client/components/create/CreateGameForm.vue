@@ -283,6 +283,33 @@
                               </label>
                             </template>
 
+                            <input type="checkbox" v-model="mulliganEnabled" id="mulligan-checkbox" @change="mulliganToggle">
+                            <label for="mulligan-checkbox">
+                                <span v-i18n>Starting hand mulligan</span>
+                            </label>
+
+                            <div class="create-game-mulligan-options" v-if="mulliganEnabled">
+                              <div class="create-game-mulligan-hint" v-i18n>Each enabled pool may be redrawn once with one fewer card.</div>
+                              <div class="create-game-page-column-row create-game-mulligan-tiers">
+                                <div>
+                                  <input type="checkbox" v-model="mulligan.project" id="mulligan-project-checkbox">
+                                  <label for="mulligan-project-checkbox"><span v-i18n>Cards</span></label>
+                                </div>
+                                <div>
+                                  <input type="checkbox" v-model="mulligan.corporation" id="mulligan-corporation-checkbox">
+                                  <label for="mulligan-corporation-checkbox"><span v-i18n>Corporations</span></label>
+                                </div>
+                                <div v-if="expansions.prelude">
+                                  <input type="checkbox" v-model="mulligan.prelude" id="mulligan-prelude-checkbox">
+                                  <label for="mulligan-prelude-checkbox"><span v-i18n>Preludes</span></label>
+                                </div>
+                                <div v-if="expansions.ceo">
+                                  <input type="checkbox" v-model="mulligan.ceo" id="mulligan-ceo-checkbox">
+                                  <label for="mulligan-ceo-checkbox"><span v-i18n>CEOs</span></label>
+                                </div>
+                              </div>
+                            </div>
+
                             <input type="checkbox" v-model="shuffleMapOption" id="shuffleMap-checkbox">
                             <label for="shuffleMap-checkbox">
                                     <span v-i18n>Randomize board tiles</span>&nbsp;<a :href="wikiUrls.randomizeBoardTiles" class="tooltip" v-i18n data-tooltip="Link opens in a new tab/window" target="_blank">&#9432;</a>
@@ -661,6 +688,14 @@ export default defineComponent({
       if (value === true && this.preludeDraftVariant === undefined) {
         this.preludeDraftVariant = true;
       }
+      if (!this.uploading) {
+        this.mulligan.prelude = value && this.mulliganEnabled;
+      }
+    },
+    'expansions.ceo': function(value: boolean) {
+      if (!this.uploading) {
+        this.mulligan.ceo = value && this.mulliganEnabled;
+      }
     },
     'expansions.prelude2': function(value: boolean) {
       if (value === true && this.preludeToggled === false && this.uploading === false) {
@@ -715,6 +750,12 @@ export default defineComponent({
     },
   },
   methods: {
+    mulliganToggle() {
+      this.mulligan.project = this.mulliganEnabled;
+      this.mulligan.corporation = this.mulliganEnabled;
+      this.mulligan.prelude = this.mulliganEnabled && this.expansions.prelude;
+      this.mulligan.ceo = this.mulliganEnabled && this.expansions.ceo;
+    },
     async downloadSettings() {
       const serializedData = await this.serializeSettings();
 
@@ -1208,6 +1249,17 @@ export default defineComponent({
         twoCorpsVariant,
         startingCeos,
         startingPreludes,
+        mulligan: this.mulliganEnabled ? {
+          project: this.mulligan.project,
+          corporation: this.mulligan.corporation,
+          prelude: this.mulligan.prelude && this.expansions.prelude,
+          ceo: this.mulligan.ceo && this.expansions.ceo,
+        } : {
+          project: false,
+          corporation: false,
+          prelude: false,
+          ceo: false,
+        },
       };
       return JSON.stringify(dataToSend, undefined, 4);
     },

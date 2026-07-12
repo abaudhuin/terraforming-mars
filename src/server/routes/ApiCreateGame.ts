@@ -17,6 +17,7 @@ import {Request} from '../Request';
 import {Response} from '../Response';
 import {QuotaConfig, QuotaHandler} from '../server/QuotaHandler';
 import {durationToMilliseconds} from '../utils/durations';
+import {NO_MULLIGAN} from '../../common/game/Mulligan';
 
 function getQuotaConfig(): QuotaConfig {
   const defaultQuota = {limit: 1, perMs: 1}; // Effectively, no limit.
@@ -166,6 +167,7 @@ export class ApiCreateGame extends Handler {
             deltaProjectExpansion: gameReq.expansions.deltaProject,
             undoOption: gameReq.undoOption,
             venusNextExtension: gameReq.expansions.venus,
+            mulligan: {...NO_MULLIGAN, ...gameReq.mulligan},
           };
 
           let game: IGame;
@@ -186,4 +188,3 @@ export class ApiCreateGame extends Handler {
     });
   }
 }
-

@@ -3,6 +3,7 @@ import {BoardName} from '@/common/boards/BoardName';
 import {DEFAULT_EXPANSIONS} from '@/common/cards/GameModule';
 import {RandomMAOptionType} from '@/common/ma/RandomMAOptionType';
 import {CreateGameModel} from './CreateGameModel';
+import {NO_MULLIGAN} from '@/common/game/Mulligan';
 
 export function defaultCreateGameModel(): CreateGameModel {
   return {
@@ -69,5 +70,7 @@ export function defaultCreateGameModel(): CreateGameModel {
     startingPreludes: 4,
     preludeDraftVariant: undefined,
     ceosDraftVariant: undefined,
+    mulliganEnabled: false,
+    mulligan: {...NO_MULLIGAN},
   };
 }

@@ -4,6 +4,7 @@ import {AgendaStyle} from '../turmoil/Types';
 import {CardName} from '../cards/CardName';
 import {Expansion} from '../cards/GameModule';
 import {EscapeVelocityOptions} from '../game/NewGameConfig';
+import {MulliganOptions} from '../game/Mulligan';
 
 export type GameOptionsModel = {
   aresExtremeVariant: boolean,
@@ -31,4 +32,5 @@ export type GameOptionsModel = {
   requiresVenusTrackCompletion: boolean,
   twoCorpsVariant: boolean,
   undoOption: boolean,
+  mulligan: MulliganOptions,
 }

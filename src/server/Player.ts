@@ -79,6 +79,7 @@ import {AlliedParty} from '../common/turmoil/Types';
 import {PlayedCards} from './cards/PlayedCards';
 import {From} from './logs/From';
 import {SelectStandardProjectToPlay} from './inputs/SelectStandardProjectToPlay';
+import {MulliganCategory} from '../common/game/Mulligan';
 
 const THROW_STATE_ERRORS = Boolean(process.env.THROW_STATE_ERRORS);
 const DEFAULT_GLOBAL_PARAMETER_STEPS = {
@@ -132,6 +133,7 @@ export class Player implements IPlayer {
   public dealtPreludeCards: Array<IPreludeCard> = [];
   public dealtCeoCards: Array<ICeoCard> = [];
   public dealtProjectCards: Array<IProjectCard> = [];
+  public mulliganedCategories = new Set<MulliganCategory>();
   public cardsInHand: Array<IProjectCard> = [];
   public preludeCardsInHand: Array<IPreludeCard> = [];
   public ceoCardsInHand: Set<ICeoCard> = new Set();
@@ -1798,6 +1800,7 @@ export class Player implements IPlayer {
       dealtPreludeCards: this.dealtPreludeCards.map(toName),
       dealtCeoCards: this.dealtCeoCards.map(toName),
       dealtProjectCards: this.dealtProjectCards.map(toName),
+      mulliganedCategories: Array.from(this.mulliganedCategories),
       cardsInHand: this.cardsInHand.map(toName),
       preludeCardsInHand: this.preludeCardsInHand.map(toName),
       ceoCardsInHand: Array.from(this.ceoCardsInHand).map(toName),
@@ -1919,6 +1922,7 @@ export class Player implements IPlayer {
     player.dealtPreludeCards = preludesFromJSON(d.dealtPreludeCards);
     player.dealtCeoCards = ceosFromJSON(d.dealtCeoCards);
     player.dealtProjectCards = cardsFromJSON(d.dealtProjectCards);
+    player.mulliganedCategories = new Set(d.mulliganedCategories ?? []);
     player.deltaProjectData = d.deltaProject;
     player.cardsInHand = cardsFromJSON(d.cardsInHand);
     // I don't like "as IPreludeCard" but this is pretty safe.

@@ -11,6 +11,7 @@ import {GlobalEventName} from '../turmoil/globalEvents/GlobalEventName';
 import {Warning} from '../cards/Warning';
 import {Units} from '../Units';
 import {ClaimedToken} from '../underworld/UnderworldPlayerData';
+import {MulliganCategory} from '../game/Mulligan';
 
 export type BaseInputModel = {
   title: string | Message;
@@ -35,6 +36,7 @@ export type OrOptionsModel = BaseInputModel & {
 export type SelectInitialCardsModel = BaseInputModel & {
   type: 'initialCards';
   options: Array<PlayerInputModel>;
+  mulliganCategories: Array<MulliganCategory>;
 }
 
 export type SelectOptionModel = BaseInputModel & {
