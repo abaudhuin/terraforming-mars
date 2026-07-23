@@ -1,16 +1,8 @@
 <template>
   <section class="tm-action-spotlight" :class="{'tm-action-spotlight--empty': messages.length === 0}" aria-live="polite">
-    <header v-if="actor || visibleResourceDeltas.length > 0 || globalDeltas.length > 0" class="tm-action-spotlight-header">
+    <header v-if="actor || globalDeltas.length > 0" class="tm-action-spotlight-header">
       <strong v-if="actor" class="tm-action-spotlight-actor" :class="'player_bg_color_' + actor.color">{{ actor.name }}</strong>
-      <div v-if="visibleResourceDeltas.length > 0 || globalDeltas.length > 0" class="tm-action-spotlight-deltas">
-        <div
-          v-for="delta in visibleResourceDeltas"
-          :key="delta.playerColor + '-' + delta.resource"
-          class="tm-action-delta"
-          :title="delta.playerName + ': ' + signed(delta.amount || delta.production)">
-          <i class="resource_icon" :class="'resource_icon--' + delta.resource" aria-hidden="true"></i>
-          <strong>{{ signed(delta.amount || delta.production) }}</strong>
-        </div>
+      <div v-if="globalDeltas.length > 0" class="tm-action-spotlight-deltas">
         <div v-for="delta in globalDeltas" :key="delta.parameter" class="tm-action-delta tm-action-delta--global" :title="globalLabel(delta.parameter)">
           <span>{{ globalSymbol(delta.parameter) }}</span>
           <strong>{{ signed(delta.amount) }}</strong>
@@ -24,14 +16,17 @@
     </div>
 
     <template v-else>
-      <ul v-if="featuredMessage === undefined && primaryMessage" class="tm-action-spotlight-messages">
-        <LogMessageComponent
-          :key="primaryMessage.timestamp"
-          :message="primaryMessage"
-          :viewModel="viewModel"/>
-      </ul>
-      <div v-if="featuredMessage" class="tm-action-spotlight-object">
-        <CardPanel :message="featuredMessage" :players="viewModel.players" :showClose="false"/>
+      <div class="tm-action-spotlight-content" :class="spotlightContentClasses">
+        <ul class="tm-action-spotlight-messages">
+          <LogMessageComponent
+            v-for="(message, index) in visibleMessages"
+            :key="message.timestamp + '-' + index"
+            :message="message"
+            :viewModel="viewModel"/>
+        </ul>
+        <div v-if="featuredMessage" class="tm-action-spotlight-object">
+          <CardPanel :message="featuredMessage" :players="viewModel.players" :showClose="false"/>
+        </div>
       </div>
     </template>
   </section>
@@ -43,7 +38,7 @@ import {LogMessage} from '@/common/logs/LogMessage';
 import {LogMessageDataType} from '@/common/logs/LogMessageDataType';
 import {ViewModel, PublicPlayerModel} from '@/common/models/PlayerModel';
 import {GlobalParameter} from '@/common/GlobalParameter';
-import {ResourceDelta, GlobalDelta} from '@/client/utils/ActionFeedback';
+import {GlobalDelta} from '@/client/utils/ActionFeedback';
 import LogMessageComponent from '@/client/components/logpanel/LogMessageComponent.vue';
 import CardPanel from '@/client/components/logpanel/CardPanel.vue';
 
@@ -58,11 +53,6 @@ export default defineComponent({
       type: Object as () => ViewModel,
       required: true,
     },
-    resourceDeltas: {
-      type: Array as () => Array<ResourceDelta>,
-      required: false,
-      default: () => [],
-    },
     globalDeltas: {
       type: Array as () => Array<GlobalDelta>,
       required: false,
@@ -75,16 +65,34 @@ export default defineComponent({
   },
   computed: {
     visibleMessages(): Array<LogMessage> {
-      return this.messages.slice(-3);
+      return this.messages.slice(-12);
     },
     primaryMessage(): LogMessage | undefined {
-      return [...this.visibleMessages].reverse().find((message) => this.messageHasVisual(message)) ?? this.visibleMessages.at(-1);
+      return this.featuredMessage ?? this.visibleMessages[0];
     },
     featuredMessage(): LogMessage | undefined {
-      return this.primaryMessage !== undefined && this.messageHasVisual(this.primaryMessage) ? this.primaryMessage : undefined;
+      const playedCard = [...this.visibleMessages].reverse().find((message) =>
+        /\bplayed\b/i.test(message.message) && this.messageHasVisual(message));
+      return playedCard ?? [...this.visibleMessages].reverse().find((message) => this.messageHasVisual(message));
     },
-    visibleResourceDeltas(): Array<ResourceDelta> {
-      return this.resourceDeltas.slice(0, 4);
+    featuredVisualCount(): number {
+      return this.featuredMessage?.data.reduce((count, datum) => {
+        if (datum.type === LogMessageDataType.CARDS) {
+          return count + datum.value.length;
+        }
+        if (datum.type === LogMessageDataType.CARD ||
+            datum.type === LogMessageDataType.COLONY ||
+            datum.type === LogMessageDataType.GLOBAL_EVENT) {
+          return count + 1;
+        }
+        return count;
+      }, 0) ?? 0;
+    },
+    spotlightContentClasses(): Record<string, boolean> {
+      return {
+        'tm-action-spotlight-content--visual-single': this.featuredVisualCount === 1,
+        'tm-action-spotlight-content--visual-stack': this.featuredVisualCount > 1,
+      };
     },
     actor(): PublicPlayerModel | undefined {
       const datum = this.primaryMessage?.data.find((entry) => entry.type === LogMessageDataType.PLAYER);

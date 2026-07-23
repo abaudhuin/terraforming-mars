@@ -1160,7 +1160,7 @@
     min-width: 0;
     min-height: 0;
     height: 100%;
-    padding: 10px 5px 6px;
+    padding: 10px 5px 36px;
     display: flex;
     flex-flow: column;
     align-items: center;
@@ -1224,7 +1224,7 @@
     width: 100%;
     min-width: 0;
     margin: 0;
-    padding: 6px 2px;
+    padding: 2px;
     display: block;
     overflow: hidden;
     border: 0;
@@ -1242,6 +1242,42 @@
     white-space: nowrap;
   }
 
+  .tm-action-spotlight-content {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .tm-action-spotlight-content--visual-single {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 142px;
+    align-items: start;
+    gap: 10px;
+  }
+
+  .tm-action-spotlight-content--visual-single .tm-action-spotlight-messages li {
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .tm-action-spotlight-content--visual-single .tm-action-spotlight-messages {
+    max-height: 188px;
+    overflow: hidden auto;
+  }
+
+  .tm-action-spotlight-content--visual-stack {
+    flex: 1;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 128px;
+    gap: 8px;
+  }
+
+  .tm-action-spotlight-content--visual-stack .tm-action-spotlight-messages {
+    overflow: hidden auto;
+  }
+
   .tm-action-spotlight-messages li > span:first-child,
   .tm-action-spotlight-messages .log-player {
     display: none;
@@ -1256,40 +1292,65 @@
     width: 100%;
     min-width: 0;
     min-height: 0;
-    padding: 3px 0 6px;
+    padding: 0 0 4px;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     overflow: auto hidden;
+    scrollbar-gutter: auto;
   }
 
   .tm-action-spotlight-object .card-panel {
     min-width: 0;
     display: flex;
-    justify-content: center;
-    gap: 6px;
+    justify-content: flex-start;
+    gap: 5px;
   }
 
   .tm-action-spotlight-object .log-panel-card {
-    flex: 0 0 172px;
-    width: 172px;
-    height: 228px;
+    flex: 0 0 86px;
+    width: 86px;
+    height: 128px;
     margin: 0;
     overflow: visible;
   }
 
   .tm-action-spotlight-object .log-panel-card > .card-container {
-    transform: scale(0.67);
-    transform-origin: top left;
+    transform: scale(0.33);
+    transform-origin: top left !important;
   }
 
   .tm-action-spotlight-object .log-panel-card > .card-standard-project {
-    transform: scale(0.73);
+    transform: scale(0.36);
   }
 
   .tm-action-spotlight-object .log-panel-card.colony-card,
   .tm-action-spotlight-object .log-panel-card > .colony-card {
-    transform: scale(0.34);
+    transform: scale(0.17);
     transform-origin: top left;
+  }
+
+  .tm-action-spotlight-content--visual-single .tm-action-spotlight-object {
+    overflow: hidden;
+  }
+
+  .tm-action-spotlight-content--visual-single .tm-action-spotlight-object .log-panel-card {
+    flex-basis: 142px;
+    width: 142px;
+    height: 188px;
+  }
+
+  .tm-action-spotlight-content--visual-single .tm-action-spotlight-object .log-panel-card > .card-container {
+    transform: scale(0.55);
+    transform-origin: top left !important;
+  }
+
+  .tm-action-spotlight-content--visual-single .tm-action-spotlight-object .log-panel-card > .card-standard-project {
+    transform: scale(0.6);
+  }
+
+  .tm-action-spotlight-content--visual-single .tm-action-spotlight-object .log-panel-card.colony-card,
+  .tm-action-spotlight-content--visual-single .tm-action-spotlight-object .log-panel-card > .colony-card {
+    transform: scale(0.28);
   }
 
   .tm-action-spotlight-empty {
@@ -1696,6 +1757,7 @@
     .tm-action-spotlight,
     .tm-action-spotlight-pulse,
     .tm-action-delta,
+    .tm-resource-change,
     .tm-feedback-highlight,
     .tm-feedback-pulse {
       animation-duration: 1ms !important;
@@ -3008,7 +3070,7 @@
     .tm-action-workbench > div:not(.tm-panel-heading),
     .tm-action-workbench .wf-root {
       min-height: 0;
-      height: calc(100% - 27px);
+      height: 100%;
     }
 
     .tm-action-workbench .wf-options--command-board {
@@ -3134,7 +3196,7 @@
     }
 
     .wf-component--select-card {
-      height: calc(100% - 27px);
+      height: 100%;
       max-height: none;
     }
 
@@ -6076,10 +6138,13 @@
     background: rgba(10, 12, 13, 0.96);
   }
 
+  // WaitingFor already sits below the tray chrome. Let both of its wrappers
+  // inherit the complete workbench height instead of subtracting a phantom
+  // heading once at each nesting level.
   .tm-action-workbench > div:not(.tm-panel-heading),
   .tm-action-workbench .wf-root {
     min-height: 0;
-    height: calc(100% - 27px);
+    height: 100%;
   }
 
   .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-options--command-board {
@@ -6513,8 +6578,10 @@
   }
 
   .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-component--select-card {
+    position: relative;
     height: 100%;
     max-height: none;
+    box-sizing: border-box;
     display: flex;
     flex-flow: row wrap;
     align-content: flex-start;
@@ -7562,10 +7629,70 @@
     .resource_item,
     .player-info--self .resource_item,
     .player-info--opponent .resource_item {
+      position: relative;
       min-height: 32px;
       padding: 2px 3px 1px;
       grid-template-rows: 19px 10px;
       overflow: visible;
+    }
+
+    .tm-resource-change {
+      position: absolute;
+      z-index: 18;
+      top: -11px;
+      right: -3px;
+      min-height: 17px;
+      padding: 1px 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      border: 1px solid rgba(255, 204, 100, 0.52);
+      border-radius: 4px;
+      background: rgba(11, 13, 14, 0.97);
+      color: #ffe3a0;
+      font-family: Prototype, sans-serif;
+      font-size: 9px;
+      line-height: 13px;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 204, 100, 0.12);
+      animation: tm-delta-pop 440ms cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+    }
+
+    .tm-resource-change::after {
+      content: "";
+      position: absolute;
+      right: 8px;
+      bottom: -4px;
+      width: 1px;
+      height: 4px;
+      background: rgba(255, 204, 100, 0.52);
+    }
+
+    .tm-resource-change strong {
+      font: inherit;
+    }
+
+    .tm-resource-change-production {
+      padding-left: 3px;
+      border-left: 1px solid rgba(255, 255, 255, 0.16);
+      color: #d8b99b;
+    }
+
+    .tm-resource-change-production small {
+      margin-right: 1px;
+      color: rgba(243, 238, 228, 0.58);
+      font: inherit;
+    }
+
+    .tm-resource-change--loss {
+      border-color: rgba(224, 112, 91, 0.58);
+      color: #f0a394;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 10px rgba(208, 99, 82, 0.13);
+    }
+
+    .tm-resource-change--loss::after {
+      background: rgba(224, 112, 91, 0.58);
     }
 
     .resource_item_stock,
@@ -8244,20 +8371,22 @@
     grid-template-columns: var(--tm-player-width, 332px) minmax(0, 1fr) 44px;
   }
 
+  // Keep the tray toggle out of the tray's grid flow. The shared icon-control
+  // rule sets position: relative later in the cascade, which otherwise creates
+  // an empty first row above every action panel.
+  .tm-bottom-tray > .tm-bottom-tray-toggle {
+    position: absolute;
+    top: -37px;
+    right: 7px;
+    left: auto;
+  }
+
   &.tm-player-table--bottom-collapsed {
-    grid-template-rows: var(--tm-hud-height) minmax(0, 1fr) 42px !important;
+    grid-template-rows: var(--tm-hud-height) minmax(0, 1fr) 0 !important;
   }
 
   &.tm-player-table--bottom-collapsed .tm-bottom-tray {
-    min-height: 42px;
-    border: 1px solid var(--tm-border-soft);
-    border-radius: 8px;
-    background: var(--tm-panel-bg);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32);
-  }
-
-  &.tm-player-table--bottom-collapsed .tm-bottom-tray-toggle {
-    top: 6px;
+    min-height: 0;
   }
 
   &.tm-player-table--activity-collapsed .tm-activity-rail {
@@ -8499,24 +8628,6 @@
   }
 
   .tm-action-workbench .wf-component--select-card:not(:has(.colony-card)) {
-    padding-bottom: 50px;
-    scroll-padding-bottom: 56px;
-  }
-
-  .tm-action-workbench .wf-component--select-card > .wf-component-title.nofloat,
-  .tm-action-workbench .wf-component--select-card > .wf-component-title {
-    flex: 0 0 100%;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .tm-action-workbench .wf-component--select-card {
-    justify-content: flex-start;
-  }
-
-  .tm-action-workbench .wf-component--select-card:not(:has(.colony-card)) {
-    padding-bottom: 50px;
     scroll-padding-bottom: 56px;
   }
 
@@ -8546,17 +8657,20 @@
     z-index: 4;
     bottom: 0;
     flex: 0 0 100%;
+    height: 42px;
     min-height: 42px;
     order: 2;
-    margin-top: auto;
+    margin: -42px 0 0;
     padding: 8px 0 1px;
     align-items: center;
     justify-content: flex-end;
     background: transparent;
+    box-sizing: border-box;
+    pointer-events: none;
   }
 
-  .tm-action-workbench .wf-component--select-card:not(:has(.colony-card)) > .wf-component-actions {
-    bottom: -50px;
+  .tm-action-workbench .wf-component--select-card > .wf-component-actions > * {
+    pointer-events: auto;
   }
 
   .tm-action-workbench .wf-component--select-card > label.cardbox {

@@ -1,5 +1,9 @@
 <template>
   <div class="resource_item" :class="mainCSS" :data-resource="type">
+      <div v-if="delta" class="tm-resource-change" :class="{'tm-resource-change--loss': delta.amount < 0 || delta.production < 0}" role="status" :aria-label="deltaLabel">
+        <strong v-if="delta.amount !== 0">{{ signed(delta.amount) }}</strong>
+        <strong v-if="delta.production !== 0" class="tm-resource-change-production"><small>P</small>{{ signed(delta.production) }}</strong>
+      </div>
       <div class="resource_item_stock">
           <i class="resource_icon tooltip tooltip-bottom" :class="iconCSS" :data-tooltip="resourceTypeTooltip"></i>
           <div class="resource_item_stock_count" data-test="stock-count">{{ count }}</div>
@@ -22,6 +26,7 @@ import {defineComponent} from 'vue';
 import {DEFAULT_STEEL_VALUE, DEFAULT_TITANIUM_VALUE} from '@/common/constants';
 import {Resource} from '@/common/Resource';
 import {Protection} from '@/common/models/PlayerModel';
+import {ResourceDelta} from '@/client/utils/ActionFeedback';
 
 export default defineComponent({
   name: 'PlayerResource',
@@ -51,6 +56,10 @@ export default defineComponent({
       type: Number,
       default: 0,
     },
+    delta: {
+      type: Object as () => ResourceDelta | undefined,
+      default: undefined,
+    },
   },
   data() {
     return {
@@ -68,6 +77,9 @@ export default defineComponent({
       default:
         return false;
       }
+    },
+    signed(value: number): string {
+      return value > 0 ? `+${value}` : String(value);
     },
   },
   computed: {
@@ -109,6 +121,19 @@ export default defineComponent({
     },
     productionCountTooltip(): string {
       return this.$t('Production count');
+    },
+    deltaLabel(): string {
+      if (this.delta === undefined) {
+        return '';
+      }
+      const changes = [];
+      if (this.delta.amount !== 0) {
+        changes.push(`${this.signed(this.delta.amount)} ${this.resourceTypeTooltip}`);
+      }
+      if (this.delta.production !== 0) {
+        changes.push(`${this.signed(this.delta.production)} ${this.productionCountTooltip}`);
+      }
+      return changes.join(', ');
     },
   },
 });

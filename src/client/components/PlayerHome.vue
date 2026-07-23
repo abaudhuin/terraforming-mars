@@ -94,7 +94,7 @@
 
       <main class="tm-table-main">
         <aside class="tm-player-rail" id="shortkey-playersoverview">
-          <PlayersOverview :playerView="playerView" @open-player="openPlayer" v-trim-whitespace/>
+          <PlayersOverview :playerView="playerView" :resourceDeltas="resourceDeltas" @open-player="openPlayer" v-trim-whitespace/>
           <button
             type="button"
             class="tm-layout-resize-handle tm-layout-resize-handle--player"
@@ -183,7 +183,6 @@
               :key="feedbackEpoch"
               :messages="activityMessages"
               :viewModel="playerView"
-              :resourceDeltas="resourceDeltas"
               :globalDeltas="globalDeltas"/>
             <LogPanel
               v-show="activityMode === 'history'"
@@ -995,7 +994,7 @@ export default defineComponent({
       });
     },
     isPlayerActing(playerView: PlayerViewModel) : boolean {
-      return playerView.players.length > 1 && playerView.waitingFor !== undefined && !playerView.waitingFor.optional;
+      return playerView.waitingFor !== undefined && !playerView.waitingFor.optional;
     },
     clampLayoutValue(value: number, min: number, max: number): number {
       return Math.min(max, Math.max(min, Math.round(value)));

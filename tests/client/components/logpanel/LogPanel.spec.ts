@@ -175,6 +175,19 @@ describe('LogPanel', () => {
     expect(activityUpdate).to.have.length(1);
     expect((activityUpdate![0][0] as any).messages.map((message: LogMessage) => message.message)).to.deep.eq(['one', 'two', 'three', 'four', 'five']);
     expect((activityUpdate![0][0] as any).isInitial).to.be.true;
+
+    const played = new LogMessage(LogMessageType.DEFAULT, 'played a card', []);
+    const result = new LogMessage(LogMessageType.DEFAULT, 'lost production', []);
+    await wrapper.setProps({gameAge: 1});
+    responses.shift()!({ok: true, json: () => Promise.resolve([...messages, played, result])} as Response);
+    await flushPromises();
+
+    expect(wrapper.emitted('activity-update')).to.have.length(2);
+    expect((wrapper.emitted('activity-update')![1][0] as any).messages.map((message: LogMessage) => message.message)).to.deep.eq([
+      'played a card',
+      'lost production',
+    ]);
+    expect((wrapper.emitted('activity-update')![1][0] as any).isInitial).to.be.false;
     wrapper.unmount();
   });
 });

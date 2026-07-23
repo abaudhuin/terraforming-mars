@@ -10,6 +10,7 @@
               :player="p"
               :key="p.color"
               :playerView="playerView"
+              :resourceDeltas="getResourceDeltas(p)"
               :firstForGen="getIsFirstForGen(p)"
               :actionLabel="getActionLabel(p)"
               :playerIndex="index"
@@ -20,6 +21,7 @@
               :player="thisPlayer"
               :key="thisPlayer.color"
               :playerView="playerView"
+              :resourceDeltas="getResourceDeltas(thisPlayer)"
               :firstForGen="getIsFirstForGen(thisPlayer)"
               :actionLabel="getActionLabel(thisPlayer)"
               :playerIndex="-1"
@@ -36,6 +38,7 @@ import {ViewModel, PublicPlayerModel} from '@/common/models/PlayerModel';
 import {ActionLabel} from '@/client/components/overview/ActionLabel';
 import {Phase} from '@/common/Phase';
 import {Color} from '@/common/Color';
+import {ResourceDelta} from '@/client/utils/ActionFeedback';
 
 const SHOW_NEXT_LABEL_MIN = 2;
 
@@ -58,6 +61,10 @@ export default defineComponent({
     playerView: {
       type: Object as () => ViewModel,
       required: true,
+    },
+    resourceDeltas: {
+      type: Array as () => Array<ResourceDelta>,
+      default: () => [],
     },
   },
   computed: {
@@ -82,6 +89,9 @@ export default defineComponent({
     },
     getIsFirstForGen(player: PublicPlayerModel): boolean {
       return playerIndex(player.color, this.players) === 0;
+    },
+    getResourceDeltas(player: PublicPlayerModel): Array<ResourceDelta> {
+      return this.resourceDeltas.filter((delta) => delta.playerColor === player.color);
     },
     getPlayersInOrder(): Array<PublicPlayerModel> {
       const players = this.players;

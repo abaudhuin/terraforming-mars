@@ -94,6 +94,30 @@ describe('PlayerHome', () => {
     expect(wrapper.find('.tm-passive-sync').exists()).to.be.false;
   });
 
+  it('uses the acting layout for a solo player with an input', () => {
+    const thisPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}]});
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {
+        methods: {
+          getVisibilityState: () => true,
+          setVisibilityState: () => {},
+        },
+      } as any,
+      props: {
+        playerView: fakePlayerViewModel({
+          thisPlayer,
+          players: [thisPlayer],
+          waitingFor: {type: 'option', title: 'Take another action', buttonLabel: 'Confirm'},
+        }),
+      },
+    });
+
+    expect(wrapper.classes()).to.include('tm-player-table--acting');
+    expect(wrapper.classes()).not.to.include('tm-player-table--passive');
+    expect(wrapper.find('.tm-action-workbench').exists()).to.be.true;
+  });
+
   it('uses a Focus/History activity rail and clamps available colony fleets', () => {
     const thisPlayer = fakePublicPlayerModel({
       tableau: [{name: CardName.ACQUIRED_COMPANY}],

@@ -41,6 +41,7 @@ import {ParticipantId, SpaceId} from '@/common/Types';
 import LogMessageComponent from '@/client/components/logpanel/LogMessageComponent.vue';
 import CardPanel from '@/client/components/logpanel/CardPanel.vue';
 import {isMarsSpace} from '@/common/boards/spaces';
+import {appendedActivityMessages} from '@/client/utils/ActivityGrouping';
 
 type LogPanelModel = {
   messages: Array<LogMessage>,
@@ -220,11 +221,12 @@ export default defineComponent({
           }
           const scrollState = this.getScrollState();
           const isInitial = messages.length === 0;
+          const activityMessages = appendedActivityMessages(messages, data);
           messages.splice(0, messages.length);
           messages.push(...data);
-          if (this.liveUpdates) {
+          if (this.liveUpdates && (isInitial || activityMessages.length > 0)) {
             this.$emit('activity-update', {
-              messages: data.slice(-8),
+              messages: activityMessages,
               isInitial,
             });
           }

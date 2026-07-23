@@ -19,7 +19,7 @@
             <PlayerStatus :timer="player.timer" :showTimer="playerView.game.gameOptions.showTimers" :liveTimer="playerView.game.phase !== Phase.END" v-trim-whitespace :actionLabel="actionLabel"/>
           </div>
           </div>
-          <PlayerResources :player="player" v-trim-whitespace />
+          <PlayerResources :player="player" :resourceDeltas="resourceDeltas" v-trim-whitespace />
           <div class="tm-rail-player-summary">
             <div class="tm-rail-stat tm-rail-stat--vp" title="VP">
               <span class="tm-rail-stat-icon tm-rail-stat-icon--vp" aria-hidden="true"></span>
@@ -74,6 +74,7 @@ import {CardType} from '@/common/cards/CardType';
 import {getCard} from '@/client/cards/ClientCardManifest';
 import {Phase} from '@/common/Phase';
 import {ActionLabel} from './ActionLabel';
+import {ResourceDelta} from '@/client/utils/ActionFeedback';
 
 export default defineComponent({
   name: 'PlayerInfo',
@@ -98,6 +99,10 @@ export default defineComponent({
     playerIndex: {
       type: Number,
       required: true,
+    },
+    resourceDeltas: {
+      type: Array as () => Array<ResourceDelta>,
+      default: () => [],
     },
     hideZeroTags: {
       type: Boolean,
