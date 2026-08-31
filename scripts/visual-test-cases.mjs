@@ -183,17 +183,17 @@ const areaDetailSelectors = {
   players: '.tm-player-rail, .tm-modal',
   activity: '.tm-activity-rail',
   board: '.tm-board-stage, .tm-modal',
-  ma: '.tm-ma-panel, .milestone-award-inline',
+  ma: '.tm-modal--module .tm-module-ma-grid, .milestone-award-inline',
   setup: '.player_home_block--setup',
   research: '.tm-action-workbench, .player_home_block--actions',
-  colonies: '.tm-table-leaf--colonies, .tm-extension-panel--colonies',
-  venus: '.tm-table-leaf--venus, .venus-next-board',
-  turmoil: '.tm-extension-panel--turmoil, .turmoil',
+  colonies: '.tm-modal--module .tm-module-overlay--colonies',
+  venus: '.global-numbers-venus .val-is-active',
+  turmoil: '.tm-modal--module .tm-module-overlay--turmoil, .turmoil',
   ares: '.tm-mars-board-surface, .board-cont',
-  moon: '.tm-extension-panel--moon, #moon_board',
-  pathfinders: '.tm-extension-panel--pathfinders',
-  underworld: '.tm-extension-panel--underworld, .underworld',
-  delta: '.tm-extension-panel--delta, .tm-extension-panel--deltaProject',
+  moon: '.tm-modal--module .tm-module-overlay--moon, #moon_board',
+  pathfinders: '.tm-modal--module .tm-module-overlay--pathfinders',
+  underworld: '.tm-modal--module .tm-module-overlay--underworld',
+  delta: '.tm-modal--module .tm-module-overlay--delta',
   ceo: '.tm-table-leaf--ceo, .card-container',
   endgame: '#game-end, .game_end',
 };
@@ -342,15 +342,20 @@ const builtInTestCases = [
   detail('layout/primary-dense-4p', 'layout', 'Normal primary midgame table and default panel proportions.', 'table-active'),
   detail('layout/dense-5p', 'layout', 'Five-player density with every opponent reachable.', 'table-active', {fixture: 'dense-mid-5p'}),
   detail('layout/bottom-tray-compressed', 'layout', 'Compressed action tray preserves the pending decision.', 'bottom-tray-compressed'),
+  detail('layout/bottom-tray-collapsed', 'layout', 'The waiting-state tray collapse control remains inside the tray edge and the collapsed tray returns its space to the board.', 'bottom-tray-collapsed', {perspective: 'waiting', detailSelector: '#player-home'}),
   detail('layout/activity-collapsed', 'layout', 'Collapsed activity rail restores board space without orphan chrome.', 'activity-rail-collapsed'),
   detail('layout/primary-wide', 'layout', 'Wide desktop uses extra space intentionally without stretching decisions.', 'table-active', {viewport: 'desktop-wide'}),
   detail('layout/resize-handles-hover', 'layout', 'Horizontal and vertical resize handles remain visible and untinted on hover without moving their panels.', 'resize-handles-hover', {detailSelector: '#player-home'}),
   detail('layout/resize-minimums-1280', 'layout', 'At the minimum supported desktop size, both side rails and the bottom tray can contract enough to return useful space to the board.', 'resized-layout-minimums', {viewport: 'desktop-minimum', detailSelector: '#player-home'}),
+  detail('layout/utility-dock-open', 'layout', 'The consolidated top-right utility controls stay aligned while the icon-only tools menu is open.', 'tools-open', {detailSelector: '.tm-table-hud'}),
+  detail('layout/hud-long-turn-context-1280', 'layout', 'Long active-turn context stays fully inside the table HUD at the minimum supported desktop size.', 'hud-long-turn-context', {viewport: 'desktop-minimum', detailSelector: '.tm-table-hud'}),
+  detail('layout/module-dock-dense', 'layout', 'Every available inspectable table module fits in one narrow board-bottom dock without covering Mars targets.', 'module-dock-dense', {fixture: 'all-modules-mid-4p', viewport: 'desktop-minimum', detailSelector: '.tm-board-stage'}),
   detail('layout/player-rail-enlarged-1280', 'layout', 'At the minimum supported desktop size, the player rail has a materially useful enlargement range while the board remains reachable.', 'player-rail-enlarged', {viewport: 'desktop-minimum', detailSelector: '#player-home'}),
   detail('layout/activity-rail-enlarged-1280', 'layout', 'At the minimum supported desktop size, the activity rail has a materially useful enlargement range while the board remains reachable.', 'activity-rail-enlarged-maximum', {viewport: 'desktop-minimum', detailSelector: '#player-home'}),
   detail('layout/bottom-tray-enlarged-1280', 'layout', 'At the minimum supported desktop size, the bottom tray has a materially useful enlargement range without hiding the current board.', 'bottom-tray-enlarged-maximum', {viewport: 'desktop-minimum', detailSelector: '#player-home'}),
 
   detail('actions/top-level-neutral', 'actions', 'All ordinary action families visible with none implied as selected.', 'action-neutral-contract', {fixture: 'action-inputs-2p'}),
+  detail('actions/top-level-density-1280', 'actions', 'The compact action picker exposes several complete choices plus the fixed aligned Pass control at the minimum desktop size.', 'action-neutral-contract', {fixture: 'action-inputs-2p', viewport: 'desktop-minimum', detailSelector: '.tm-action-workbench'}),
   detail('actions/top-level-keyboard-focus', 'actions', 'Keyboard focus is visible without changing layout.', 'action-keyboard-focus', {fixture: 'action-inputs-2p'}),
   detail('actions/colony-trade-keyboard-focus', 'actions', 'Colony trade keeps its transport symbol legible under keyboard focus.', 'action-colony-trade-keyboard-focus', {fixture: 'action-inputs-2p'}),
   detail('actions/colony-trade-hover', 'actions', 'Colony trade keeps its transport symbol legible under pointer hover.', 'action-colony-trade-hover', {fixture: 'action-inputs-2p'}),
@@ -460,9 +465,9 @@ const builtInTestCases = [
 
   detail('pathfinders/all-zero', 'pathfinders', 'All-zero tracks still communicate direction and rewards.', 'pathfinders-open', {fixturePatch: 'pathfinders-zero'}),
   detail('pathfinders/uneven-competition', 'pathfinders', 'Uneven track competition keeps every pawn and reward readable.', 'pathfinders-open', {fixturePatch: 'pathfinders-uneven'}),
-  detail('pathfinders/near-max', 'pathfinders', 'Near-max tracks and rewards stay grouped without excessive travel.', 'pathfinders-scrolled', {fixturePatch: 'pathfinders-near-max'}),
+  detail('pathfinders/near-max', 'pathfinders', 'Near-max tracks and rewards stay grouped without excessive travel.', 'pathfinders-open', {fixturePatch: 'pathfinders-near-max'}),
 
-  detail('underworld/all-hidden', 'underworld', 'Underworld-enabled board with no revealed tokens remains readable and does not imply revealed information.', 'overlay-board', {fixture: 'secondary-modules-3p', fixturePatch: 'underworld-hidden', detailSelector: '.tm-modal .board-cont, .tm-modal .tm-board-stage'}),
+  detail('underworld/all-hidden', 'underworld', 'Underworld-enabled board with no revealed tokens remains readable and does not imply revealed information.', 'overlay-board', {fixture: 'secondary-modules-3p', fixturePatch: 'underworld-hidden', detailSelector: '.tm-board-stage'}),
   detail('underworld/revealed-mixed', 'underworld', 'Multiple claimed Underworld tokens remain distinguishable in the player summary.', 'underworld-open', {fixture: 'secondary-modules-3p', fixturePatch: 'underworld-revealed'}),
   detail('underworld/high-corruption', 'underworld', 'Claims, active/protected tokens, corruption, and negative VP remain coherent.', 'overlay-player-opponent', {fixture: 'secondary-modules-3p', fixturePatch: 'underworld-high-corruption', detailSelector: '.tm-modal'}),
 
@@ -1671,7 +1676,15 @@ function responseFor(input, options = {}) {
     return {type: 'projectCard', card: card.name, payment: {...emptyPayment, megacredits: cardCost(card)}};
   }
   case 'space':
-    return {type: 'space', spaceId: input.spaces[0]};
+    {
+      const spaceId = options.availableSpaceIds === undefined ?
+        input.spaces[0] :
+        input.spaces.find((candidate) => options.availableSpaceIds.has(candidate));
+      if (spaceId === undefined) {
+        throw new Error(`No currently unoccupied space is available for "${titleText(input)}"`);
+      }
+      return {type: 'space', spaceId};
+    }
   case 'player':
     return {type: 'player', player: input.players[0]};
   case 'party':
@@ -1900,7 +1913,16 @@ async function stabilizePostSetup(game, testCase) {
       if (waitingFor === undefined || isOrdinaryActionInput(waitingFor) || isResearchInput(waitingFor)) {
         continue;
       }
-      const response = waitingFor.type === 'initialCards' ? initialCardsResponse(waitingFor, testCase) : responseFor(waitingFor, {preferPass: false});
+      const visibleSpaces = [
+        ...(model.game.spaces ?? []),
+        ...(model.game.moon?.spaces ?? []),
+      ];
+      const availableSpaceIds = new Set(
+        visibleSpaces.filter((space) => space.tileType === undefined).map((space) => space.id),
+      );
+      const response = waitingFor.type === 'initialCards' ?
+        initialCardsResponse(waitingFor, testCase) :
+        responseFor(waitingFor, {preferPass: false, availableSpaceIds});
       try {
         await postInput(player.id, response);
       } catch (error) {
@@ -2283,9 +2305,9 @@ async function hoverCardAndTrackScroll(page, targetSelector, scrollRootSelectors
 }
 
 async function refreshCardsOverlayAndTrackState(page, _seat, _testCase, game) {
-  if (!await openCardsOverlay(page)) return false;
+  if (!await openCardsOverlay(page)) throw new Error('Could not open the Cards overlay before refresh');
   const gallery = await firstVisible(page.locator('.tm-modal .tm-card-gallery'));
-  if (gallery === undefined) return false;
+  if (gallery === undefined) throw new Error('Cards overlay opened without a visible gallery');
   const before = await page.evaluate(() => {
     const setTrackedScroll = (element, top, left) => {
       if (!(element instanceof HTMLElement)) return null;
@@ -2306,8 +2328,16 @@ async function refreshCardsOverlayAndTrackState(page, _seat, _testCase, game) {
   const mutation = await mutateSerializedGame(game.id, (serialized) => {
     serialized.gameAge = Number(serialized.gameAge ?? 0) + 1;
   });
-  if (!mutation.applied) return false;
-  if (await response === undefined) return false;
+  if (!mutation.applied) throw new Error('Could not mutate the fixture game for refresh verification');
+  const refreshRequested = await page.evaluate(() => {
+    const host = document.querySelector('#app');
+    const app = host?.__vue_app__?._container?._vnode?.component?.proxy;
+    if (typeof app?.updatePlayer !== 'function') return false;
+    app.updatePlayer();
+    return true;
+  });
+  if (!refreshRequested) throw new Error('Could not request a live player refresh from the mounted app');
+  if (await response === undefined) throw new Error('Cards overlay fixture did not receive the expected player refresh');
   await page.waitForTimeout(400);
   const after = await page.evaluate(() => {
     const modal = document.querySelector('.tm-modal');
@@ -2379,16 +2409,23 @@ async function openCardsOverlay(page) {
 }
 
 async function openLogOverlay(page) {
-  if (await openModal(page, 'Log')) return true;
-  return clickIfPresent(page, '.tm-activity-rail .tm-icon-control--eye');
+  return openModal(page, 'History');
 }
 
 async function openBoardOverlay(page) {
-  return openModal(page, 'Board');
+  return await page.locator('.tm-board-stage:visible').count() === 1;
 }
 
 async function openPlayersOverlay(page) {
   return openModal(page, 'Players');
+}
+
+async function openModuleOverlay(page, name) {
+  const button = await firstVisible(page.locator(`.tm-module-dock-button[aria-label="${name}"]`));
+  if (button === undefined) return false;
+  await button.click({timeout: optionalActionTimeoutMs});
+  await page.waitForTimeout(350);
+  return await page.locator('.tm-modal--module:visible').count() === 1;
 }
 
 async function closeModal(page) {
@@ -2427,23 +2464,8 @@ async function scrollSelector(page, selector, direction = 'bottom') {
 }
 
 async function scrollColoniesWithWheel(page) {
-  const opened = await openExtensionSummary(page, ['.tm-table-leaf--colonies > summary', '.tm-extension-panel--colonies > summary', 'details:has-text("Colonies") > summary']);
-  if (!opened) return false;
-  const locator = page.locator('.player_home_colony_cont:visible').first();
-  if (await locator.count() === 0) return false;
-  const before = await locator.evaluate((element) => ({
-    clientWidth: element.clientWidth,
-    scrollWidth: element.scrollWidth,
-    scrollLeft: element.scrollLeft,
-  }));
-  await locator.hover();
-  await page.mouse.wheel(0, 480);
-  await page.waitForTimeout(250);
-  const after = await locator.evaluate((element) => element.scrollLeft);
-  await page.evaluate((result) => {
-    globalThis.__tmVisualColonyWheelScroll = result;
-  }, {...before, after});
-  return before.scrollWidth <= before.clientWidth || after > before.scrollLeft;
+  if (!await openModuleOverlay(page, 'Colonies')) return false;
+  return scrollSelector(page, '.tm-module-overlay--colonies:visible', 'bottom');
 }
 
 async function resizeLayout(page) {
@@ -2525,16 +2547,16 @@ async function assertBoardUsableAtResizeExtremum(page, label) {
   const result = await page.evaluate(() => {
     const space = document.querySelector('#main_board .board-space-selectable');
     const box = space?.getBoundingClientRect();
-    const expand = document.querySelector('.tm-board-expand-button');
+    const dock = document.querySelector('.tm-module-dock');
     const pass = document.querySelector('.wf-command-pass-action');
     return {
       spaceWidth: box?.width ?? 0,
       spaceHeight: box?.height ?? 0,
-      expandVisible: expand instanceof HTMLElement && expand.getBoundingClientRect().width > 0,
+      dockReachable: dock === null || (dock instanceof HTMLElement && dock.getBoundingClientRect().width > 0),
       passVisible: pass instanceof HTMLElement && pass.getBoundingClientRect().height > 0,
     };
   });
-  if (result.spaceWidth < 14 || result.spaceHeight < 14 || !result.expandVisible || !result.passVisible) {
+  if (result.spaceWidth < 14 || result.spaceHeight < 14 || !result.dockReachable || !result.passVisible) {
     throw new Error(`${label} made the board or current action unreachable: ${JSON.stringify(result)}`);
   }
 }
@@ -2598,7 +2620,8 @@ async function beginConvertPlantsPlacement(page) {
   // its attached component owns the glowing map targets and confirmation.
   await page.locator('.select_space_cont').waitFor({state: 'attached', timeout: 5000});
   const selectedTitle = await page.locator('label.wf-command-tile--selected .wf-command-option-title').textContent();
-  if (!/Convert 8 plants into greenery/i.test(selectedTitle ?? '')) {
+  const plantCost = Number.parseInt(selectedTitle?.match(/Convert (\d+) plants into greenery/i)?.[1] ?? '', 10);
+  if (!Number.isFinite(plantCost) || plantCost <= 0) {
     throw new Error(`Unexpected selected Convert plants action: ${JSON.stringify(selectedTitle)}`);
   }
   const target = page.locator('#main_board .board-space--available').first();
@@ -2619,7 +2642,7 @@ async function beginConvertPlantsPlacement(page) {
   if (!topmost.targetOwnsPoint || topmost.spaceId !== targetId) {
     throw new Error(`Convert plants target ${targetId} was intercepted: ${JSON.stringify(topmost)}`);
   }
-  return {playerId, before, targetId, center};
+  return {playerId, before, targetId, center, plantCost};
 }
 
 async function prepareConvertPlants(page, stage) {
@@ -2677,7 +2700,7 @@ async function prepareConvertPlants(page, stage) {
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
   if (after === undefined ||
-      after.thisPlayer.plants !== placement.before.thisPlayer.plants - 8 ||
+      after.thisPlayer.plants !== placement.before.thisPlayer.plants - placement.plantCost ||
       after.game.oxygenLevel !== placement.before.game.oxygenLevel + 1 ||
       greeneryCount(after) !== greeneryCount(placement.before) + 1 ||
       after.game.gameAge <= placement.before.game.gameAge) {
@@ -2746,17 +2769,15 @@ async function hoverActionChoice(page, text) {
   return true;
 }
 
-async function openAndVerifyExclusiveModule(page, selectors) {
-  if (!await openExtensionSummary(page, selectors)) return false;
+async function openAndVerifyExclusiveModule(page, label) {
+  if (!await openModuleOverlay(page, label)) return false;
   await page.waitForTimeout(250);
   const state = await page.evaluate(() => {
-    const stage = document.querySelector('.tm-board-stage');
-    const openPanels = stage?.querySelectorAll('details[open]').length ?? 0;
-    const workbench = document.querySelector('.tm-action-workbench');
-    const workbenchPointerEvents = workbench === null ? 'missing' : getComputedStyle(workbench).pointerEvents;
-    return {openPanels, workbenchPointerEvents};
+    const openModules = document.querySelectorAll('.tm-modal--module .tm-module-overlay').length;
+    const backdrop = document.querySelector('.tm-modal-backdrop');
+    return {openModules, backdropVisible: backdrop instanceof HTMLElement && backdrop.getBoundingClientRect().width > 0};
   });
-  if (state.openPanels !== 1 || state.workbenchPointerEvents !== 'none') {
+  if (state.openModules !== 1 || !state.backdropVisible) {
     throw new Error(`exclusive module contract failed: ${JSON.stringify(state)}`);
   }
   return true;
@@ -2827,21 +2848,14 @@ async function showCeoCards(page) {
 }
 
 async function openUnderworldSurface(page) {
-  if (!await openExtensionSummary(page, ['.tm-extension-panel--underworld > summary', 'details:has-text("Underworld") > summary'])) return false;
-  const panel = page.locator('.tm-extension-panel--underworld[open]').first();
+  if (!await openModuleOverlay(page, 'Underworld')) return false;
+  const panel = page.locator('.tm-module-overlay--underworld:visible').first();
   if (await panel.count() !== 1 || !await panel.isVisible()) return false;
   const tokenCount = await panel.locator('.underground-token-style--player-home').count();
   if (tokenCount < 2) {
     throw new Error(`Expected multiple claimed Underworld tokens in the open module panel, got ${tokenCount}`);
   }
   return true;
-}
-
-async function openExtensionSummary(page, selectors) {
-  for (const selector of selectors) {
-    if (await clickIfPresent(page, selector)) return true;
-  }
-  return false;
 }
 
 async function waitForEndgameShell(page) {
@@ -3016,8 +3030,7 @@ async function showPlayerResourceFeedback(page) {
   const geometry = await page.locator('.player-info--self .player-info-details').evaluate((header) => {
     const name = header.querySelector('.player-info-name');
     const feedback = header.querySelector('.tm-resource-change-list')?.getBoundingClientRect();
-    const button = header.querySelector('.tm-player-view-button')?.getBoundingClientRect();
-    if (!(name instanceof HTMLElement) || feedback === undefined || button === undefined) return {valid: false};
+    if (!(name instanceof HTMLElement) || feedback === undefined) return {valid: false};
     const nameBounds = name.getBoundingClientRect();
     return {
       valid: true,
@@ -3027,7 +3040,6 @@ async function showPlayerResourceFeedback(page) {
       feedbackLeft: feedback.left,
       feedbackTop: feedback.top,
       feedbackRight: feedback.right,
-      buttonLeft: button.left,
       headerRight: header.getBoundingClientRect().right,
     };
   });
@@ -3035,7 +3047,6 @@ async function showPlayerResourceFeedback(page) {
       geometry.nameClipped ||
       geometry.feedbackLeft < geometry.nameRight - 1 ||
       Math.abs(geometry.feedbackTop - geometry.nameTop) > 5 ||
-      geometry.feedbackRight > geometry.buttonLeft + 1 ||
       geometry.feedbackRight > geometry.headerRight + 1) {
     throw new Error(`Player feedback clips the player name or escapes the identity/control row: ${JSON.stringify(geometry)}`);
   }
@@ -3399,27 +3410,54 @@ const allCaptureDefinitions = [
     if (!await selectFirstVisibleCard(page)) return false;
     return await page.locator('.tm-action-workbench label.tm-selectable-card--selected:visible').count() === 1;
   }, reviewTags: ['sell-patents', 'card-selected', 'shared-selection', 'selection-summary']},
-  {name: 'milestones-awards-hover', seat: 'active', prepare: (page) => hoverIfPresent(page, '.tm-ma-panel-summary, .tm-ma-panel button, .milestone-award-inline'), reviewTags: ['milestones-awards', 'hover-focus', 'button-affordance']},
-  {name: 'milestones-awards-open', seat: 'active', prepare: (page) => clickIfPresent(page, '.tm-ma-panel-summary') || clickTextIfPresent(page, 'Milestones'), reviewTags: ['milestones-awards', 'compact-open', 'claimed-funded-state']},
-  {name: 'colonies-open', seat: 'active', prepare: (page) => openExtensionSummary(page, ['.tm-table-leaf--colonies > summary', '.tm-extension-panel--colonies > summary', 'details:has-text("Colonies") > summary']), reviewTags: ['colonies', 'compact-open', 'extension-panel']},
+  {name: 'milestones-awards-hover', seat: 'active', prepare: (page) => hoverIfPresent(page, '.tm-module-dock-button--ma'), reviewTags: ['milestones-awards', 'hover-focus', 'button-affordance']},
+  {name: 'milestones-awards-open', seat: 'active', prepare: (page) => openModuleOverlay(page, 'Milestones & Awards'), reviewTags: ['milestones-awards', 'full-overlay', 'claimed-funded-state']},
+  {name: 'colonies-open', seat: 'active', prepare: (page) => openModuleOverlay(page, 'Colonies'), reviewTags: ['colonies', 'full-overlay', 'module']},
   {name: 'colonies-scrolled', seat: 'active', prepare: scrollColoniesWithWheel, reviewTags: ['colonies', 'horizontal-scroll', 'chrome-wheel', 'extension-panel']},
   {name: 'venus-track', seat: 'active', prepare: showVenusTrack, reviewTags: ['venus', 'global-parameter', 'venus-track']},
   {name: 'ares-hazards', seat: 'active', prepare: showAresHazards, reviewTags: ['ares', 'hazards', 'global-parameter']},
   {name: 'ceo-cards', seat: 'active', prepare: showCeoCards, reviewTags: ['ceos', 'cards', 'tableau', 'ceo-action-state']},
-  {name: 'pathfinders-open', seat: 'active', prepare: (page) => openExtensionSummary(page, ['.tm-extension-panel--pathfinders > summary', 'details:has-text("Pathfinders") > summary']), reviewTags: ['pathfinders', 'planetary-tracks', 'extension-panel']},
-  {name: 'pathfinders-scrolled', seat: 'active', prepare: async (page) => {
-    const panel = page.locator('.tm-extension-panel--pathfinders').first();
-    if (await panel.count() === 0) return false;
-    const isOpen = await panel.evaluate((element) => element.hasAttribute('open'));
-    if (!isOpen && !await openExtensionSummary(page, ['.tm-extension-panel--pathfinders > summary', 'details:has-text("Pathfinders") > summary'])) return false;
-    return scrollSelector(page, '.tm-extension-panel--pathfinders[open] .tm-extension-panel-body--pathfinders');
-  }, reviewTags: ['pathfinders', 'planetary-tracks', 'vertical-scroll', 'extension-panel']},
-  {name: 'turmoil-open', seat: 'active', prepare: (page) => openExtensionSummary(page, ['.tm-extension-panel--turmoil > summary', 'details:has-text("Turmoil") > summary']), reviewTags: ['turmoil', 'delegates', 'global-events', 'extension-panel']},
-  {name: 'module-exclusive-turmoil', seat: 'active', prepare: (page) => openAndVerifyExclusiveModule(page, ['.tm-extension-panel--turmoil > summary', 'details:has-text("Turmoil") > summary']), reviewTags: ['turmoil', 'exclusive-panel', 'masked-action', 'interaction-contract']},
-  {name: 'moon-open', seat: 'active', prepare: (page) => openExtensionSummary(page, ['.tm-extension-panel--moon > summary', 'details:has-text("Moon") > summary']), reviewTags: ['moon', 'moon-board', 'moon-rates', 'extension-panel']},
+  {name: 'pathfinders-open', seat: 'active', prepare: (page) => openModuleOverlay(page, 'Tracks'), reviewTags: ['pathfinders', 'planetary-tracks', 'full-overlay']},
+  {name: 'turmoil-open', seat: 'active', prepare: (page) => openModuleOverlay(page, 'Turmoil'), reviewTags: ['turmoil', 'delegates', 'global-events', 'full-overlay']},
+  {name: 'module-exclusive-turmoil', seat: 'active', prepare: (page) => openAndVerifyExclusiveModule(page, 'Turmoil'), reviewTags: ['turmoil', 'exclusive-panel', 'masked-action', 'interaction-contract']},
+  {name: 'moon-open', seat: 'active', prepare: (page) => openModuleOverlay(page, 'Moon'), reviewTags: ['moon', 'moon-board', 'moon-rates', 'full-overlay']},
   {name: 'underworld-open', seat: 'active', prepare: openUnderworldSurface, reviewTags: ['underworld', 'underground-tokens', 'corruption', 'board-tokens', 'player-tokens']},
-  {name: 'delta-open', seat: 'active', prepare: (page) => openExtensionSummary(page, ['.tm-extension-panel--delta > summary', '.tm-extension-panel--deltaProject > summary', 'details:has-text("Delta") > summary']), reviewTags: ['delta-project', 'extension-panel']},
+  {name: 'delta-open', seat: 'active', prepare: (page) => openModuleOverlay(page, 'Delta'), reviewTags: ['delta-project', 'full-overlay']},
   {name: 'tools-open', seat: 'active', prepare: (page) => clickIfPresent(page, '.tm-utility-menu > summary'), reviewTags: ['tools-menu', 'utility-panel']},
+  {name: 'hud-long-turn-context', seat: 'active', prepare: async (page) => {
+    const pill = page.locator('.tm-status-pill:visible').first();
+    const hud = page.locator('.tm-table-hud:visible').first();
+    if (await pill.count() !== 1 || await hud.count() !== 1) {
+      throw new Error('Expected one visible turn-status pill inside one table HUD');
+    }
+    await pill.evaluate((element) => {
+      element.textContent = 'YOUR TURN — CHOOSE AN ACTION';
+    });
+    const [pillBox, hudBox] = await Promise.all([pill.boundingBox(), hud.boundingBox()]);
+    if (pillBox === null || hudBox === null ||
+        pillBox.x < hudBox.x || pillBox.x + pillBox.width > hudBox.x + hudBox.width ||
+        pillBox.y < hudBox.y || pillBox.y + pillBox.height > hudBox.y + hudBox.height) {
+      throw new Error(`Long turn context escapes the table HUD: ${JSON.stringify({pillBox, hudBox})}`);
+    }
+    return true;
+  }, reviewTags: ['hud', 'long-turn-context', 'minimum-desktop', 'text-clipping']},
+  {name: 'module-dock-dense', seat: 'active', prepare: async (page) => {
+    const dock = page.locator('.tm-module-dock:visible').first();
+    const buttons = dock.locator('.tm-module-dock-button:visible');
+    if (await dock.count() !== 1 || await buttons.count() !== 7) {
+      throw new Error(`Expected one seven-item module dock, found ${await dock.count()} dock and ${await buttons.count()} buttons`);
+    }
+    const geometry = await dock.evaluate((element) => ({
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+      bottom: element.getBoundingClientRect().bottom,
+      viewportHeight: window.innerHeight,
+    }));
+    if (geometry.bottom > geometry.viewportHeight || geometry.scrollWidth > geometry.clientWidth + 1) {
+      throw new Error(`Dense module dock is clipped or unexpectedly scrolling: ${JSON.stringify(geometry)}`);
+    }
+    return true;
+  }, reviewTags: ['module-dock', 'all-modules', 'minimum-desktop', 'board-hit-testing']},
   {name: 'activity-focus-browser', seat: 'active', prepare: async (page) => {
     await page.locator('.tm-action-spotlight-messages li').first().waitFor({state: 'visible', timeout: 5000});
     const fittedObject = page.locator('.tm-action-spotlight-object .log-panel-card > :is(.card-container, .colony-card):visible').first();
@@ -3439,9 +3477,9 @@ const allCaptureDefinitions = [
     await page.locator('.tm-action-spotlight-object').first().waitFor({state: 'visible', timeout: 5000});
     return scrollSelector(page, '.tm-action-spotlight-object', 'right');
   }, reviewTags: ['activity-focus', 'always-on-card-browser', 'horizontal-scroll']},
-  {name: 'activity-focus-history', seat: 'active', prepare: (page) => clickTextIfPresent(page, 'History'), reviewTags: ['activity-focus', 'history', 'mode-switch']},
+  {name: 'activity-focus-history', seat: 'active', prepare: (page) => clickTextIfPresent(page, 'History', ['.tm-activity-mode-tabs button']), reviewTags: ['activity-focus', 'history', 'mode-switch']},
   {name: 'activity-scrolled', seat: 'active', prepare: async (page) => {
-    await clickTextIfPresent(page, 'History');
+    await clickTextIfPresent(page, 'History', ['.tm-activity-mode-tabs button']);
     await page.waitForTimeout(180);
     return scrollSelector(page, '.tm-activity-rail .log-panel > .panel-body', 'bottom');
   }, reviewTags: ['log', 'compact-log', 'scrolled-list']},
@@ -3450,6 +3488,19 @@ const allCaptureDefinitions = [
   {name: 'resized-layout', seat: 'active', prepare: resizeLayout, reviewTags: ['resizing', 'activity-rail', 'cards-tray', 'layout-mechanics']},
   {name: 'bottom-tray-enlarged', seat: 'active', prepare: (page) => resizeBottomTray(page, -120), reviewTags: ['cards-tray', 'resizing']},
   {name: 'bottom-tray-compressed', seat: 'active', prepare: (page) => resizeBottomTray(page, 140), reviewTags: ['board', 'cards-tray', 'resizing', 'action-panel']},
+  {name: 'bottom-tray-collapsed', seat: 'waiting', prepare: async (page) => {
+    const toggle = page.locator('.tm-bottom-tray-toggle:visible').first();
+    if (await toggle.count() !== 1 || await toggle.isDisabled()) return false;
+    const before = await toggle.boundingBox();
+    await toggle.click();
+    await page.waitForTimeout(250);
+    const after = await toggle.boundingBox();
+    const workbench = page.locator('.tm-action-workbench:visible');
+    if (before === null || after === null || Math.abs(before.x - after.x) > 1 || await workbench.count() !== 0) {
+      throw new Error(`Bottom tray collapse did not preserve the in-tray control or hide the waiting workbench: ${JSON.stringify({before, after})}`);
+    }
+    return true;
+  }, reviewTags: ['cards-tray', 'collapsed', 'waiting-turn', 'toggle']},
   {name: 'activity-rail-enlarged', seat: 'active', prepare: (page) => resizeActivityRail(page, -120), reviewTags: ['activity-rail', 'resizing', 'log']},
   {name: 'resized-layout-minimums', seat: 'active', prepare: resizeLayoutMinimums, reviewTags: ['resizing', 'minimum-desktop', 'board-space', 'layout-extrema']},
   {name: 'player-rail-enlarged', seat: 'active', prepare: resizePlayerRailToMaximum, reviewTags: ['player-rail', 'resizing', 'minimum-desktop', 'layout-extrema']},
@@ -3468,13 +3519,7 @@ const allCaptureDefinitions = [
   {name: 'action-convert-plants-committed', seat: 'active', prepare: (page) => prepareConvertPlants(page, 'committed'), reviewTags: ['convert-plants', 'engine-commit', 'greenery', 'oxygen', 'plants']},
   {name: 'overlay-board', seat: 'active', prepare: openBoardOverlay, reviewTags: ['board', 'full-overlay', 'mars-map']},
   {name: 'overlay-board-ma-open', seat: 'active', prepare: async (page) => {
-    if (!await openBoardOverlay(page)) return false;
-    const summary = page.locator('.tm-modal .tm-ma-panel-summary:visible').first();
-    if (await summary.count() > 0) {
-      await summary.click();
-      await page.waitForTimeout(300);
-    }
-    return true;
+    return openModuleOverlay(page, 'Milestones & Awards');
   }, reviewTags: ['board', 'full-overlay', 'milestones-awards']},
   {name: 'overlay-cards', seat: 'active', prepare: openCardsOverlay, reviewTags: ['cards', 'full-overlay', 'hand', 'tableau']},
   {name: 'overlay-cards-scrolled', seat: 'active', prepare: async (page) => {
@@ -3497,7 +3542,7 @@ const allCaptureDefinitions = [
   }, reviewTags: ['log', 'full-overlay', 'scrolled-list', 'dense-log']},
   {name: 'overlay-players', seat: 'active', prepare: openPlayersOverlay, reviewTags: ['players', 'full-overlay', 'player-dossier']},
   {name: 'overlay-player-opponent', seat: 'active', prepare: async (page) => {
-    const buttons = page.locator('.tm-player-rail .tm-player-view-button');
+    const buttons = page.locator('.tm-player-rail .player-info--opponent');
     if (await buttons.count() === 0) return false;
     if (await page.locator('.tm-player-rail .points-per-tag').count() !== 0) {
       throw new Error('Compact player rail still exposes VP-per-tag detail');

@@ -32,18 +32,26 @@
   background-size: 22px;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-command-option-title {
+  display: -webkit-box;
   max-height: none;
-  overflow: visible;
+  overflow: hidden;
   color: var(--tm-text);
   font-size: 13px;
   line-height: 1.15;
   white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-command-option-meta {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
   color: var(--tm-muted);
   font-size: 11px;
   line-height: 1.1;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-detail .wf-options--command-board.wf-options--simple-choices .wf-command-tile {
   min-height: 46px;
@@ -294,7 +302,7 @@
   justify-content: start;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-options--command-board:has(> .wf-command-detail .select_space_cont) {
-  width: min(392px, 100%);
+  width: min(760px, 100%);
   box-sizing: border-box;
   height: auto;
   max-height: 100%;
@@ -356,11 +364,12 @@
   grid-row: 1;
   min-height: 0;
   display: grid;
-  align-content: start;
   gap: 6px;
   overflow: auto;
   padding: 0 4px 0 0;
-  grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)) !important;
+  place-content: start;
+  align-items: stretch;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-detail .wf-options--command-board.wf-options--simple-choices .wf-command-submit,
 #player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-detail .wf-options--command-board.wf-options--simple-choices .wf-command-submit--selected-option {
@@ -372,15 +381,13 @@
   padding: 7px 4px 0 0;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-options--command-board.wf-options--simple-choices:not(:has(> .wf-command-detail)) {
-  --tm-action-choice-tile-width: clamp(236px, 15.5vw, 292px);
-  width: min(392px, 100%);
+  width: min(760px, 100%);
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: max-content 40px;
   align-content: start;
 }
-#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-options--command-board.wf-options--simple-choices:not(:has(> .wf-command-detail)) > .wf-command-grid,
-#player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-detail .wf-options--command-board.wf-options--simple-choices .wf-command-grid {
-  grid-template-columns: repeat(auto-fill, minmax(var(--tm-action-choice-tile-width, 236px), var(--tm-action-choice-tile-width, 236px))) !important;
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-options--command-board.wf-options--simple-choices:not(:has(> .wf-command-detail)) > .wf-command-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   place-content: start;
   align-items: stretch;
 }
@@ -507,7 +514,7 @@
   align-content: start;
   overflow: auto;
   padding: 2px 5px 2px 2px;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)) !important;
   gap: 4px;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-command-tile {
@@ -515,10 +522,7 @@
   grid-template-columns: 28px minmax(0, 1fr) auto;
   gap: 6px;
   background: rgba(255, 255, 255, 0.07);
-  // Narrow resize extrema can wrap a title onto three lines. Keep the row
-  // intrinsic and tall enough for that title plus its status line; the grid
-  // is already the scroll owner when all commands no longer fit.
-  min-height: 64px;
+  min-height: 48px;
   padding-block: 2px;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-options--command-board > .wf-command-submit {
@@ -534,8 +538,9 @@
 #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-options--command-board > .wf-command-pass-action {
   grid-column: 1;
   grid-row: 2;
-  place-self: center start;
-  width: min(236px, 100%);
+  place-self: center stretch;
+  width: 100%;
+  box-sizing: border-box;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-options--command-board.wf-options--has-direct-pass > .wf-command-submit {
   grid-column: 2;
@@ -550,7 +555,7 @@
 }
 
 #player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-options--command-board:not(:has(> .wf-command-detail)):not(:has(> .wf-command-pass-action)) {
-  width: min(392px, 100%);
+  width: min(760px, 100%);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;

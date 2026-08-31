@@ -12,7 +12,8 @@
                           :playerinput="waitingfor"
                           :onsave="onsave"
                           :showsave="true"
-                          :showtitle="true" />
+                          :showtitle="true"
+                          @open-module="$emit('open-module', $event)" />
     </div>
   </div>
 </template>
@@ -62,6 +63,7 @@ const CANNOT_CONTACT_SERVER = 'Unable to reach the server. It may be restarting 
 
 export default defineComponent({
   name: 'WaitingFor',
+  emits: ['open-module'],
   props: {
     playerView: {
       type: Object as () => ViewModel,

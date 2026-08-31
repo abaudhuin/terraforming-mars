@@ -7,6 +7,31 @@ import {InputResponse} from '@/common/inputs/InputResponse';
 import PlayerInputFactory from '@/client/components/PlayerInputFactory.vue';
 
 describe('OrOptions', () => {
+  it('requests the controlled milestones overlay without losing the selected choice', async () => {
+    const component = mount(OrOptions, {
+      ...globalConfig,
+      global: {...globalConfig.global, components: {'PlayerInputFactory': PlayerInputFactory}},
+      props: {
+        playerView: {},
+        playerinput: {
+          type: 'or',
+          title: 'Claim a milestone',
+          options: [
+            {type: 'option', title: 'Builder', buttonLabel: 'Claim'},
+            {type: 'option', title: 'Planner', buttonLabel: 'Claim'},
+          ],
+        },
+        onsave: () => {},
+        showsave: true,
+      },
+    });
+
+    await component.findAll('input')[1].setValue(true);
+    await component.find('.wf-context-strip button').trigger('click');
+
+    expect(component.emitted('open-module')).to.deep.eq([['ma']]);
+    expect((component.vm as any).selectedOption.title).to.eq('Planner');
+  });
   it('saves the options ignoring hidden', async () => {
     let savedData: InputResponse | undefined;
     PreferencesManager.INSTANCE.set('learner_mode', false);

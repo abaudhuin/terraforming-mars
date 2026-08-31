@@ -58,7 +58,8 @@
                             :playerinput="selectedOption"
                             :onsave="playerFactorySaved(selectedIdx)"
                             :showsave="showsave"
-                            :showtitle="false" />
+                            :showtitle="false"
+                            @open-module="$emit('open-module', $event)" />
     </div>
   </div>
 </template>
@@ -104,6 +105,7 @@ function reorderDisplayedOptions(entries: Array<DisplayedOption>): Array<Display
 
 export default defineComponent({
   name: 'OrOptions',
+  emits: ['open-module'],
   props: {
     playerView: {
       type: Object as () => PlayerViewModel,
@@ -250,8 +252,7 @@ export default defineComponent({
       this.selectedIdx = idx;
     },
     openMilestonesAndAwards() {
-      const summary = document.querySelector<HTMLElement>('.tm-ma-panel-summary');
-      summary?.click();
+      this.$emit('open-module', 'ma');
     },
     hasMeaningfulChildUi(option: PlayerInputModel): boolean {
       return option.type !== 'option';

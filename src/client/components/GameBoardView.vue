@@ -23,13 +23,13 @@
     </div>
 
     <button
-      v-if="openPanel"
+      v-if="showModuleLaunchers && openPanel"
       type="button"
       class="tm-module-backdrop"
       :aria-label="'Close ' + openPanel"
       @click="closePanels"></button>
 
-    <div class="tm-board-modules" :class="{'tm-board-modules--panel-open': openPanel !== undefined}">
+    <div v-if="showModuleLaunchers" class="tm-board-modules" :class="{'tm-board-modules--panel-open': openPanel !== undefined}">
       <details
         v-if="game.turmoil"
         class="tm-extension-panel tm-extension-panel--turmoil"
@@ -128,7 +128,7 @@
     </div>
 
     <details
-      v-if="players.length > 1"
+      v-if="showModuleLaunchers && players.length > 1"
       class="player_home_block--milestones-and-awards tm-ma-panel"
       :open="openPanel === 'ma'"
       @toggle="handlePanelToggle('ma', $event)">
@@ -219,6 +219,11 @@ export default defineComponent({
       type: Number,
       required: false,
       default: 1.6,
+    },
+    showModuleLaunchers: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   emits: ['toggleTileView', 'panel-change'],

@@ -18,11 +18,16 @@
     position: absolute;
     z-index: 75;
     top: 7px;
-    left: 7px;
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
+    right: 7px;
+    left: auto;
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+  }
+
+  .tm-bottom-tray > .tm-bottom-tray-toggle {
+    position: absolute;
   }
 
   .tm-bottom-tray-toggle.tm-icon-control--bottom-close > span,
@@ -225,8 +230,7 @@
   }
 
   .tm-panel-icon-button,
-  .tm-section-expand-button,
-  .tm-player-view-button {
+  .tm-section-expand-button {
     position: relative;
     min-height: 24px;
     min-width: 24px;
@@ -473,7 +477,7 @@
   }
 
   &.tm-player-table--acting {
-    --tm-bottom-height: clamp(328px, 38vh, 378px);
+    --tm-bottom-height: clamp(260px, 31vh, 286px);
     --tm-board-zoom: 0.76;
     --tm-board-y-offset: -36px;
 
@@ -493,7 +497,7 @@
     }
 
     @media (max-height: 820px) {
-      --tm-bottom-height: 318px;
+      --tm-bottom-height: 260px;
       --tm-board-zoom: 0.62;
       --tm-board-y-offset: -24px;
     }

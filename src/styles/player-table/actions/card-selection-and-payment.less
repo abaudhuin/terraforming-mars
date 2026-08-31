@@ -330,7 +330,9 @@
   align-items: flex-start;
   gap: 8px 10px;
   overflow: auto;
-  padding: 0 6px 8px 0;
+  // Keep the task label fully inside the tray. Browser focus restoration can
+  // pin a nofloat research heading to the scrollport's top edge.
+  padding: 6px 6px 8px 0;
   background: transparent;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-component--select-card::after {
@@ -391,9 +393,9 @@
   font-size: inherit;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > label.cardbox {
-  flex: 0 0 212px;
-  width: 212px;
-  height: 312px;
+  flex: 0 0 var(--tm-action-card-width);
+  width: var(--tm-action-card-width);
+  height: var(--tm-action-card-height);
   order: 1;
   margin: 0;
   padding-top: 0;
@@ -483,7 +485,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-#player-home.tm-player-table.tm-player-table--acting:not(.tm-player-table--setup):has(.tm-action-workbench :is(.wf-command-detail, .wf-component--select-card, .tm-project-payment, .wf-component--blue-card-action)) {
+#player-home.tm-player-table.tm-player-table--acting:not(.tm-player-table--setup):has(.tm-action-workbench :is(.wf-component--select-card:not(.wf-component--select-colony), .tm-project-card-option, .tm-project-payment, .wf-component--blue-card-action)) {
   --tm-bottom-height: clamp(328px, 38vh, 378px);
 }
 #player-home.tm-player-table.tm-player-table--acting:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) {
@@ -491,12 +493,15 @@
 }
 #player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card {
   justify-content: flex-start;
+  scroll-padding-top: 42px;
 }
 #player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card > .wf-component-title.nofloat,
 #player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card > .wf-component-title {
-  // The heading participates in the scrollable flow. A sticky overlay covered
-  // card headers whenever focus management scrolled a tall card into view.
-  position: static;
+  // Research restores focus after selection and may scroll this component.
+  // Reserve the same inset for focused cards so the pinned task never covers
+  // a card header or becomes clipped by the tray edge.
+  position: sticky;
+  top: 0;
   z-index: 5;
   flex: 0 0 100%;
   width: 100%;

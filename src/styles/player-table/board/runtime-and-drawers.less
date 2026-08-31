@@ -7,31 +7,6 @@
     padding: 8px;
     text-align: center;
 
-    .tm-board-expand-button {
-      position: absolute;
-      z-index: 8;
-      top: 10px;
-      left: 10px;
-      min-height: 26px;
-      padding: 6px 9px;
-      border-radius: 5px;
-      border: 1px solid var(--tm-border-soft);
-      background: rgba(0, 0, 0, 0.52);
-      color: var(--tm-muted);
-      font-family: Prototype, sans-serif;
-      font-size: 11px;
-      line-height: 1;
-      text-transform: uppercase;
-      cursor: pointer;
-
-      &:hover,
-      &:focus {
-        color: var(--tm-accent);
-        border-color: var(--tm-border);
-        outline: none;
-      }
-    }
-
     > .player_home_anchor,
     > a.hotkey-target {
       display: none;
@@ -158,7 +133,7 @@
 
 }
 
-#player-home.tm-player-table:not(.tm-player-table--setup) {
+#player-home.tm-player-table:not(.tm-player-table--setup):is(.tm-player-table--acting, .tm-player-table--passive) {
   .tm-game-board-view {
     position: relative;
     isolation: isolate;
@@ -289,34 +264,6 @@
     transform-origin: top left;
   }
 
-  &.tm-player-table--board-panel-open .tm-action-workbench {
-    position: relative;
-    opacity: 0.38;
-    filter: saturate(0.55);
-    pointer-events: none;
-  }
-
-  &.tm-player-table--board-panel-open .tm-action-workbench::after {
-    content: "INSPECTING TABLE · CLOSE PANEL TO RESUME";
-    position: absolute;
-    z-index: 20;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    color: var(--tm-focus);
-    font-family: Prototype, sans-serif;
-    font-size: 13px;
-    letter-spacing: 0.08em;
-    text-shadow: 0 2px 8px black;
-  }
-
-  &.tm-player-table--board-panel-open .tm-board-expand-button,
-  &.tm-player-table--board-panel-open .tm-table-leaf--colonies:not([open]),
-  &.tm-player-table--board-panel-open .tm-ma-panel:not([open]),
-  &.tm-player-table--board-panel-open .tm-board-stage:has(.tm-table-leaf--colonies[open]) .tm-board-modules:not(.tm-board-modules--panel-open) {
-    visibility: hidden;
-    pointer-events: none;
-  }
   .tm-board-stage .tm-ma-panel[open] {
     height: min(400px, calc(100% - 24px));
     padding: 0;
@@ -641,5 +588,97 @@
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+#player-home.tm-player-table:not(.tm-player-table--setup) {
+  .tm-module-dock {
+    position: absolute;
+    z-index: 42;
+    right: 50%;
+    bottom: 7px;
+    max-width: calc(100% - 20px);
+    height: 36px;
+    padding: 2px 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow: auto hidden;
+    transform: translateX(50%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    background: rgba(8, 10, 11, 0.9);
+    box-shadow: 0 7px 18px rgba(0, 0, 0, 0.48);
+    scrollbar-width: none;
+  }
+
+  .tm-module-dock::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tm-module-dock-button {
+    position: relative;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.07);
+    color: #c8c2b4;
+    cursor: pointer;
+  }
+
+  .tm-module-dock-button:is(:hover, :focus-visible) {
+    outline: none;
+    border-color: rgba(255, 204, 100, 0.62);
+    background: rgba(255, 204, 100, 0.14);
+    color: var(--tm-accent);
+  }
+
+  .tm-module-dock-button > span {
+    width: 18px;
+    height: 18px;
+    display: block;
+    background: currentColor;
+    mask: center / contain no-repeat;
+    -webkit-mask: center / contain no-repeat;
+  }
+
+  .tm-module-dock-button--colonies > span {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l3.8 6.2L22 12l-6.2 3.8L12 22l-3.8-6.2L2 12l6.2-3.8zM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l3.8 6.2L22 12l-6.2 3.8L12 22l-3.8-6.2L2 12l6.2-3.8zM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z'/%3E%3C/svg%3E");
+  }
+
+  .tm-module-dock-button--ma > span {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l2.8 5.8 6.2.9-4.5 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 8.7l6.2-.9z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l2.8 5.8 6.2.9-4.5 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 8.7l6.2-.9z'/%3E%3C/svg%3E");
+  }
+
+  .tm-module-dock-button--turmoil > span {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 3h16v5H4zM9 9h6v10h4v2H5v-2h4z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 3h16v5H4zM9 9h6v10h4v2H5v-2h4z'/%3E%3C/svg%3E");
+  }
+
+  .tm-module-dock-button--moon > span {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19.5 15.3A8 8 0 0 1 8.7 4.5 9 9 0 1 0 19.5 15.3z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M19.5 15.3A8 8 0 0 1 8.7 4.5 9 9 0 1 0 19.5 15.3z'/%3E%3C/svg%3E");
+  }
+
+  .tm-module-dock-button--pathfinders > span {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 5h18v3H3zm0 6h14v3H3zm0 6h10v3H3z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 5h18v3H3zm0 6h14v3H3zm0 6h10v3H3z'/%3E%3C/svg%3E");
+  }
+
+  .tm-module-dock-button--underworld > span {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4h16v4H4zm2 6h12l-6 10z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4h16v4H4zm2 6h12l-6 10z'/%3E%3C/svg%3E");
+  }
+
+  .tm-module-dock-button--delta > span {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l10 19H2zm0 6.2L7 18h10z'/%3E%3C/svg%3E");
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l10 19H2zm0 6.2L7 18h10z'/%3E%3C/svg%3E");
   }
 }

@@ -249,7 +249,7 @@ describe('PlayerHome', () => {
       vm.setLayoutDimension('bottom', -1000);
       expect(vm.bottomTrayHeight).to.eq(150);
       vm.setLayoutDimension('bottom', 1000);
-      expect(vm.bottomTrayHeight).to.eq(300);
+      expect(vm.bottomTrayHeight).to.eq(360);
     } finally {
       Object.defineProperty(window, 'innerWidth', {configurable: true, value: previousWidth});
       Object.defineProperty(window, 'innerHeight', {configurable: true, value: previousHeight});
@@ -272,9 +272,8 @@ describe('PlayerHome', () => {
       props: {playerView: initialView},
     });
     const vm = wrapper.vm as any;
-    vm.activeOverlay = 'cards';
-    vm.isColonyPanelOpen = true;
-    vm.activeExtensionPanel = 'turmoil';
+    vm.activeOverlay = 'module';
+    vm.activeModule = 'turmoil';
 
     await wrapper.setProps({
       playerView: {
@@ -285,8 +284,85 @@ describe('PlayerHome', () => {
     await wrapper.vm.$nextTick();
 
     expect(vm.activeOverlay).to.eq('none');
-    expect(vm.isColonyPanelOpen).to.be.false;
-    expect(vm.activeExtensionPanel).to.eq(undefined);
+    expect(vm.activeModule).to.eq(undefined);
+    wrapper.unmount();
+  });
+
+  it('keeps a mandatory decision visible without overwriting the stored collapsed preference', async () => {
+    localStorage.setItem('tm-player-table-bottom-tray-collapsed', 'true');
+    const thisPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}]});
+    const waitingView = fakePlayerViewModel({thisPlayer, players: [thisPlayer], waitingFor: undefined});
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {methods: {getVisibilityState: () => true, setVisibilityState: () => {}}} as any,
+      props: {playerView: waitingView},
+    });
+
+    expect(wrapper.classes()).to.include('tm-player-table--bottom-collapsed');
+    await wrapper.setProps({
+      playerView: {...waitingView, waitingFor: {type: 'option', title: 'Choose', buttonLabel: 'Continue'}},
+    });
+    expect(wrapper.classes()).not.to.include('tm-player-table--bottom-collapsed');
+    expect(wrapper.find('.tm-action-workbench').exists()).to.eq(true);
+    expect(wrapper.find('.tm-bottom-tray-toggle').attributes()).to.have.property('disabled');
+    expect(localStorage.getItem('tm-player-table-bottom-tray-collapsed')).to.eq('true');
+
+    await wrapper.setProps({playerView: waitingView});
+    expect(wrapper.classes()).to.include('tm-player-table--bottom-collapsed');
+  });
+
+  it('uses one utility dock and one controlled module overlay', async () => {
+    const thisPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}]});
+    const otherPlayer = fakePublicPlayerModel({color: 'red', id: 'p-red-id', name: 'Red'});
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {methods: {getVisibilityState: () => true, setVisibilityState: () => {}}} as any,
+      props: {playerView: fakePlayerViewModel({thisPlayer, players: [thisPlayer, otherPlayer]})},
+    });
+
+    expect(wrapper.findAll('.tm-top-tools > .tm-utility-control').length).to.eq(3);
+    expect(wrapper.find('.tm-top-tools .tm-utility-menu').exists()).to.eq(true);
+    expect(wrapper.find('.tm-control--board').exists()).to.eq(false);
+    expect(wrapper.find('.tm-board-expand-button').exists()).to.eq(false);
+    expect(wrapper.findAll('.tm-module-dock-button').length).to.eq(1);
+
+    await wrapper.find('.tm-module-dock-button--ma').trigger('click');
+    expect((wrapper.vm as any).activeOverlay).to.eq('module');
+    expect((wrapper.vm as any).activeModule).to.eq('ma');
+    expect(wrapper.find('.tm-modal--module').exists()).to.eq(true);
+  });
+
+  it('closes module overlays consistently, restores focus, and invalidates unavailable modules', async () => {
+    const thisPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}]});
+    const otherPlayer = fakePublicPlayerModel({color: 'red', id: 'p-red-id', name: 'Red'});
+    const initialView = fakePlayerViewModel({thisPlayer, players: [thisPlayer, otherPlayer]});
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      attachTo: document.body,
+      parentComponent: {methods: {getVisibilityState: () => true, setVisibilityState: () => {}}} as any,
+      props: {playerView: initialView},
+    });
+    const launcher = wrapper.find<HTMLButtonElement>('.tm-module-dock-button--ma');
+    const vm = wrapper.vm as any;
+
+    launcher.element.focus();
+    await launcher.trigger('click');
+    expect(vm.activeOverlay).to.eq('module');
+    vm.handleGlobalKeydown({key: 'Escape', preventDefault: () => {}} as KeyboardEvent);
+    await wrapper.vm.$nextTick();
+    expect(vm.activeOverlay).to.eq('none');
+    expect(document.activeElement).to.eq(launcher.element);
+
+    await launcher.trigger('click');
+    await wrapper.find('.tm-modal-backdrop').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(vm.activeOverlay).to.eq('none');
+
+    await launcher.trigger('click');
+    await wrapper.setProps({playerView: {...initialView, players: [thisPlayer]}});
+    await wrapper.vm.$nextTick();
+    expect(vm.activeOverlay).to.eq('none');
+    expect(vm.activeModule).to.eq(undefined);
     wrapper.unmount();
   });
 

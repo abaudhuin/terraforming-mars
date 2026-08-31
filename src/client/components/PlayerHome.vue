@@ -34,35 +34,6 @@
 
     <template v-else>
       <header class="tm-table-hud">
-        <details class="tm-utility-menu">
-          <summary :title="$t('Table tools')">
-            <span v-i18n>Tools</span>
-          </summary>
-          <div class="tm-utility-panel">
-            <div class="tm-tool-list">
-              <div v-if="game.spectatorId" class="tm-tool-row">
-                <a :href="'/spectator?id=' + game.spectatorId" target="_blank" rel="noopener noreferrer" v-i18n>Spectator link</a>
-              </div>
-            </div>
-
-            <div v-if="thisPlayer.selfReplicatingRobotsCards.length > 0" class="tm-mini-section">
-              <div class="tm-panel-heading">
-                <span v-i18n>Self-replicating Robots</span>
-                <small>{{ thisPlayer.selfReplicatingRobotsCards.length }}</small>
-              </div>
-              <div class="tm-card-strip tm-card-strip--mini">
-                <div v-for="card in thisPlayer.selfReplicatingRobotsCards" :key="card.name" class="cardbox">
-                  <Card :card="card"/>
-                </div>
-              </div>
-            </div>
-
-            <div class="tm-mini-section tm-purge-warning">
-              <PurgeWarning :expectedPurgeTimeMs="game.expectedPurgeTimeMs"/>
-            </div>
-          </div>
-        </details>
-
         <div class="tm-turn-context">
           <span class="tm-status-pill" :class="{'tm-status-pill--active': isPlayerActing(playerView)}">{{ turnStatusLabel }}</span>
           <span v-if="activePlayer" class="tm-active-player" :class="'player_bg_color_' + activePlayer.color">{{ activePlayer.name }}</span>
@@ -76,12 +47,44 @@
         </div>
 
         <div class="tm-top-tools">
-          <button type="button" class="tm-control tm-control--review tm-control--board" @click="openOverlay('board')" v-i18n>Board</button>
-          <button type="button" class="tm-control tm-control--review tm-control--cards" @click="openCardsOverlay()">
-            <span v-i18n>Cards</span>
+          <button type="button" class="tm-control tm-utility-control tm-control--review tm-control--cards" @click="openCardsOverlay()" :aria-label="$t('Cards')" :title="$t('Cards')">
+            <span class="tm-utility-control-label" v-i18n>Cards</span>
             <small v-if="cardsInHandCount > 0" class="tm-control-badge">{{ cardsInHandCount }}</small>
           </button>
-          <button type="button" class="tm-control tm-control--review tm-control--players" @click="openPlayers" v-i18n>Players</button>
+          <button type="button" class="tm-control tm-utility-control tm-control--review tm-control--players" @click="openPlayers" :aria-label="$t('Players')" :title="$t('Players')">
+            <span class="tm-utility-control-label" v-i18n>Players</span>
+          </button>
+          <button type="button" class="tm-control tm-utility-control tm-control--review tm-control--history" @click="openOverlay('log')" :aria-label="$t('History')" :title="$t('History')">
+            <span class="tm-utility-control-label" v-i18n>History</span>
+          </button>
+          <details class="tm-utility-menu" @toggle="handleUtilityMenuToggle">
+            <summary class="tm-icon-control tm-icon-control--tools" :title="$t('Table tools')" :aria-label="$t('Table tools')">
+              <span aria-hidden="true"></span>
+            </summary>
+            <div class="tm-utility-panel">
+              <div class="tm-tool-list">
+                <div v-if="game.spectatorId" class="tm-tool-row">
+                  <a :href="'/spectator?id=' + game.spectatorId" target="_blank" rel="noopener noreferrer" v-i18n>Spectator link</a>
+                </div>
+              </div>
+
+              <div v-if="thisPlayer.selfReplicatingRobotsCards.length > 0" class="tm-mini-section">
+                <div class="tm-panel-heading">
+                  <span v-i18n>Self-replicating Robots</span>
+                  <small>{{ thisPlayer.selfReplicatingRobotsCards.length }}</small>
+                </div>
+                <div class="tm-card-strip tm-card-strip--mini">
+                  <div v-for="card in thisPlayer.selfReplicatingRobotsCards" :key="card.name" class="cardbox">
+                    <Card :card="card"/>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tm-mini-section tm-purge-warning">
+                <PurgeWarning :expectedPurgeTimeMs="game.expectedPurgeTimeMs"/>
+              </div>
+            </div>
+          </details>
         </div>
       </header>
 
@@ -98,51 +101,29 @@
         </aside>
 
         <section class="tm-board-stage">
-          <button type="button" class="tm-board-expand-button tm-icon-control tm-icon-control--expand" @click="openOverlay('board')" :aria-label="$t('Expand board')">
-            <span aria-hidden="true"></span>
-          </button>
           <GameBoardView
-            ref="tableBoard"
             :game="game"
             :tileView="tileView"
             :players="playerView.players"
             :globalDeltas="globalDeltas"
-            :fitBottomInset="48"
-            :fitTopInset="boardLauncherTopInset"
+            :fitBottomInset="44"
             :maxBoardScale="1.48"
+            :showModuleLaunchers="false"
             @toggleTileView="cycleTileView()"
-            @panel-change="handleExtensionPanelChange"
           />
-
-          <details
-            v-if="game.colonies.length > 0"
-            class="tm-table-leaf tm-table-leaf--colonies"
-            ref="colonies"
-            id="shortkey-colonies"
-            :open="isColonyPanelOpen"
-            @toggle="handleColonyPanelToggle">
-            <summary class="tm-table-leaf-summary">
-              <span class="tm-table-leaf-title" v-i18n>Colonies</span>
-              <span class="tm-table-leaf-close tm-icon-control tm-icon-control--close" aria-hidden="true">
-                <span></span>
-              </span>
-            </summary>
-            <a name="colonies" class="player_home_anchor hotkey-target"></a>
-            <div class="colonies-fleets-cont">
-              <div class="colonies-player-fleets" v-for="colonyPlayer in playerView.players" :key="colonyPlayer.color">
-                <span class="colonies-fleet-owner" :class="'player_bg_color_' + colonyPlayer.color">{{ colonyPlayer.name }}</span>
-                <span class="colonies-fleet-token" aria-hidden="true">
-                  <span :class="'colonies-fleet colonies-fleet-'+ colonyPlayer.color"></span>
-                </span>
-                <strong class="colonies-fleet-count">{{ getAvailableFleetCount(colonyPlayer) }}/{{ colonyPlayer.fleetSize }}</strong>
-              </div>
-            </div>
-            <div class="player_home_colony_cont" @wheel="scrollColoniesHorizontally">
-              <div class="player_home_colony" v-for="colony in game.colonies" :key="colony.name">
-                <Colony :colony="colony" :active="colony.isActive"/>
-              </div>
-            </div>
-          </details>
+          <nav v-if="moduleLaunchers.length > 0" class="tm-module-dock" :aria-label="$t('Table modules')">
+            <button
+              v-for="module in moduleLaunchers"
+              :key="module.kind"
+              type="button"
+              class="tm-module-dock-button"
+              :class="'tm-module-dock-button--' + module.kind"
+              :aria-label="$t(module.label)"
+              :title="$t(module.label)"
+              @click="openModule(module.kind)">
+              <span aria-hidden="true"></span>
+            </button>
+          </nav>
         </section>
 
         <aside class="tm-activity-rail">
@@ -172,9 +153,6 @@
                 <button type="button" :class="{'tm-activity-mode-tab--active': activityMode === 'history'}" :aria-pressed="activityMode === 'history'" @click="setActivityMode('history')" v-i18n>History</button>
               </div>
               <div class="tm-log-header-actions">
-                <button type="button" class="tm-panel-icon-button tm-icon-control tm-icon-control--eye" @click="openOverlay('log')" :aria-label="$t('Open game log')">
-                  <span aria-hidden="true"></span>
-                </button>
                 <button
                   type="button"
                   class="tm-panel-icon-button tm-icon-control tm-icon-control--activity-toggle"
@@ -209,21 +187,23 @@
         <button
           type="button"
           class="tm-bottom-tray-toggle tm-panel-icon-button tm-icon-control"
-          :class="isBottomTrayCollapsed ? 'tm-icon-control--bottom-open' : 'tm-icon-control--bottom-close'"
+          :class="isBottomTrayEffectivelyCollapsed ? 'tm-icon-control--bottom-open' : 'tm-icon-control--bottom-close'"
           @click="toggleBottomTray"
-          :aria-expanded="!isBottomTrayCollapsed"
-          :aria-label="$t(isBottomTrayCollapsed ? 'Show bottom panel' : 'Hide bottom panel')">
+          :disabled="hasPlayerInput"
+          :title="hasPlayerInput ? $t('Finish the current decision before hiding the action panel') : undefined"
+          :aria-expanded="!isBottomTrayEffectivelyCollapsed"
+          :aria-label="$t(isBottomTrayEffectivelyCollapsed ? 'Show bottom panel' : 'Hide bottom panel')">
           <span aria-hidden="true"></span>
         </button>
         <button
-          v-if="!isBottomTrayCollapsed"
+          v-if="!isBottomTrayEffectivelyCollapsed"
           type="button"
           class="tm-layout-resize-handle tm-layout-resize-handle--bottom"
           :aria-label="$t('Resize bottom panel')"
           aria-orientation="horizontal"
           @keydown="resizeFromKeyboard('bottom', $event)"
           @pointerdown="startBottomResize"></button>
-        <section v-if="!isBottomTrayCollapsed && showActivityLogPreview && activityPreviewMessage" class="tm-log-preview-desk">
+        <section v-if="!isBottomTrayEffectivelyCollapsed && showActivityLogPreview && activityPreviewMessage" class="tm-log-preview-desk">
           <header class="tm-log-preview-header">
             <div>
               <span v-i18n>Log detail</span>
@@ -239,10 +219,10 @@
           <CardPanel :message="activityPreviewMessage" :players="playerView.players" :showClose="false"/>
         </section>
 
-        <template v-else-if="!isBottomTrayCollapsed">
+        <template v-else-if="!isBottomTrayEffectivelyCollapsed">
         <section v-if="hasPlayerInput" class="tm-action-workbench player_home_block--actions" tabindex="-1">
           <a name="actions" class="player_home_anchor"></a>
-          <WaitingFor v-if="game.phase !== 'end'" :playerView="playerView" :waitingfor="playerView.waitingFor"/>
+          <WaitingFor v-if="game.phase !== 'end'" :playerView="playerView" :waitingfor="playerView.waitingFor" @open-module="openModule"/>
         </section>
         <WaitingFor
           v-else-if="game.phase !== 'end'"
@@ -338,9 +318,10 @@
       </section>
 
       <div v-if="activeOverlay !== 'none'" class="tm-modal-backdrop" @click.self="closeOverlay">
-        <section class="tm-modal" :class="'tm-modal--' + activeOverlay">
+        <section class="tm-modal" :class="'tm-modal--' + activeOverlay" role="dialog" aria-modal="true" aria-labelledby="tm-modal-title">
           <header class="tm-modal-header" :class="{'tm-modal-header--player': activeOverlay === 'player'}">
             <nav v-if="activeOverlay === 'player' && selectedPlayer" class="tm-player-tabs tm-player-tabs--header" aria-label="Players">
+              <h2 id="tm-modal-title" class="tm-compat-text">{{ modalTitle }}</h2>
               <button
                 v-for="player in playerView.players"
                 :key="player.color"
@@ -353,7 +334,7 @@
             </nav>
             <div v-else>
               <span v-if="modalKicker" class="tm-modal-kicker">{{ modalKicker }}</span>
-              <h2>{{ modalTitle }}</h2>
+              <h2 id="tm-modal-title">{{ modalTitle }}</h2>
             </div>
             <button type="button" class="tm-modal-close tm-icon-control tm-icon-control--close" @click="closeOverlay" aria-label="Close">
               <span aria-hidden="true"></span>
@@ -361,18 +342,62 @@
           </header>
 
           <div class="tm-modal-body">
-            <div v-if="activeOverlay === 'board'" class="tm-board-modal-stage">
-              <GameBoardView
-                :game="game"
-                :tileView="tileView"
-                :players="playerView.players"
-                :maxBoardScale="1.65"
-                @toggleTileView="cycleTileView()"
-              />
+            <div v-if="activeOverlay === 'module' && activeModule" class="tm-module-overlay" :class="'tm-module-overlay--' + activeModule">
+              <template v-if="activeModule === 'colonies'">
+                <div class="tm-module-colony-fleets">
+                  <div class="tm-module-colony-fleet" v-for="colonyPlayer in playerView.players" :key="colonyPlayer.color">
+                    <span class="tm-module-colony-owner" :class="'player_bg_color_' + colonyPlayer.color">{{ colonyPlayer.name }}</span>
+                    <span class="tm-module-colony-token" aria-hidden="true">
+                      <span :class="'colonies-fleet colonies-fleet-'+ colonyPlayer.color"></span>
+                    </span>
+                    <strong>{{ getAvailableFleetCount(colonyPlayer) }}/{{ colonyPlayer.fleetSize }}</strong>
+                  </div>
+                </div>
+                <div class="tm-module-colony-list" @wheel="scrollColoniesHorizontally">
+                  <div class="tm-module-colony" v-for="colony in game.colonies" :key="colony.name">
+                    <Colony :colony="colony" :active="colony.isActive"/>
+                  </div>
+                </div>
+              </template>
+
+              <div v-else-if="activeModule === 'ma'" class="tm-module-ma-grid">
+                <Milestones :milestones="game.milestones" />
+                <Awards :awards="game.awards" />
+              </div>
+
+              <div v-else-if="activeModule === 'turmoil' && game.turmoil" class="tm-module-board tm-module-board--turmoil">
+                <Turmoil :turmoil="game.turmoil"/>
+              </div>
+
+              <div v-else-if="activeModule === 'moon' && game.moon" class="tm-module-board tm-module-board--moon">
+                <MoonBoard :model="game.moon" :tileView="tileView" id="shortkey-moonBoard"/>
+              </div>
+
+              <div v-else-if="activeModule === 'pathfinders'" class="tm-extension-panel-body tm-extension-panel-body--pathfinders">
+                <PlanetaryTracks :tracks="game.pathfinders" :gameOptions="game.gameOptions"/>
+              </div>
+
+              <div v-else-if="activeModule === 'underworld'" class="tm-extension-panel-body tm-extension-panel-body--underworld">
+                <section v-for="modulePlayer in playerView.players" :key="modulePlayer.color" class="tm-underworld-player">
+                  <header class="tm-underworld-player-header">
+                    <span class="tm-underworld-player-name" :class="'player_bg_color_' + modulePlayer.color">{{ modulePlayer.name }}</span>
+                    <span class="tm-underworld-corruption">
+                      <span v-i18n>Corruption</span>
+                      <strong>{{ modulePlayer.underworldData.corruption }}</strong>
+                    </span>
+                  </header>
+                  <UndergroundTokens :underworldData="modulePlayer.underworldData"/>
+                  <p v-if="modulePlayer.underworldData.tokens.length === 0" class="tm-underworld-empty" v-i18n>No claimed tokens</p>
+                </section>
+              </div>
+
+              <div v-else-if="activeModule === 'delta'" class="tm-module-board tm-module-board--delta">
+                <DeltaProjectBoard :players="playerView.players"/>
+              </div>
             </div>
 
             <LogPanel
-              v-if="activeOverlay === 'log'"
+              v-else-if="activeOverlay === 'log'"
               :viewModel="playerView"
               :color="thisPlayer.color"
               :step="game.step"
@@ -565,6 +590,13 @@ import PurgeWarning from '@/client/components/common/PurgeWarning.vue';
 import KeyboardShortcuts from '@/client/components/KeyboardShortcuts.vue';
 import GlobalParameterValue from '@/client/components/GlobalParameterValue.vue';
 import MoonGlobalParameterValue from '@/client/components/moon/MoonGlobalParameterValue.vue';
+import DeltaProjectBoard from '@/client/components/delta/DeltaProjectBoard.vue';
+import Milestones from '@/client/components/Milestones.vue';
+import Awards from '@/client/components/Awards.vue';
+import Turmoil from '@/client/components/turmoil/Turmoil.vue';
+import MoonBoard from '@/client/components/moon/MoonBoard.vue';
+import PlanetaryTracks from '@/client/components/pathfinders/PlanetaryTracks.vue';
+import UndergroundTokens from '@/client/components/underworld/UndergroundTokens.vue';
 import {getPreferences, Preferences, PreferencesManager} from '@/client/utils/PreferencesManager';
 import {GameModel} from '@/common/models/GameModel';
 import {PlayerViewModel, PublicPlayerModel} from '@/common/models/PlayerModel';
@@ -614,11 +646,13 @@ type PlayerHomeModel = {
   feedbackColonies: Array<ColonyName>;
   feedbackEpoch: number;
   feedbackClearTimer: number | undefined;
-  activeExtensionPanel: string | undefined;
-  isColonyPanelOpen: boolean;
+  activeModule: ModuleKind | undefined;
+  overlayOpener: HTMLElement | undefined;
 }
 
-type OverlayKind = 'none' | 'board' | 'cards' | 'log' | 'player';
+type OverlayKind = 'none' | 'cards' | 'log' | 'player' | 'module';
+type ModuleKind = 'colonies' | 'ma' | 'turmoil' | 'moon' | 'pathfinders' | 'underworld' | 'delta';
+type ModuleLauncher = {kind: ModuleKind, label: string};
 type CardOverlayFocus = 'balanced' | 'hand' | 'played';
 type CardOverlayFilter = 'all' | 'playable' | 'affordable' | 'warnings';
 type CardOverlayGroup = 'none' | 'type' | 'tag';
@@ -720,8 +754,8 @@ export default defineComponent({
       feedbackColonies: [],
       feedbackEpoch: 0,
       feedbackClearTimer: undefined,
-      activeExtensionPanel: undefined,
-      isColonyPanelOpen: false,
+      activeModule: undefined,
+      overlayOpener: undefined,
     };
   },
   watch: {
@@ -737,6 +771,11 @@ export default defineComponent({
     showEventCards: function toggle_event_cards() {
       PreferencesManager.INSTANCE.set('hide_event_cards', !this.showEventCards);
     },
+    keyboardShortcutOpened: function keep_inspection_layers_exclusive(open: boolean) {
+      if (open && this.activeOverlay !== 'none') {
+        this.closeOverlay();
+      }
+    },
     isDecisionActive: function clear_activity_preview_when_acting(active: boolean) {
       if (active) {
         this.activityPreviewMessage = undefined;
@@ -749,6 +788,17 @@ export default defineComponent({
     },
     playerView: {
       handler(next: PlayerViewModel, previous: PlayerViewModel | undefined) {
+        if (this.activeOverlay === 'player' && this.selectedPlayerColor !== undefined &&
+          !next.players.some((player) => player.color === this.selectedPlayerColor)) {
+          this.selectedPlayerColor = next.players[0]?.color;
+          if (this.selectedPlayerColor === undefined) {
+            this.closeOverlay();
+          }
+        }
+        if (this.activeOverlay === 'module' && this.activeModule !== undefined &&
+          !this.moduleLaunchers.some((launcher) => launcher.kind === this.activeModule)) {
+          this.closeOverlay();
+        }
         if (previous !== undefined && previous.game.gameAge !== next.game.gameAge) {
           this.applyActionFeedback(getActionFeedback(previous, next));
         } else if (previous !== undefined) {
@@ -774,18 +824,6 @@ export default defineComponent({
     game(): GameModel {
       return this.playerView.game;
     },
-    boardLauncherTopInset(): number {
-      const expansions = this.game.gameOptions.expansions;
-      const launcherCount = [
-        this.game.colonies.length > 0,
-        this.game.turmoil !== undefined,
-        this.game.moon !== undefined,
-        expansions.pathfinders,
-        expansions.underworld,
-        expansions.deltaProject,
-      ].filter(Boolean).length;
-      return launcherCount > 1 ? 40 : 0;
-    },
     CardType(): typeof CardType {
       return CardType;
     },
@@ -800,8 +838,7 @@ export default defineComponent({
         'tm-player-table--passive': !this.isPlayerActing(this.playerView),
         'tm-player-table--magnify-cards': getPreferences().magnify_cards,
         'tm-player-table--activity-collapsed': this.isActivityRailCollapsed,
-        'tm-player-table--bottom-collapsed': this.isBottomTrayCollapsed,
-        'tm-player-table--board-panel-open': this.activeExtensionPanel !== undefined || this.isColonyPanelOpen,
+        'tm-player-table--bottom-collapsed': this.isBottomTrayEffectivelyCollapsed,
         'tm-player-table--two-row-actions':
           this.bottomTrayHeight !== undefined && this.bottomTrayHeight >= twoRowActionTrayHeight,
         [`tm-player-table--input-${this.inputKind}`]: true,
@@ -834,6 +871,9 @@ export default defineComponent({
     hasPlayerInput(): boolean {
       return this.playerView.waitingFor !== undefined;
     },
+    isBottomTrayEffectivelyCollapsed(): boolean {
+      return this.isBottomTrayCollapsed && !this.hasPlayerInput;
+    },
     activePlayer(): PublicPlayerModel | undefined {
       return this.playerView.players.find((player) => player.isActive);
     },
@@ -860,31 +900,43 @@ export default defineComponent({
     },
     modalKicker(): string {
       switch (this.activeOverlay) {
-      case 'board':
-        return '';
       case 'log':
         return '';
       case 'cards':
         return '';
       case 'player':
         return '';
+      case 'module':
+        return 'Table module';
       case 'none':
         return '';
       }
     },
     modalTitle(): string {
       switch (this.activeOverlay) {
-      case 'board':
-        return 'Mars board';
       case 'log':
         return 'Game log';
       case 'cards':
         return 'Cards';
       case 'player':
         return this.selectedPlayer?.name ?? 'Player details';
+      case 'module':
+        return this.moduleTitle(this.activeModule);
       case 'none':
         return '';
       }
+    },
+    moduleLaunchers(): Array<ModuleLauncher> {
+      const expansions = this.game.gameOptions.expansions;
+      const launchers: Array<ModuleLauncher> = [];
+      if (this.game.colonies.length > 0) launchers.push({kind: 'colonies', label: 'Colonies'});
+      if (this.playerView.players.length > 1) launchers.push({kind: 'ma', label: 'Milestones & Awards'});
+      if (this.game.turmoil !== undefined) launchers.push({kind: 'turmoil', label: 'Turmoil'});
+      if (this.game.moon !== undefined) launchers.push({kind: 'moon', label: 'Moon'});
+      if (expansions.pathfinders) launchers.push({kind: 'pathfinders', label: 'Tracks'});
+      if (expansions.underworld) launchers.push({kind: 'underworld', label: 'Underworld'});
+      if (expansions.deltaProject) launchers.push({kind: 'delta', label: 'Delta'});
+      return launchers;
     },
     phaseLabel(): string {
       return String(this.game.phase);
@@ -985,6 +1037,13 @@ export default defineComponent({
     KeyboardShortcuts,
     GlobalParameterValue,
     MoonGlobalParameterValue,
+    DeltaProjectBoard,
+    Milestones,
+    Awards,
+    Turmoil,
+    MoonBoard,
+    PlanetaryTracks,
+    UndergroundTokens,
   },
 
   mounted() {
@@ -1013,25 +1072,6 @@ export default defineComponent({
       this.isActivityRailCollapsed = false;
       localStorage.setItem(layoutStorageKeys.activityMode, 'history');
       storeLayoutBoolean(layoutStorageKeys.activityRailCollapsed, false);
-    },
-    handleExtensionPanelChange(panel: string | undefined): void {
-      this.activeExtensionPanel = panel;
-      if (panel !== undefined) {
-        this.isColonyPanelOpen = false;
-      }
-    },
-    handleColonyPanelToggle(event: Event): void {
-      const details = event.currentTarget;
-      if (!(details instanceof HTMLDetailsElement)) {
-        return;
-      }
-      this.isColonyPanelOpen = details.open;
-      if (!details.open) {
-        return;
-      }
-      const board = this.$refs.tableBoard as {closePanels?: () => void} | undefined;
-      board?.closePanels?.();
-      this.activeExtensionPanel = undefined;
     },
     handleActivityUpdate(update: ActivityUpdate): void {
       const messages = update.messages.filter((message) => message.type !== LogMessageType.NEW_GENERATION);
@@ -1194,7 +1234,10 @@ export default defineComponent({
       const rect = root?.getBoundingClientRect();
       if (target === 'bottom') {
         const tableHeight = Math.max(720, rect?.height ?? 0, window.innerHeight);
-        return {min: 150, max: Math.min(560, Math.max(150, tableHeight - 420))};
+        // Keep a useful resize range at the supported 1280x720 floor. The
+        // board remains available through the fixed stage and its module dock,
+        // while the user can deliberately trade board size for decision space.
+        return {min: 150, max: Math.min(560, Math.max(150, tableHeight - 360))};
       }
 
       const tableWidth = Math.max(1280, rect?.width ?? 0, window.innerWidth);
@@ -1299,6 +1342,10 @@ export default defineComponent({
       }
     },
     openOverlay(overlay: OverlayKind): void {
+      this.rememberOverlayOpener();
+      this.closeUtilityMenu();
+      this.keyboardShortcutOpened = false;
+      this.activeModule = undefined;
       this.activeOverlay = overlay;
       if (overlay === 'cards') {
         this.cardOverlayFocus = 'hand';
@@ -1306,20 +1353,55 @@ export default defineComponent({
     },
     closeBoardBlockingLayers(): void {
       this.closeOverlay();
-      this.isColonyPanelOpen = false;
-      this.activeExtensionPanel = undefined;
-      this.$nextTick(() => {
-        const board = this.$refs.tableBoard as {closePanels?: () => void} | undefined;
-        board?.closePanels?.();
-      });
+      this.closeUtilityMenu();
     },
     openCardsOverlay(): void {
-      this.cardOverlayFocus = 'hand';
-      this.activeOverlay = 'cards';
+      this.openOverlay('cards');
+    },
+    openModule(kind: ModuleKind): void {
+      if (!this.moduleLaunchers.some((launcher) => launcher.kind === kind)) {
+        return;
+      }
+      this.rememberOverlayOpener();
+      this.closeUtilityMenu();
+      this.keyboardShortcutOpened = false;
+      this.activeModule = kind;
+      this.activeOverlay = 'module';
+    },
+    moduleTitle(kind: ModuleKind | undefined): string {
+      return this.moduleLaunchers.find((launcher) => launcher.kind === kind)?.label ?? 'Table module';
+    },
+    closeUtilityMenu(): void {
+      const details = this.$el.querySelector('.tm-utility-menu') as HTMLDetailsElement | null;
+      if (details !== null) {
+        details.open = false;
+      }
+    },
+    handleUtilityMenuToggle(event: Event): void {
+      const details = event.currentTarget as HTMLDetailsElement | null;
+      if (details === null || !details.open) {
+        return;
+      }
+      this.activeOverlay = 'none';
+      this.activeModule = undefined;
+      this.keyboardShortcutOpened = false;
+    },
+    rememberOverlayOpener(): void {
+      if (this.activeOverlay === 'none' && document.activeElement instanceof HTMLElement) {
+        this.overlayOpener = document.activeElement;
+      }
     },
     closeOverlay(): void {
       this.activeOverlay = 'none';
+      this.activeModule = undefined;
       this.playerLogPreviewMessage = undefined;
+      const opener = this.overlayOpener;
+      this.overlayOpener = undefined;
+      this.$nextTick(() => {
+        if (opener?.isConnected) {
+          opener.focus();
+        }
+      });
     },
     openActivityLogPreview(message: LogMessage): void {
       if (this.isDecisionActive) {
@@ -1354,6 +1436,9 @@ export default defineComponent({
       storeLayoutBoolean(layoutStorageKeys.activityRailCollapsed, this.isActivityRailCollapsed);
     },
     toggleBottomTray(): void {
+      if (this.hasPlayerInput) {
+        return;
+      }
       this.isBottomTrayCollapsed = !this.isBottomTrayCollapsed;
       if (this.isBottomTrayCollapsed) {
         this.closeActivityLogPreview();
@@ -1361,11 +1446,17 @@ export default defineComponent({
       storeLayoutBoolean(layoutStorageKeys.bottomTrayCollapsed, this.isBottomTrayCollapsed);
     },
     openPlayer(color: Color): void {
+      this.rememberOverlayOpener();
+      this.closeUtilityMenu();
+      this.keyboardShortcutOpened = false;
       this.selectedPlayerColor = color;
       this.playerLogPreviewMessage = undefined;
       this.activeOverlay = 'player';
     },
     openPlayers(): void {
+      this.rememberOverlayOpener();
+      this.closeUtilityMenu();
+      this.keyboardShortcutOpened = false;
       this.selectedPlayerColor = this.playerView.players[0]?.color ?? this.thisPlayer.color;
       this.playerLogPreviewMessage = undefined;
       this.activeOverlay = 'player';

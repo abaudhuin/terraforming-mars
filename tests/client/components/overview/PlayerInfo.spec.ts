@@ -97,4 +97,23 @@ describe('PlayerInfo', () => {
     expect(wrapper.find('.player-info-corp').attributes('title')).to.eq(undefined);
     expect(wrapper.find('.tm-player-economy-row .tm-rail-player-summary').exists()).to.eq(true);
   });
+
+  it('uses the whole player card as the single dossier control', async () => {
+    const player = fakePublicPlayerModel({color: 'blue', name: 'Blue', tableau: [], timer: fakeTimerModel()});
+    const wrapper = shallowMount(PlayerInfo, {
+      ...globalConfig,
+      props: {
+        player,
+        playerView: {thisPlayer: player, game: {phase: 'action', gameOptions: {showTimers: false}}} as PlayerViewModel,
+        playerIndex: 0,
+        actionLabel: 'none',
+      },
+    });
+
+    expect(wrapper.attributes('role')).to.eq('button');
+    expect(wrapper.find('.tm-player-view-button').exists()).to.eq(false);
+    expect(wrapper.findComponent({name: 'AppButton'}).exists()).to.eq(false);
+    await wrapper.trigger('click');
+    expect(wrapper.emitted('open-player')).to.deep.eq([['blue']]);
+  });
 });

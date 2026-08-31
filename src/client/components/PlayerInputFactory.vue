@@ -6,7 +6,8 @@
     :playerinput="playerinput"
     :onsave="onsave"
     :showsave="showsave"
-    :showtitle="showtitle" />
+    :showtitle="showtitle"
+    @open-module="$emit('open-module', $event)" />
 </template>
 
 <script lang="ts">
@@ -90,6 +91,7 @@ function inputModelKey(input: PlayerInputModel): string {
 
 export default defineComponent({
   name: 'PlayerInputFactory',
+  emits: ['open-module'],
   props: {
     playerView: {
       type: Object as () => PlayerViewModel,

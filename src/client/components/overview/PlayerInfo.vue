@@ -1,5 +1,13 @@
 <template>
-      <div :class="getClasses()" :data-player-color="player.color" tabindex="0">
+      <div
+        :class="getClasses()"
+        :data-player-color="player.color"
+        role="button"
+        tabindex="0"
+        :aria-label="$t('View player details') + ': ' + player.name"
+        @click="togglePlayerDetails"
+        @keydown.enter.prevent="togglePlayerDetails"
+        @keydown.space.prevent="togglePlayerDetails">
         <div class="player-status-and-res">
         <div class="player-status">
           <div class="player-info-details">
@@ -14,9 +22,6 @@
               </div>
             </div>
             <PlayerResourceChanges :deltas="resourceDeltas"/>
-            <button type="button" class="tm-player-view-button tm-icon-control tm-icon-control--eye" @click.stop="togglePlayerDetails" :aria-label="$t('View player details')">
-              <span aria-hidden="true"></span>
-            </button>
           </div>
           <div>
             <PlayerStatus :timer="player.timer" :showTimer="playerView.game.gameOptions.showTimers" :liveTimer="playerView.game.phase !== Phase.END" v-trim-whitespace :actionLabel="actionLabel"/>
@@ -51,7 +56,6 @@
                 <div class="played-cards-count">{{numberOfPlayedCards()}}</div>
               </div>
             </div>
-            <AppButton class="played-cards-button" size="tiny" @click="togglePlayerDetails" :title="buttonLabel()" />
           </div>
           <div class="tag-display player-board-blue-action-counter" :class="tooltipCss" :data-tooltip="$t('The number of available actions on active cards')">
             <div class="tag-count tag-action-card">
@@ -75,7 +79,6 @@ import PlayerTags from '@/client/components/overview/PlayerTags.vue';
 import PlayerAlliedParty from '@/client/components/overview/PlayerAlliedParty.vue';
 import PlayerStatus from '@/client/components/overview/PlayerStatus.vue';
 import {playerColorClass} from '@/common/utils/utils';
-import AppButton from '@/client/components/common/AppButton.vue';
 import {CardType} from '@/common/cards/CardType';
 import {getCard} from '@/client/cards/ClientCardManifest';
 import {Phase} from '@/common/Phase';
@@ -120,7 +123,6 @@ export default defineComponent({
     },
   },
   components: {
-    AppButton,
     PlayerResources,
     PlayerResourceChanges,
     PlayerTags,
@@ -136,9 +138,6 @@ export default defineComponent({
     },
   },
   methods: {
-    buttonLabel(): string {
-      return 'details';
-    },
     togglePlayerDetails() {
       this.$emit('open-player', this.player.color);
     },

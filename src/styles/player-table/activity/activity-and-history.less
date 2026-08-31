@@ -683,22 +683,12 @@
     grid-template-columns: var(--tm-player-width, 360px) minmax(0, 1fr) 44px;
   }
 
-  // Keep the tray toggle out of the tray's grid flow. The shared icon-control
-  // rule sets position: relative later in the cascade, which otherwise creates
-  // an empty first row above every action panel.
-  .tm-bottom-tray > .tm-bottom-tray-toggle {
-    position: absolute;
-    top: -37px;
-    right: 7px;
-    left: auto;
-  }
-
   &.tm-player-table--bottom-collapsed {
-    grid-template-rows: var(--tm-hud-height) minmax(0, 1fr) 0 !important;
+    grid-template-rows: var(--tm-hud-height) minmax(0, 1fr) 38px !important;
   }
 
   &.tm-player-table--bottom-collapsed .tm-bottom-tray {
-    min-height: 0;
+    min-height: 38px;
   }
 
   &.tm-player-table--activity-collapsed .tm-activity-rail {

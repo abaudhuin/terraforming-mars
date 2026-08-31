@@ -8,7 +8,8 @@
       :playerinput="option"
       :onsave="playerFactorySaved(idx)"
       :showsave="false"
-      :showtitle="true" />
+      :showtitle="true"
+      @open-module="$emit('open-module', $event)" />
     <div v-if="showsave" class="wf-action">
       <AppButton :title="playerinput.buttonLabel" type="submit" size="normal" @click="saveData" :disabled="!canSave()"/>
     </div>
@@ -30,6 +31,7 @@ interface DataModel {
 
 export default defineComponent({
   name: 'AndOptions',
+  emits: ['open-module'],
   props: {
     playerView: {
       type: Object as () => PlayerViewModel,
