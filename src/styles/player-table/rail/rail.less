@@ -1,0 +1,1315 @@
+// Player rail, resources, status, tags, and density.
+#player-home.tm-player-table {
+  .tm-player-rail {
+    position: relative;
+    overflow: hidden;
+    padding: 4px 8px;
+
+    .players-overview {
+      height: 100%;
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: stretch;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .players-overview-settings,
+    .player-divider {
+      display: none;
+    }
+
+    .other_player {
+      display: none;
+      min-width: 0;
+    }
+
+    .player-info-name {
+      font-size: 17px;
+      line-height: 19px;
+    }
+
+    .player-info-corp {
+      font-size: 14px;
+      height: 18px;
+      line-height: 18px;
+    }
+
+    .player-status-and-res {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .player-status {
+      flex: 0 0 112px;
+    }
+
+    .resource_items_cont {
+      flex: 1 1 auto;
+      min-width: 0;
+      gap: 4px;
+    }
+
+    .resource_item {
+      min-width: 46px;
+      margin-left: 0;
+      padding: 4px 3px 3px;
+      border-radius: 5px;
+    }
+
+    .resource_icon {
+      width: 22px;
+      height: 22px;
+    }
+
+    .resource_item_stock_count {
+      font-size: 20px;
+    }
+
+    .resource_item--energy::after,
+    .player-allied-party,
+    .player-played-cards,
+    .player-board-blue-action-counter {
+      display: none;
+    }
+
+    .player-info--self .tag-display.player-board-blue-action-counter {
+      display: none;
+    }
+    .player-info {
+      flex: 1 1 0;
+      min-width: 260px;
+      max-width: none;
+      min-height: 98px;
+      margin: 0;
+      padding: 6px;
+      border-radius: 7px;
+      overflow: auto;
+      border-color: var(--tm-border-soft);
+      background: rgba(0, 0, 0, 0.32);
+    }
+
+    .player-info--self {
+      border-color: var(--tm-border);
+      background: rgba(255, 204, 100, 0.055);
+    }
+
+    .player-info--opponent:hover,
+    .player-info--opponent:focus,
+    .player-info--opponent:focus-within {
+      min-height: 72px;
+      border-color: var(--tm-border-soft);
+      background: rgba(0, 0, 0, 0.32);
+      box-shadow: none;
+    }
+
+    .player-info--active {
+      border-color: rgba(255, 204, 100, 0.5);
+      box-shadow: inset 0 0 0 1px rgba(255, 204, 100, 0.3), 0 0 12px rgba(255, 204, 100, 0.12);
+    }
+
+    .player-info-details {
+      width: 112px;
+      grid-template-columns: minmax(0, 1fr) 30px;
+      align-items: start;
+    }
+
+    .tm-player-view-button {
+      width: 28px;
+      height: 28px;
+      place-self: start end;
+    }
+
+    .player-info-name,
+    .player-info-corp {
+      max-width: 100%;
+      padding-right: 2px;
+    }
+
+    .player-action-status-container {
+      min-width: 0;
+      min-height: 26px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.34);
+      color: var(--tm-muted);
+      box-shadow: none;
+    }
+
+    .player-action-status-container--active {
+      border-color: rgba(255, 204, 100, 0.48);
+      background: rgba(255, 204, 100, 0.13);
+      color: var(--tm-accent);
+    }
+
+    .player-action-status-container--passed {
+      border-color: rgba(208, 99, 82, 0.34);
+      background: rgba(208, 99, 82, 0.1);
+      color: #d9a096;
+    }
+
+    .player-action-status,
+    .player-status-timer {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-info--opponent .player-tags,
+    .player-info--opponent:hover .player-tags,
+    .player-info--opponent:focus .player-tags,
+    .player-info--opponent:focus-within .player-tags {
+      display: none;
+    }
+
+    .resource_item_prod {
+      min-width: 24px;
+      font-size: 13px;
+      color: #d8b99b;
+    }
+  }
+
+  &.tm-player-table--acting .tm-player-rail,
+  &.tm-player-table--passive .tm-player-rail {
+    .player-info--opponent:hover,
+    .player-info--opponent:focus,
+    .player-info--opponent:focus-within {
+      min-height: 78px;
+    }
+  }
+
+}
+
+
+// Player-rail density.
+
+
+#player-home.tm-player-table:not(.tm-player-table--setup) {
+
+  .tm-player-dossier-summary {
+    .resource_item {
+      position: relative;
+      overflow: visible;
+    }
+
+    .shield_parent {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      left: auto;
+      width: 22px;
+      height: 22px;
+      transform: scale(0.72);
+      transform-origin: top right;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .shield_icon,
+    .shield_icon_half {
+      position: absolute;
+      inset: 0;
+      width: 22px;
+      height: 22px;
+      background-size: 22px 22px;
+      bottom: auto;
+      right: auto;
+    }
+
+    .shield_resource_protection {
+      top: 1px;
+      left: 6px;
+      width: 8px;
+      height: 8px;
+      background-size: 8px 8px;
+    }
+
+    .shield_production_protection {
+      top: 1px;
+      left: 15px;
+      width: 8px;
+      height: 8px;
+      background-size: 8px 8px;
+    }
+  }
+  .tm-player-rail {
+    .player-status-and-res > .player-status,
+    .player-info--self .player-status-and-res > .player-status {
+      grid-template-columns: minmax(0, 1fr) 96px;
+    }
+
+    .player-info--opponent:hover,
+    .player-info--opponent:focus,
+    .player-info--opponent:focus-within {
+      min-height: 72px;
+      border-color: var(--tm-border-soft);
+      background: rgba(0, 0, 0, 0.32);
+      box-shadow: none;
+    }
+
+    .player-action-status-container--active:has(.player-status-timer),
+    .player-action-status-container--passed:has(.player-status-timer) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .player-action-status-container--active:has(.player-status-timer) .player-action-status,
+    .player-action-status-container--passed:has(.player-status-timer) .player-action-status {
+      display: none;
+    }
+
+    .player-action-status,
+    .player-status-timer {
+      flex: 0 0 auto;
+      max-width: none;
+      overflow: visible;
+      text-overflow: clip;
+    }
+
+    .player-status-timer,
+    .player-status-timer .player-timer {
+      width: auto;
+      min-width: 0;
+    }
+
+    .player-status-timer .player-timer {
+      display: inline-flex;
+      justify-content: flex-end;
+    }
+
+    .player-status-timer .player-timer-hours,
+    .player-status-timer .player-timer-minutes,
+    .player-status-timer .player-timer-seconds {
+      width: auto;
+      min-width: 0;
+    }
+
+    .player-action-status-container--active {
+      border-color: rgba(255, 204, 100, 0.48);
+      background: rgba(255, 204, 100, 0.13);
+      color: var(--tm-accent);
+    }
+
+    .shield_parent {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      left: auto;
+      width: 20px;
+      height: 20px;
+      transform: scale(0.66);
+      transform-origin: top right;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .shield_icon,
+    .shield_icon_half {
+      position: absolute;
+      inset: 0;
+      width: 20px;
+      height: 20px;
+      background-size: 20px 20px;
+      bottom: auto;
+      right: auto;
+    }
+
+    .shield_resource_protection {
+      top: 1px;
+      left: 5px;
+      width: 8px;
+      height: 8px;
+      background-size: 8px 8px;
+    }
+
+    .shield_production_protection {
+      top: 1px;
+      left: 14px;
+      width: 8px;
+      height: 8px;
+      background-size: 8px 8px;
+    }
+    min-width: 0;
+    min-height: 0;
+    padding: 6px;
+    overflow: auto;
+
+    .players-overview-settings,
+    .player-divider {
+      display: none;
+    }
+
+    .other_player {
+      display: none;
+    }
+
+    .player-info--active {
+      box-shadow: inset 0 0 0 1px rgba(255, 204, 100, 0.5), 0 0 14px rgba(255, 204, 100, 0.16);
+    }
+
+    .player-info--opponent:hover,
+    .player-info--opponent:focus-within {
+      min-height: 154px;
+      border-color: rgba(255, 204, 100, 0.36);
+    }
+
+    .player-status-and-res {
+      width: 100%;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 104px minmax(0, 1fr);
+      gap: 5px;
+      align-items: stretch;
+    }
+
+    .player-status {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-content: start;
+    }
+
+    .player-info-name {
+      font-size: 15px;
+      line-height: 17px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .player-info--self .player-info-name {
+      font-size: 18px;
+      line-height: 20px;
+    }
+
+    .player-status-bottom {
+      align-items: flex-start;
+    }
+
+    .resource_items_cont {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 4px;
+      filter: none;
+    }
+
+    .player-info--opponent .resource_items_cont {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .player-info--self .resource_items_cont {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .resource_item {
+      overflow: visible;
+      min-width: 0;
+      margin-left: 0;
+      padding: 3px 3px 2px;
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      align-items: center;
+      gap: 2px;
+      border-radius: 5px;
+    }
+
+    .player-info--self .resource_item {
+      grid-template-columns: 25px minmax(0, 1fr);
+      min-height: 36px;
+    }
+
+    .resource_icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .player-info--self .resource_icon {
+      width: 25px;
+      height: 25px;
+    }
+
+    .resource_item_stock_count {
+      font-size: 18px;
+      position: relative;
+      z-index: 4;
+      text-align: left;
+    }
+
+    .player-info--self .resource_item_stock_count {
+      font-size: 22px;
+    }
+
+    .resource_item--energy::after {
+      display: none;
+    }
+
+    .player-info--opponent:hover .player-tags,
+    .player-info--opponent:focus-within .player-tags {
+      display: flex;
+    }
+
+    .player-tags-main,
+    .player-tags-secondary {
+      margin-top: 0;
+    }
+
+    .player-allied-party {
+      display: none;
+    }
+
+    @media (max-height: 820px) {
+      .player-info--self {
+        min-height: 202px;
+      }
+
+      .player-info {
+        min-height: 62px;
+      }
+
+      .resource_item_stock_count {
+        font-size: 15px;
+      }
+    }
+
+    .player-info--self .player-status-and-res {
+      grid-template-columns: 112px minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr);
+      gap: 5px;
+    }
+
+    .player-info--self .player-status {
+      grid-template-columns: minmax(0, 1fr) 108px;
+      gap: 4px;
+    }
+
+    .player-info--self .tm-player-view-button {
+      place-self: start end;
+      margin-top: 0;
+    }
+
+    .player-info--self .player-action-status-container {
+      width: 80px;
+      max-width: 80px;
+      min-height: 26px;
+      padding: 2px 7px;
+    }
+
+    .player-info--self .player-status-timer {
+      line-height: 14px;
+    }
+
+    .player-played-cards,
+    .player-board-blue-action-counter {
+      display: none;
+    }
+
+    .resource_item,
+    .player-info--self .resource_item,
+    .player-info--opponent .resource_item {
+      position: relative;
+      min-height: 32px;
+      padding: 2px 3px 1px;
+      grid-template-rows: 19px 10px;
+      overflow: visible;
+    }
+
+    .resource_item_stock,
+    .player-info--self .resource_item_stock,
+    .player-info--opponent .resource_item_stock {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      place-items: center start;
+      gap: 2px;
+    }
+
+    .resource_icon,
+    .player-info--self .resource_icon,
+    .player-info--opponent .resource_icon {
+      width: 17px;
+      height: 17px;
+    }
+
+    .resource_item_stock_count,
+    .player-info--self .resource_item_stock_count,
+    .player-info--opponent .resource_item_stock_count {
+      position: relative;
+      z-index: 4;
+      font-size: 14px;
+      line-height: 15px;
+      text-align: left;
+    }
+
+    .resource_item_prod,
+    .player-info--self .resource_item_prod,
+    .player-info--opponent .resource_item_prod {
+      position: relative;
+      height: 10px;
+      line-height: 10px;
+      background: transparent;
+    }
+
+    .resource_icon--megacredit-value {
+      position: static;
+      z-index: auto;
+      min-width: 16px;
+      height: 10px;
+      margin: 0 0 0 2px;
+      padding: 0 2px;
+      font-size: 7px;
+      line-height: 10px;
+    }
+
+    .player-info--opponent .player-tags,
+    .player-info--opponent:hover .player-tags,
+    .player-info--opponent:focus .player-tags,
+    .player-info--opponent:focus-within .player-tags {
+      display: none;
+    }
+
+    .tm-rail-stat-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .tm-rail-stat strong {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .player-info--self .player-tags-main {
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      gap: 2px;
+      flex: 0 0 auto;
+    }
+
+    .player-info--self .player-tags-secondary {
+      width: auto;
+      display: flex;
+      flex: 1 1 auto;
+      flex-flow: row nowrap;
+      align-items: center;
+      gap: 2px;
+      margin-top: 0;
+      min-width: 0;
+      overflow: auto hidden;
+      overscroll-behavior-inline: contain;
+      scrollbar-width: none;
+    }
+
+    .player-info--self .player-tags-secondary::-webkit-scrollbar {
+      display: none;
+    }
+
+    .player-info--self .player-tags-summary-divider {
+      width: 1px;
+      height: 24px;
+      flex: 0 0 1px;
+      margin: 0 2px;
+      background: rgba(255, 255, 255, 0.24);
+    }
+
+    // Compact rail icons already carry visible labels or familiar artwork.
+    // Suppressing the generic pseudo-tooltip avoids clipped labels layering
+    // underneath the adjacent counters.
+    .player-info--self .tag-count.tooltip::after {
+      display: none;
+    }
+
+    .player-info--self .tag-count-container,
+    .player-info--self .tag-and-discount {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .player-info--self .tag-display {
+      position: relative;
+      width: 21px;
+      height: 22px;
+      margin: 0;
+      display: block;
+    }
+
+    .player-info--self .tag-count {
+      width: 19px;
+      height: 19px;
+      margin: 0;
+      background-size: 21px 21px;
+      background-position: center;
+    }
+
+    .player-info--self .tag-display--city,
+    .player-info--self .tag-display--city-count {
+      width: 21px;
+    }
+
+    .player-info--self .tag-display--city .tag-city,
+    .player-info--self .tag-display--city-count .tag-city-count {
+      width: 19px !important;
+      height: 19px !important;
+      margin: 0;
+      background-size: 19px 19px !important;
+      background-position: center;
+    }
+
+    .player-info--self .tag-count-display {
+      position: absolute;
+      z-index: 4;
+      right: -1px;
+      bottom: -1px;
+      min-width: 13px;
+      height: 13px;
+      margin: 0;
+      padding: 0 2px;
+      border-radius: 4px;
+      display: grid;
+      place-items: center;
+      background: rgba(0, 0, 0, 0.78);
+      color: var(--tm-text);
+      font-size: 9px;
+      line-height: 13px;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+      box-sizing: border-box;
+    }
+
+    .player-info--self .tag-count-no-show {
+      display: none;
+    }
+
+    .player-info--self .tag-separator {
+      width: 1px;
+      height: 24px;
+      margin: 0 1px;
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .player-info--self .tag-display.player-board-blue-action-counter {
+      display: none;
+    }
+    overflow: hidden;
+
+    .players-overview {
+      display: flex;
+      flex-flow: column nowrap;
+      align-items: stretch;
+      gap: 6px;
+      margin: 0;
+      height: 100%;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .player-info {
+      width: 100%;
+      flex: 0 0 auto;
+      min-width: 0;
+      max-width: none;
+      margin: 0;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      min-height: 112px;
+      padding: 7px;
+      outline: none;
+      overflow: hidden;
+      transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+
+      *,
+      *::before,
+      *::after {
+        min-width: 0;
+      }
+    }
+
+    .player-info--self {
+      order: -1;
+      border-color: var(--tm-border);
+      background-color: rgba(255, 255, 255, 0.06);
+      display: flex;
+      flex-flow: column nowrap;
+      align-items: stretch;
+      gap: 4px;
+      min-height: 154px;
+    }
+
+    .player-info--opponent:hover {
+      min-height: 112px;
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .player-info--opponent:focus,
+    .player-info--opponent:focus-within {
+      border-color: rgba(255, 204, 100, 0.32);
+      box-shadow: inset 0 0 0 1px rgba(255, 204, 100, 0.18), 0 0 14px rgba(255, 204, 100, 0.12);
+    }
+
+    .player-status-and-res,
+    .player-info--self .player-status-and-res {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+
+    .player-status-and-res > .player-status {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 8px;
+    }
+
+    .player-status-and-res > .player-status > div:last-child {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    .player-info-details {
+      min-width: 0;
+      padding-right: 0;
+      box-sizing: border-box;
+      position: relative;
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto 28px;
+      grid-template-rows: 18px 16px;
+      align-items: start;
+      gap: 4px;
+    }
+
+    .tm-player-identity-copy {
+      min-width: 0;
+      display: grid;
+      gap: 1px;
+      grid-column: 1;
+      grid-row: 1 / span 2;
+    }
+
+    .tm-player-identity-meta {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .tm-player-identity-meta > span {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .tm-player-view-button {
+      min-width: 22px;
+      min-height: 22px;
+
+      > span {
+        width: 14px;
+        height: 14px;
+      }
+      grid-column: 3;
+      grid-row: 1 / span 2;
+      place-self: center end;
+      width: 28px;
+      height: 28px;
+    }
+
+    .tm-resource-change-list {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      place-self: start;
+      width: max-content;
+      max-width: 120px;
+      height: 22px;
+      min-height: 22px;
+      margin: 0;
+      padding: 1px 2px;
+      border: 1px solid rgba(255, 204, 100, 0.28);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      overflow: hidden auto;
+      background: rgba(7, 9, 10, 0.88);
+      color: #ffe3a0;
+      font-family: Prototype, sans-serif;
+      font-size: 10px;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.38);
+      animation: tm-delta-pop 440ms cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+    }
+
+    .tm-resource-change-group,
+    .tm-resource-change-token {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .tm-resource-change-group {
+      gap: 2px;
+    }
+
+    .tm-resource-change-token {
+      gap: 2px;
+    }
+
+    .tm-resource-change-token + .tm-resource-change-token {
+      padding-left: 2px;
+      border-left: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .tm-resource-change-token strong {
+      color: inherit;
+      font: inherit;
+      font-size: 10px;
+    }
+
+    .tm-resource-change-token--loss {
+      color: #f0a394;
+    }
+
+    .tm-resource-change-token > .resource_icon {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 16px;
+      background-position: center;
+      background-size: 16px 16px;
+    }
+
+    .tm-resource-change-production-box.production-box {
+      width: 19px;
+      height: 19px;
+      min-width: 19px;
+      margin: 0;
+      padding: 2px;
+      border-radius: 3px;
+      display: grid;
+      place-items: center;
+      line-height: 15px;
+      box-sizing: border-box;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.82), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
+
+    .tm-resource-change-production-box > .production {
+      width: 15px;
+      height: 15px;
+      margin: 0;
+      background-position: center;
+      background-size: 15px 15px;
+      line-height: 15px;
+      vertical-align: middle;
+    }
+
+    .player-info-name,
+    .player-info--self .player-info-name {
+      grid-column: 1;
+      font-size: 16px;
+      line-height: 18px;
+      max-width: 100%;
+      overflow: visible;
+      overflow-wrap: anywhere;
+      text-overflow: clip;
+      white-space: normal;
+    }
+
+    .player-info-corp {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      grid-column: 1;
+      max-width: 100%;
+      height: 16px;
+      line-height: 16px;
+      font-size: 12px;
+    }
+
+    .icon-first-player {
+      display: none;
+    }
+
+    .player-action-status-container {
+      width: 80px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.34);
+      color: var(--tm-muted);
+      box-shadow: none;
+      max-width: none;
+      min-height: 28px;
+      padding: 4px 5px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      overflow: hidden;
+    }
+
+    .player-action-status {
+      font-size: 11px;
+      line-height: 12px;
+      white-space: nowrap;
+    }
+
+    .player-status-timer {
+      justify-self: end;
+      font-size: 15px;
+      line-height: 16px;
+      white-space: nowrap;
+    }
+
+    .resource_items_cont,
+    .player-info--opponent .resource_items_cont,
+    .player-info--self .resource_items_cont {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 4px;
+      width: 100%;
+    }
+
+    .tm-player-economy-row {
+      width: 100%;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 3px;
+      overflow: visible;
+    }
+
+    .tm-player-economy-row > .resource_items_cont {
+      grid-column: 1 / -1;
+      width: auto;
+      min-width: 0;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 4px;
+    }
+
+    .tm-player-economy-row .resource_item,
+    .player-info--self .tm-player-economy-row .resource_item,
+    .player-info--opponent .tm-player-economy-row .resource_item {
+      min-width: 0;
+      grid-template-columns: 16px minmax(0, 1fr);
+      overflow: visible;
+    }
+
+    .tm-player-economy-row .resource_item_stock,
+    .player-info--self .tm-player-economy-row .resource_item_stock,
+    .player-info--opponent .tm-player-economy-row .resource_item_stock {
+      grid-template-columns: 16px minmax(0, 1fr);
+    }
+
+    .tm-player-economy-row .resource_icon,
+    .player-info--self .tm-player-economy-row .resource_icon,
+    .player-info--opponent .tm-player-economy-row .resource_icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    .tm-player-economy-row .resource_item_stock_count,
+    .player-info--self .tm-player-economy-row .resource_item_stock_count,
+    .player-info--opponent .tm-player-economy-row .resource_item_stock_count {
+      font-size: 13px;
+      line-height: 14px;
+    }
+
+    .resource_item,
+    .player-info--self .resource_item {
+      position: relative;
+      min-width: 0;
+      min-height: 38px;
+      padding: 3px 3px 2px;
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      grid-template-rows: 21px 11px;
+      align-items: center;
+      gap: 0;
+      border-radius: 5px;
+    }
+
+    .resource_item_stock {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      place-items: center start;
+      gap: 2px;
+    }
+
+    .resource_icon,
+    .player-info--self .resource_icon {
+      width: 22px;
+      height: 22px;
+    }
+
+    .resource_item_stock_count,
+    .player-info--self .resource_item_stock_count {
+      font-size: 16px;
+      line-height: 17px;
+      text-align: left;
+    }
+
+    .resource_item_prod {
+      grid-column: 2;
+      grid-row: 2;
+      width: auto;
+      min-width: 0;
+      height: 11px;
+      border-radius: 0;
+      background: transparent;
+      font-size: 10px;
+      line-height: 11px;
+      text-align: left;
+    }
+
+    .resource_item_prod_count {
+      font-size: 9px;
+      line-height: 10px;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .player-tags {
+      display: flex;
+      min-width: 0;
+      transform-origin: top left;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .player-tags-secondary {
+      display: flex;
+    }
+
+    .player-info--self .player-tags {
+      width: 100%;
+      max-width: 100%;
+      margin-top: 2px;
+      overflow: hidden;
+      transform: none;
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .player-info--self .tag-vp,
+    .player-info--self .tag-tr,
+    .player-info--self .tag-none,
+    .player-info--self .tag-wild {
+      background-image: none !important;
+      background-color: rgba(21, 23, 24, 0.96) !important;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 50%;
+      box-sizing: border-box;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+    }
+
+    .player-info--self .tag-vp::before,
+    .player-info--self .tag-tr::before,
+    .player-info--self .tag-none::before,
+    .player-info--self .tag-wild::before {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #ddd3ba;
+      font-family: Prototype, sans-serif;
+      font-size: 8px;
+      line-height: 1;
+      text-shadow: 0 1px 2px #000;
+    }
+
+    .player-info--self .tag-vp::before {
+      content: "VP";
+      color: #f2b84f;
+    }
+
+    .player-info--self .tag-tr::before {
+      content: "TR";
+      color: #ef925f;
+    }
+
+    .player-info--self .tag-none::before {
+      content: "∅";
+      font-size: 13px;
+    }
+
+    .player-info--self .tag-wild::before {
+      content: "✦";
+      color: #d8c995;
+      font-size: 12px;
+    }
+
+    .player-info--self .tag-cards {
+      background-size: 19px 19px;
+      background-position: center;
+    }
+
+    .tm-rail-player-summary {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 3px;
+    }
+
+    .player-info--self .tm-rail-player-summary {
+      display: grid;
+    }
+
+    .tm-rail-stat {
+      position: relative;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: 21px 11px;
+      place-items: center;
+      min-width: 0;
+      min-height: 38px;
+      padding: 2px;
+      border-radius: 5px;
+      display: grid;
+      align-content: start;
+      gap: 0;
+      background: rgba(0, 0, 0, 0.28);
+      color: var(--tm-muted);
+
+      .tm-rail-stat-label {
+        overflow: hidden;
+        white-space: nowrap;
+        font-family: Prototype, sans-serif;
+        font-size: 8px;
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      strong {
+        grid-row: 2;
+        color: var(--tm-text);
+        font-family: Prototype, sans-serif;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: normal;
+      }
+    }
+
+    .tm-rail-stat-icon {
+      --tm-rail-stat-icon-size: 19px;
+      grid-row: 1;
+    }
+
+    .player-info--opponent .player-tags {
+      display: none;
+      margin-top: 6px;
+      transform: none;
+      width: 100%;
+    }
+
+    .player-info--opponent:hover .player-tags {
+      display: none;
+    }
+    scrollbar-color: var(--tm-scrollbar-thumb) var(--tm-scrollbar-track);
+    scrollbar-width: thin;
+  }
+
+  &.tm-player-table--players-4 .tm-player-rail,
+  &.tm-player-table--players-5 .tm-player-rail {
+    overflow: hidden;
+  }
+
+  &.tm-player-table--players-4 .tm-player-rail .players-overview,
+  &.tm-player-table--players-5 .tm-player-rail .players-overview {
+    height: auto;
+    min-height: 0;
+    display: flex;
+    gap: 5px;
+  }
+
+  &.tm-player-table--players-4 .tm-player-rail .player-info,
+  &.tm-player-table--players-5 .tm-player-rail .player-info {
+    width: 100%;
+    height: auto;
+    min-height: 176px;
+    max-height: none;
+    overflow: visible;
+  }
+
+  &.tm-player-table--players-4 .tm-player-rail .player-info--self,
+  &.tm-player-table--players-5 .tm-player-rail .player-info--self {
+    order: -1;
+    min-height: 210px;
+  }
+
+  &.tm-player-table--players-4 .tm-player-rail .player-info--opponent:hover,
+  &.tm-player-table--players-4 .tm-player-rail .player-info--opponent:focus-within,
+  &.tm-player-table--players-5 .tm-player-rail .player-info--opponent:hover,
+  &.tm-player-table--players-5 .tm-player-rail .player-info--opponent:focus-within {
+    min-height: 176px;
+    border-color: var(--tm-line-strong);
+  }
+
+  &.tm-player-table--players-5 .tm-player-rail .player-info--opponent .player-action-status-container {
+    min-height: 24px;
+    padding-block: 2px;
+  }
+
+}
+
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting {
+  .tm-player-rail {
+    .player-status-and-res > .player-status,
+    .player-info--self .player-status-and-res > .player-status {
+      grid-template-columns: minmax(0, 1fr) 80px;
+    }
+
+    .player-action-status-container {
+      width: 80px;
+      max-width: 80px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      justify-content: stretch;
+      gap: 5px;
+    }
+
+    .player-action-status,
+    .player-status-timer {
+      flex: 0 0 auto;
+      max-width: none;
+      overflow: visible;
+      text-overflow: clip;
+    }
+
+    .player-status-timer,
+    .player-status-timer .player-timer {
+      width: auto;
+      min-width: 0;
+    }
+
+    .player-status-timer {
+      justify-self: end;
+    }
+
+    .player-status-timer .player-timer {
+      display: inline-flex;
+      justify-content: flex-end;
+    }
+
+    .player-status-timer .player-timer-hours,
+    .player-status-timer .player-timer-minutes,
+    .player-status-timer .player-timer-seconds {
+      width: auto;
+      min-width: 0;
+    }
+  }
+}

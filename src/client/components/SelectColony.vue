@@ -26,7 +26,6 @@
       </div>
       <span class="tm-colony-selection-a11y" aria-live="polite">{{ selectedColony === undefined ? $t('No colony selected') : selectedColony }}</span>
     </div>
-
     <div class="tm-colony-card-strip">
       <label
         v-for="colony in (playerinput.coloniesModel || [])"
@@ -45,7 +44,7 @@
       </label>
     </div>
     <div v-if="showsave === true" class="nofloat wf-component-actions">
-      <AppButton @click="saveData" :title="playerinput.buttonLabel" :disabled="!canSave()"/>
+      <AppButton @click="saveData" :title="commitLabel" :disabled="!canSave()"/>
     </div>
   </div>
 </template>
@@ -167,6 +166,12 @@ export default defineComponent({
     },
     selfFleetPreviewRows(): Array<FleetPreviewRow> {
       return this.fleetPreviewRows.filter((row) => row.isSelf);
+    },
+    commitLabel(): string {
+      if (this.isTradeAction) {
+        return this.selectedColony === undefined ? 'Trade with selected colony' : `Trade with ${this.selectedColony}`;
+      }
+      return this.playerinput.buttonLabel;
     },
   },
 });

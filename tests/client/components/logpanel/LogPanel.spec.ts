@@ -153,6 +153,27 @@ describe('LogPanel', () => {
     wrapper.unmount();
   });
 
+  it('requests and renders the complete current generation by default', async () => {
+    let requestedUrl = '';
+    const messages = Array.from({length: 14}, (_, index) =>
+      new LogMessage(LogMessageType.DEFAULT, `message ${index + 1}`, []));
+    (global as any).fetch = (url: string) => {
+      requestedUrl = url;
+      return Promise.resolve({ok: true, json: () => Promise.resolve(messages)});
+    };
+    const viewModel = fakeViewModel();
+    viewModel.game.generation = 4;
+    const wrapper = shallowMount(LogPanel, {
+      ...globalConfig,
+      props: {viewModel, color: 'blue'},
+    });
+    await flushPromises();
+
+    expect(requestedUrl).to.contain('generation=4');
+    expect((wrapper.vm as any).visibleMessages).to.have.length(14);
+    wrapper.unmount();
+  });
+
   it('publishes a compact activity bundle for the focus view', async () => {
     const responses: Array<(response: Response) => void> = [];
     (global as any).fetch = () => new Promise<Response>((resolve) => responses.push(resolve));

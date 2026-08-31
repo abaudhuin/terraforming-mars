@@ -46,4 +46,17 @@ describe('PointsPerTag', () => {
   it('asterisk - half point special case 2', () => {
     doTest({points: 0, halfPoints: 2, asterisk: true}, '2⁄2*');
   });
+
+  it('adds an explicit VP label for detailed surfaces', () => {
+    const wrapper = shallowMount(PointsPerTag, {
+      ...globalConfig,
+      props: {
+        points: {points: 1, halfPoints: 0},
+        showLabel: true,
+      },
+    });
+
+    expect(wrapper.text()).eq('1VP');
+    expect(wrapper.find('small').text()).eq('VP');
+  });
 });

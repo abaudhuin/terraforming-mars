@@ -14,7 +14,7 @@ describe('TagCount', () => {
         size: 'normal',
       },
     });
-    expect(tagCount.find('div[class="tag-display tag-no-show"]').exists()).is.true;
+    expect(tagCount.find('div[class="tag-display tag-display--building tag-no-show"]').exists()).is.true;
     expect(tagCount.find('span[class="tag-count-display tag-count-no-show"]').exists()).is.true;
   });
   it('renders with count', () => {
@@ -26,7 +26,21 @@ describe('TagCount', () => {
         size: 'normal',
       },
     });
-    expect(tagCount.find('div[class="tag-display"]').exists()).is.true;
+    expect(tagCount.find('div[class="tag-display tag-display--building"]').exists()).is.true;
     expect(tagCount.find('span[class="tag-count-display"]').exists()).is.true;
+  });
+
+  it('exposes the city tag to component-local optical sizing', () => {
+    const tagCount = mount(TagCount, {
+      ...globalConfig,
+      props: {
+        count: 1,
+        tag: 'city',
+        size: 'big',
+      },
+    });
+
+    expect(tagCount.classes()).to.include('tag-display--city');
+    expect(tagCount.find('.tag-city').exists()).is.true;
   });
 });

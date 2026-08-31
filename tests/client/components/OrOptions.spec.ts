@@ -48,8 +48,10 @@ describe('OrOptions', () => {
         showtitle: true,
       },
     });
-    const buttons = component.findAllComponents({name: 'AppButton'});
-    await buttons[0].trigger('click');
+    const inputs = component.findAll('input');
+    expect(inputs.length).to.eq(2);
+    await inputs[0].setValue(true);
+    await component.find('.wf-command-submit button').trigger('click');
     expect(savedData).to.deep.eq({type: 'or', index: 1, response: {type: 'option'}});
   });
   it('playerFactorySaved returns correct original index when options are filtered', async () => {
@@ -98,8 +100,7 @@ describe('OrOptions', () => {
     expect(inputs.length).to.eq(2);
     // Select the second displayed option (select b, original index 2)
     await inputs[1].setValue(true);
-    const buttons = component.findAllComponents({name: 'AppButton'});
-    await buttons[0].trigger('click');
+    await component.find('.wf-command-submit button').trigger('click');
     expect(savedData).to.deep.eq({type: 'or', index: 2, response: {type: 'option'}});
   });
 
@@ -134,11 +135,14 @@ describe('OrOptions', () => {
         showtitle: true,
       },
     });
-    expect(component.vm.selectedOption.title).to.eq('select a');
+    expect(component.vm.selectedOption).to.eq(undefined);
     expect(component.findAllComponents({name: 'PlayerInputFactory'}).length).to.eq(0);
 
-    // Click second radio
     const inputs = component.findAll('input');
+    await inputs[0].setValue(true);
+    expect(component.vm.selectedOption.title).to.eq('select a');
+
+    // Click second radio
     await inputs[1].setValue(true);
 
     expect(component.vm.selectedOption.title).to.eq('select b');
@@ -188,8 +192,7 @@ describe('OrOptions', () => {
     // Select third option
     const inputs = component.findAll('input');
     await inputs[2].setValue(true);
-    const buttons = component.findAllComponents({name: 'AppButton'});
-    await buttons[0].trigger('click');
+    await component.find('.wf-command-submit button').trigger('click');
     expect(savedData).to.deep.eq({type: 'or', index: 2, response: {type: 'option'}});
   });
 
@@ -232,8 +235,7 @@ describe('OrOptions', () => {
     const inputs = component.findAll('input');
     await inputs[1].setValue(true);
 
-    const buttons = component.findAllComponents({name: 'AppButton'});
-    await buttons[0].trigger('click');
+    await component.find('.wf-command-submit button').trigger('click');
     expect(savedData).to.deep.eq({type: 'or', index: 1, response: {type: 'option'}});
   });
 
@@ -275,7 +277,7 @@ describe('OrOptions', () => {
     expect(factories[0].props('playerinput').title).to.eq('Sell Patents');
   });
 
-  it('child save button label includes card count', () => {
+  it('child save button label includes card count', async () => {
     const component = mount(OrOptions, {
       ...globalConfig,
       global: {...globalConfig.global, components: {'PlayerInputFactory': PlayerInputFactory}},
@@ -300,6 +302,77 @@ describe('OrOptions', () => {
         showsave: true,
       },
     });
+    await component.find('input').setValue(true);
     expect(component.findComponent({name: 'AppButton'}).text()).to.eq('Sell 0');
+  });
+
+  it('commits a simple pass directly without a second confirmation', async () => {
+    let savedData: InputResponse | undefined;
+    const component = mount(OrOptions, {
+      ...globalConfig,
+      global: {...globalConfig.global, components: {'PlayerInputFactory': PlayerInputFactory}},
+      props: {
+        playerView: {},
+        playerinput: {
+          type: 'or',
+          title: '',
+          options: [{
+            type: 'option',
+            title: 'Pass for this generation',
+            buttonLabel: 'Pass',
+          }],
+        },
+        onsave: (data: InputResponse) => {
+          savedData = data;
+        },
+        showsave: true,
+      },
+    });
+
+    expect(component.find('.wf-command-grid .wf-command-tile').exists()).to.eq(false);
+    expect(component.find('.wf-command-pass-action').text()).to.contain('Pass for this generation');
+    expect(component.find('.wf-command-danger-submit').exists()).to.eq(false);
+
+    await component.find('.wf-command-pass-action').trigger('click');
+
+    expect(savedData).to.deep.eq({type: 'or', index: 0, response: {type: 'option'}});
+  });
+
+  it('commits a top-level pass directly from the bottom danger action', async () => {
+    let savedData: InputResponse | undefined;
+    const component = mount(OrOptions, {
+      ...globalConfig,
+      global: {...globalConfig.global, components: {'PlayerInputFactory': PlayerInputFactory}},
+      props: {
+        playerView: {},
+        playerinput: {
+          type: 'or',
+          title: '',
+          options: [{
+            type: 'projectCard',
+            title: 'Play project card',
+            buttonLabel: 'Play',
+            cards: [],
+            paymentOptions: {},
+          }, {
+            type: 'option',
+            title: 'Pass for this generation',
+            buttonLabel: 'Pass',
+          }],
+        },
+        onsave: (data: InputResponse) => {
+          savedData = data;
+        },
+        showsave: true,
+      },
+    });
+
+    expect(component.findAll('.wf-command-grid .wf-command-tile')).to.have.length(1);
+    expect(component.find('.wf-command-pass-action').text()).to.contain('Pass for this generation');
+    expect(component.find('.wf-command-danger-submit').exists()).to.eq(false);
+
+    await component.find('.wf-command-pass-action').trigger('click');
+
+    expect(savedData).to.deep.eq({type: 'or', index: 1, response: {type: 'option'}});
   });
 });

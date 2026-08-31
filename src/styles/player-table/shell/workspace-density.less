@@ -1,0 +1,87 @@
+// Workspace and HUD density.
+#player-home.tm-player-table:not(.tm-player-table--setup) {
+  --tm-hud-height: 44px;
+  --tm-stable-bottom-height: clamp(300px, 34vh, 384px);
+  --tm-bottom-height: var(--tm-stable-bottom-height);
+  --tm-board-zoom: 1;
+
+  grid-template-rows: var(--tm-hud-height) minmax(0, 1fr) var(--tm-bottom-height);
+  gap: 6px;
+
+  @media (max-height: 940px) {
+    --tm-stable-bottom-height: clamp(286px, 34vh, 330px);
+    --tm-board-zoom: 0.88;
+  }
+
+  @media (max-height: 820px) {
+    --tm-hud-height: 40px;
+    --tm-stable-bottom-height: clamp(220px, 32vh, 270px);
+    --tm-board-zoom: 0.74;
+  }
+
+  @media (min-height: 1000px) {
+    --tm-stable-bottom-height: clamp(340px, 34vh, 392px);
+  }
+
+  .tm-table-hud {
+    grid-template-columns: auto minmax(270px, 0.8fr) minmax(280px, 1fr) minmax(320px, 0.8fr);
+    padding: 5px 10px;
+    overflow: visible;
+  }
+
+  .tm-hud-cluster {
+    gap: 8px;
+  }
+
+  .tm-hud-number {
+    width: 34px;
+    height: 34px;
+    background-size: 74px;
+    background-position: -20px -15px;
+    font-size: 22px;
+    line-height: 36px;
+  }
+
+  .tm-hud-title {
+    font-size: 17px;
+  }
+
+  .tm-hud-subtitle {
+    font-size: 11px;
+  }
+
+  .tm-hud-glance {
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+
+    span {
+      min-width: 0;
+      max-width: 210px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-radius: 5px;
+      padding: 5px 8px;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--tm-muted);
+      font-size: 12px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+  }
+
+  .tm-status-pill,
+  .tm-active-player {
+    padding: 7px 9px;
+    font-size: 14px;
+  }
+
+  .tm-table-main {
+    grid-template-columns: var(--tm-player-width, 360px) minmax(0, 1fr) var(--tm-activity-width, 310px);
+    gap: 6px;
+  }
+}

@@ -1,6 +1,6 @@
 <template>
   <div v-if="show" :class="cssClasses">
-    {{ amount }}
+    <span>{{ amount }}</span><small v-if="showLabel">VP</small>
   </div>
 </template>
 
@@ -23,6 +23,10 @@ export default defineComponent({
     points: {
       type: Object as () => Points,
       required: true,
+    },
+    showLabel: {
+      type: Boolean,
+      default: false,
     },
   },
   computed: {

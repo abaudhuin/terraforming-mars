@@ -130,6 +130,13 @@ export default defineComponent({
       return inputComponents[input.type];
     },
     inputComponentKey(): string {
+      // A mulligan replaces the initial-card input model after the server
+      // responds. Keep the parent selection component alive across that
+      // refresh; SelectInitialCards keys each individual pool by its cards, so
+      // only the redrawn pool remounts.
+      if (this.playerinput.type === 'initialCards') {
+        return `initialCards:${this.playerView.id}`;
+      }
       return inputModelKey(this.playerinput);
     },
   },

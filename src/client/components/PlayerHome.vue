@@ -57,13 +57,6 @@
               </div>
             </div>
 
-            <div v-if="thisPlayer.underworldData.tokens.length > 0" class="tm-mini-section">
-              <div class="tm-panel-heading">
-                <span v-i18n>Underground tokens</span>
-              </div>
-              <UndergroundTokens :underworldData="thisPlayer.underworldData"/>
-            </div>
-
             <div class="tm-mini-section tm-purge-warning">
               <PurgeWarning :expectedPurgeTimeMs="game.expectedPurgeTimeMs"/>
             </div>
@@ -99,6 +92,8 @@
             type="button"
             class="tm-layout-resize-handle tm-layout-resize-handle--player"
             :aria-label="$t('Resize player panel')"
+            aria-orientation="vertical"
+            @keydown="resizeFromKeyboard('player', $event)"
             @pointerdown="startPlayerResize"></button>
         </aside>
 
@@ -107,15 +102,25 @@
             <span aria-hidden="true"></span>
           </button>
           <GameBoardView
+            ref="tableBoard"
             :game="game"
             :tileView="tileView"
             :players="playerView.players"
+            :globalDeltas="globalDeltas"
             :fitBottomInset="48"
+            :fitTopInset="boardLauncherTopInset"
             :maxBoardScale="1.48"
             @toggleTileView="cycleTileView()"
+            @panel-change="handleExtensionPanelChange"
           />
 
-          <details v-if="game.colonies.length > 0" class="tm-table-leaf tm-table-leaf--colonies" ref="colonies" id="shortkey-colonies">
+          <details
+            v-if="game.colonies.length > 0"
+            class="tm-table-leaf tm-table-leaf--colonies"
+            ref="colonies"
+            id="shortkey-colonies"
+            :open="isColonyPanelOpen"
+            @toggle="handleColonyPanelToggle">
             <summary class="tm-table-leaf-summary">
               <span class="tm-table-leaf-title" v-i18n>Colonies</span>
               <span class="tm-table-leaf-close tm-icon-control tm-icon-control--close" aria-hidden="true">
@@ -146,6 +151,8 @@
             type="button"
             class="tm-layout-resize-handle tm-layout-resize-handle--activity"
             :aria-label="$t('Resize logs')"
+            aria-orientation="vertical"
+            @keydown="resizeFromKeyboard('activity', $event)"
             @pointerdown="startActivityResize"></button>
           <div v-if="isActivityRailCollapsed" class="tm-panel-heading tm-log-collapsed-heading">
             <span v-i18n>Activity</span>
@@ -182,17 +189,14 @@
               v-if="activityMode === 'focus'"
               :key="feedbackEpoch"
               :messages="activityMessages"
-              :viewModel="playerView"
-              :globalDeltas="globalDeltas"/>
+              :viewModel="playerView"/>
             <LogPanel
               v-show="activityMode === 'history'"
               :viewModel="playerView"
               :color="thisPlayer.color"
               :step="game.step"
               :gameAge="game.gameAge"
-              :recentHistory="true"
               :liveUpdates="true"
-              :messageLimit="8"
               headerTitle="History"
               cardPanelMode="emit"
               @activity-update="handleActivityUpdate"
@@ -216,6 +220,8 @@
           type="button"
           class="tm-layout-resize-handle tm-layout-resize-handle--bottom"
           :aria-label="$t('Resize bottom panel')"
+          aria-orientation="horizontal"
+          @keydown="resizeFromKeyboard('bottom', $event)"
           @pointerdown="startBottomResize"></button>
         <section v-if="!isBottomTrayCollapsed && showActivityLogPreview && activityPreviewMessage" class="tm-log-preview-desk">
           <header class="tm-log-preview-header">
@@ -245,6 +251,21 @@
           :playerView="playerView"
           :waitingfor="playerView.waitingFor"
           :showPassiveStatus="false"/>
+
+        <aside v-if="!hasPlayerInput && game.phase !== 'end'" class="tm-waiting-planner" aria-labelledby="tm-waiting-planner-title">
+          <div class="tm-waiting-planner-copy">
+            <span class="tm-waiting-planner-kicker">
+              {{ activePlayer ? activePlayer.name + ' is playing' : $t('Waiting for the table') }}
+            </span>
+            <strong id="tm-waiting-planner-title" v-i18n>Plan your next turn</strong>
+            <span v-i18n>Review the latest change, compare players, or inspect your hand without losing your place.</span>
+          </div>
+          <div class="tm-waiting-planner-actions">
+            <button type="button" class="tm-control tm-control--review tm-control--cards" @click="openCardsOverlay" v-i18n>Review hand</button>
+            <button type="button" class="tm-control tm-control--review tm-control--players" @click="openPlayers" v-i18n>Compare players</button>
+            <button type="button" class="tm-control tm-control--review tm-control--history" @click="openHistory" v-i18n>View history</button>
+          </div>
+        </aside>
 
         <section class="tm-card-desk" :class="{'tm-card-desk--engine-only': cardsInHandCount === 0 && playerView.draftedCards.length === 0}">
           <a name="cards" class="player_home_anchor"></a>
@@ -372,13 +393,24 @@
                     <input type="search" v-model="cardOverlaySearch" :placeholder="$t('Search hand')">
                   </label>
                   <div class="tm-card-modal-controls tm-modal-filters">
-                    <button type="button" :class="cardOverlayButtonClass(cardOverlayFilter === 'playable')" @click="setCardOverlayFilter('playable')" v-i18n>Playable</button>
-                    <button type="button" :class="cardOverlayButtonClass(cardOverlayFilter === 'affordable')" @click="setCardOverlayFilter('affordable')" v-i18n>Affordable</button>
-                    <button type="button" :class="cardOverlayButtonClass(cardOverlayGroup === 'type')" @click="setCardOverlayGroup('type')" v-i18n>Type</button>
-                    <button type="button" :class="cardOverlayButtonClass(cardOverlayGroup === 'tag')" @click="setCardOverlayGroup('tag')" v-i18n>Tag</button>
-                    <button type="button" :class="cardOverlayButtonClass(cardOverlayFilter === 'warnings')" @click="setCardOverlayFilter('warnings')" v-i18n>Warning</button>
-                    <button type="button" :class="cardOverlayButtonClass(cardOverlaySort === 'cost')" @click="toggleCardOverlayCostSort()" v-i18n>Cost</button>
-                    <button type="button" :class="cardOverlayButtonClass(!cardOverlayHasActiveControls)" @click="clearCardOverlayControls()" v-i18n>All</button>
+                    <div class="tm-card-modal-control-group" role="group" :aria-label="$t('Filter cards')">
+                      <span class="tm-card-modal-control-label" v-i18n>Filter</span>
+                      <button type="button" :class="cardOverlayButtonClass(cardOverlayFilter === 'playable')" :aria-pressed="cardOverlayFilter === 'playable'" @click="setCardOverlayFilter('playable')" v-i18n>Playable</button>
+                      <button type="button" :class="cardOverlayButtonClass(cardOverlayFilter === 'affordable')" :aria-pressed="cardOverlayFilter === 'affordable'" @click="setCardOverlayFilter('affordable')" v-i18n>Affordable</button>
+                      <button type="button" :class="cardOverlayButtonClass(cardOverlayFilter === 'warnings')" :aria-pressed="cardOverlayFilter === 'warnings'" @click="setCardOverlayFilter('warnings')" v-i18n>Warnings</button>
+                    </div>
+                    <div class="tm-card-modal-control-group" role="group" :aria-label="$t('Group cards')">
+                      <span class="tm-card-modal-control-label" v-i18n>Group</span>
+                      <button type="button" :class="cardOverlayButtonClass(cardOverlayGroup === 'type')" :aria-pressed="cardOverlayGroup === 'type'" @click="setCardOverlayGroup('type')" v-i18n>Type</button>
+                      <button type="button" :class="cardOverlayButtonClass(cardOverlayGroup === 'tag')" :aria-pressed="cardOverlayGroup === 'tag'" @click="setCardOverlayGroup('tag')" v-i18n>Tag</button>
+                    </div>
+                    <div class="tm-card-modal-control-group" role="group" :aria-label="$t('Sort cards')">
+                      <span class="tm-card-modal-control-label" v-i18n>Sort</span>
+                      <button type="button" class="tm-card-modal-control tm-card-modal-control--sort" :class="{'tm-card-modal-control--active': cardOverlaySort === 'cost'}" :aria-pressed="cardOverlaySort === 'cost'" @click="toggleCardOverlayCostSort()">
+                        <span v-i18n>Cost</span><span aria-hidden="true"> ↑</span>
+                      </button>
+                    </div>
+                    <button type="button" class="tm-card-modal-reset" :disabled="!cardOverlayHasActiveControls" @click="clearCardOverlayControls()" v-i18n>Reset</button>
                   </div>
                 </div>
                 <div v-if="cardOverlayFilteredCards.length === 0" class="tm-card-modal-empty" v-i18n>No cards match</div>
@@ -411,7 +443,13 @@
                     </div>
                   </div>
                   <PlayerResources :player="selectedPlayer"/>
-                  <PlayerTags :player="selectedPlayer" :playerView="playerView" :hideZeroTags="false" :conciseTagsViewDefaultValue="false"/>
+                  <PlayerTags
+                    :player="selectedPlayer"
+                    :playerView="playerView"
+                    :hideZeroTags="false"
+                    :conciseTagsViewDefaultValue="false"
+                    :showPoints="true"
+                    :labelPoints="true"/>
                 </section>
 
                 <section class="tm-player-dossier-cards" :class="{'tm-player-dossier-cards--with-preview': playerLogPreviewMessage !== undefined}">
@@ -473,6 +511,14 @@
                   </div>
                 </section>
 
+                <button
+                  type="button"
+                  class="tm-player-dossier-resize-handle"
+                  :aria-label="$t('Resize played cards and logs')"
+                  aria-orientation="vertical"
+                  @keydown="resizeFromKeyboard('dossier', $event)"
+                  @pointerdown="startDossierResize"></button>
+
                 <section class="tm-player-dossier-log">
                   <h3 v-i18n>Logs</h3>
                   <LogPanel
@@ -516,7 +562,6 @@ import PlayerTags from '@/client/components/overview/PlayerTags.vue';
 import DynamicTitle from '@/client/components/common/DynamicTitle.vue';
 import SortableCards from '@/client/components/SortableCards.vue';
 import PurgeWarning from '@/client/components/common/PurgeWarning.vue';
-import UndergroundTokens from '@/client/components/underworld/UndergroundTokens.vue';
 import KeyboardShortcuts from '@/client/components/KeyboardShortcuts.vue';
 import GlobalParameterValue from '@/client/components/GlobalParameterValue.vue';
 import MoonGlobalParameterValue from '@/client/components/moon/MoonGlobalParameterValue.vue';
@@ -555,7 +600,10 @@ type PlayerHomeModel = {
   bottomTrayHeight: number | undefined;
   activityRailWidth: number | undefined;
   playerRailWidth: number | undefined;
+  playerDossierLogWidth: number | undefined;
   resizeTarget: ResizeTarget;
+  resizeStartCoordinate: number | undefined;
+  resizeStartValue: number | undefined;
   activityPreviewMessage: LogMessage | undefined;
   playerLogPreviewMessage: LogMessage | undefined;
   activityMode: ActivityMode;
@@ -566,6 +614,8 @@ type PlayerHomeModel = {
   feedbackColonies: Array<ColonyName>;
   feedbackEpoch: number;
   feedbackClearTimer: number | undefined;
+  activeExtensionPanel: string | undefined;
+  isColonyPanelOpen: boolean;
 }
 
 type OverlayKind = 'none' | 'board' | 'cards' | 'log' | 'player';
@@ -573,7 +623,7 @@ type CardOverlayFocus = 'balanced' | 'hand' | 'played';
 type CardOverlayFilter = 'all' | 'playable' | 'affordable' | 'warnings';
 type CardOverlayGroup = 'none' | 'type' | 'tag';
 type CardOverlaySort = 'table' | 'cost';
-type ResizeTarget = 'bottom' | 'activity' | 'player' | undefined;
+type ResizeTarget = 'bottom' | 'activity' | 'player' | 'dossier' | undefined;
 type ActivityMode = 'focus' | 'history';
 type ActivityUpdate = {messages: Array<LogMessage>, isInitial: boolean};
 
@@ -584,6 +634,7 @@ const layoutStorageKeys = {
   bottomTrayHeight: 'tm-player-table-bottom-tray-height',
   activityRailWidth: 'tm-player-table-activity-rail-width',
   playerRailWidth: 'tm-player-table-player-rail-width',
+  playerDossierLogWidth: 'tm-player-table-dossier-log-width',
   activityRailCollapsed: 'tm-player-table-activity-rail-collapsed',
   bottomTrayCollapsed: 'tm-player-table-bottom-tray-collapsed',
   activityMode: 'tm-player-table-activity-mode',
@@ -655,7 +706,10 @@ export default defineComponent({
       bottomTrayHeight: readStoredLayoutDimension(layoutStorageKeys.bottomTrayHeight),
       activityRailWidth: readStoredLayoutDimension(layoutStorageKeys.activityRailWidth),
       playerRailWidth: readStoredLayoutDimension(layoutStorageKeys.playerRailWidth),
+      playerDossierLogWidth: readStoredLayoutDimension(layoutStorageKeys.playerDossierLogWidth),
       resizeTarget: undefined,
+      resizeStartCoordinate: undefined,
+      resizeStartValue: undefined,
       activityPreviewMessage: undefined,
       playerLogPreviewMessage: undefined,
       activityMode: readActivityMode(),
@@ -666,6 +720,8 @@ export default defineComponent({
       feedbackColonies: [],
       feedbackEpoch: 0,
       feedbackClearTimer: undefined,
+      activeExtensionPanel: undefined,
+      isColonyPanelOpen: false,
     };
   },
   watch: {
@@ -686,10 +742,21 @@ export default defineComponent({
         this.activityPreviewMessage = undefined;
       }
     },
+    inputKind: function keep_map_placement_reachable(kind: string) {
+      if (kind === 'space') {
+        this.closeBoardBlockingLayers();
+      }
+    },
     playerView: {
       handler(next: PlayerViewModel, previous: PlayerViewModel | undefined) {
         if (previous !== undefined && previous.game.gameAge !== next.game.gameAge) {
           this.applyActionFeedback(getActionFeedback(previous, next));
+        } else if (previous !== undefined) {
+          const previousActivePlayer = previous.players.find((player) => player.isActive)?.color;
+          const nextActivePlayer = next.players.find((player) => player.isActive)?.color;
+          if (previousActivePlayer !== nextActivePlayer) {
+            this.applyActionFeedback({resources: [], globals: [], spaces: [], colonies: []});
+          }
         }
       },
     },
@@ -707,6 +774,18 @@ export default defineComponent({
     game(): GameModel {
       return this.playerView.game;
     },
+    boardLauncherTopInset(): number {
+      const expansions = this.game.gameOptions.expansions;
+      const launcherCount = [
+        this.game.colonies.length > 0,
+        this.game.turmoil !== undefined,
+        this.game.moon !== undefined,
+        expansions.pathfinders,
+        expansions.underworld,
+        expansions.deltaProject,
+      ].filter(Boolean).length;
+      return launcherCount > 1 ? 40 : 0;
+    },
     CardType(): typeof CardType {
       return CardType;
     },
@@ -716,17 +795,17 @@ export default defineComponent({
     tableClasses(): Record<string, boolean> {
       return {
         'tm-player-table': true,
-        'tm-player-table--second-pass': true,
-        'tm-player-table--refined': true,
         'tm-player-table--with-turmoil': this.game.turmoil !== undefined,
         'tm-player-table--acting': this.isPlayerActing(this.playerView),
         'tm-player-table--passive': !this.isPlayerActing(this.playerView),
         'tm-player-table--magnify-cards': getPreferences().magnify_cards,
         'tm-player-table--activity-collapsed': this.isActivityRailCollapsed,
         'tm-player-table--bottom-collapsed': this.isBottomTrayCollapsed,
+        'tm-player-table--board-panel-open': this.activeExtensionPanel !== undefined || this.isColonyPanelOpen,
         'tm-player-table--two-row-actions':
           this.bottomTrayHeight !== undefined && this.bottomTrayHeight >= twoRowActionTrayHeight,
         [`tm-player-table--input-${this.inputKind}`]: true,
+        [`tm-player-table--players-${this.playerView.players.length}`]: true,
         'tm-player-table--setup': this.thisPlayer.tableau.length === 0,
       };
     },
@@ -740,6 +819,9 @@ export default defineComponent({
       }
       if (this.playerRailWidth !== undefined) {
         style['--tm-player-width'] = `${this.playerRailWidth}px`;
+      }
+      if (this.playerDossierLogWidth !== undefined) {
+        style['--tm-dossier-log-width'] = `${this.playerDossierLogWidth}px`;
       }
       return style;
     },
@@ -782,6 +864,8 @@ export default defineComponent({
         return '';
       case 'log':
         return '';
+      case 'cards':
+        return '';
       case 'player':
         return '';
       case 'none':
@@ -794,6 +878,8 @@ export default defineComponent({
         return 'Mars board';
       case 'log':
         return 'Game log';
+      case 'cards':
+        return 'Cards';
       case 'player':
         return this.selectedPlayer?.name ?? 'Player details';
       case 'none':
@@ -807,6 +893,9 @@ export default defineComponent({
       return `GEN ${this.game.generation}`;
     },
     turnStatusLabel(): string {
+      if (this.thisPlayer.tableau.length === 0) {
+        return 'Choose your setup';
+      }
       if (this.playerView.waitingFor !== undefined && !this.playerView.waitingFor.optional) {
         return 'Your turn';
       }
@@ -893,7 +982,6 @@ export default defineComponent({
     PlayerTags,
     SortableCards,
     PurgeWarning,
-    UndergroundTokens,
     KeyboardShortcuts,
     GlobalParameterValue,
     MoonGlobalParameterValue,
@@ -901,10 +989,13 @@ export default defineComponent({
 
   mounted() {
     document.addEventListener('keydown', this.handleGlobalKeydown);
+    window.addEventListener('resize', this.normalizeLayoutDimensions);
+    this.$nextTick(this.normalizeLayoutDimensions);
   },
 
   beforeUnmount() {
     document.removeEventListener('keydown', this.handleGlobalKeydown);
+    window.removeEventListener('resize', this.normalizeLayoutDimensions);
     this.removeLayoutResizeListeners();
     if (this.feedbackClearTimer !== undefined) {
       window.clearTimeout(this.feedbackClearTimer);
@@ -916,6 +1007,31 @@ export default defineComponent({
     setActivityMode(mode: ActivityMode): void {
       this.activityMode = mode;
       localStorage.setItem(layoutStorageKeys.activityMode, mode);
+    },
+    openHistory(): void {
+      this.activityMode = 'history';
+      this.isActivityRailCollapsed = false;
+      localStorage.setItem(layoutStorageKeys.activityMode, 'history');
+      storeLayoutBoolean(layoutStorageKeys.activityRailCollapsed, false);
+    },
+    handleExtensionPanelChange(panel: string | undefined): void {
+      this.activeExtensionPanel = panel;
+      if (panel !== undefined) {
+        this.isColonyPanelOpen = false;
+      }
+    },
+    handleColonyPanelToggle(event: Event): void {
+      const details = event.currentTarget;
+      if (!(details instanceof HTMLDetailsElement)) {
+        return;
+      }
+      this.isColonyPanelOpen = details.open;
+      if (!details.open) {
+        return;
+      }
+      const board = this.$refs.tableBoard as {closePanels?: () => void} | undefined;
+      board?.closePanels?.();
+      this.activeExtensionPanel = undefined;
     },
     handleActivityUpdate(update: ActivityUpdate): void {
       const messages = update.messages.filter((message) => message.type !== LogMessageType.NEW_GENERATION);
@@ -940,6 +1056,15 @@ export default defineComponent({
     },
     applyActionFeedback(feedback: ActionFeedback): void {
       if (feedback.resources.length === 0 && feedback.globals.length === 0 && feedback.spaces.length === 0 && feedback.colonies.length === 0) {
+        if (this.feedbackClearTimer !== undefined) {
+          window.clearTimeout(this.feedbackClearTimer);
+          this.feedbackClearTimer = undefined;
+        }
+        this.resourceDeltas = [];
+        this.globalDeltas = [];
+        this.feedbackSpaces = [];
+        this.feedbackColonies = [];
+        this.clearSurfaceFeedback();
         return;
       }
       this.resourceDeltas = feedback.resources;
@@ -1008,30 +1133,120 @@ export default defineComponent({
     startPlayerResize(event: PointerEvent): void {
       this.beginLayoutResize('player', event);
     },
+    startDossierResize(event: PointerEvent): void {
+      this.beginLayoutResize('dossier', event);
+    },
     beginLayoutResize(target: Exclude<ResizeTarget, undefined>, event: PointerEvent): void {
       event.preventDefault();
       this.resizeTarget = target;
+      this.resizeStartCoordinate = target === 'bottom' ? event.clientY : event.clientX;
+      this.resizeStartValue = this.currentLayoutDimension(target);
       if (event.currentTarget instanceof HTMLElement) {
         event.currentTarget.setPointerCapture?.(event.pointerId);
       }
       window.addEventListener('pointermove', this.updateLayoutResize);
       window.addEventListener('pointerup', this.stopLayoutResize, {once: true});
-      this.updateLayoutResize(event);
+      window.addEventListener('pointercancel', this.stopLayoutResize, {once: true});
     },
     updateLayoutResize(event: PointerEvent): void {
+      if (this.resizeTarget === undefined ||
+          this.resizeStartCoordinate === undefined ||
+          this.resizeStartValue === undefined) {
+        return;
+      }
+      const coordinate = this.resizeTarget === 'bottom' ? event.clientY : event.clientX;
+      const delta = coordinate - this.resizeStartCoordinate;
       if (this.resizeTarget === 'bottom') {
-        const minHeight = window.innerHeight < 820 ? 240 : 300;
-        const maxHeight = Math.min(Math.round(window.innerHeight * 0.62), Math.max(minHeight, window.innerHeight - 170));
-        this.bottomTrayHeight = this.clampLayoutValue(window.innerHeight - event.clientY - 8, minHeight, maxHeight);
+        this.setLayoutDimension('bottom', this.resizeStartValue - delta);
       }
       if (this.resizeTarget === 'activity') {
-        const maxWidth = Math.min(820, Math.max(280, window.innerWidth - 620));
-        this.activityRailWidth = this.clampLayoutValue(window.innerWidth - event.clientX - 8, 220, maxWidth);
+        this.setLayoutDimension('activity', this.resizeStartValue - delta);
       }
       if (this.resizeTarget === 'player') {
-        const maxWidth = Math.min(620, Math.max(360, window.innerWidth - 760));
-        this.playerRailWidth = this.clampLayoutValue(event.clientX - 8, 260, maxWidth);
+        this.setLayoutDimension('player', this.resizeStartValue + delta);
       }
+      if (this.resizeTarget === 'dossier') {
+        this.setLayoutDimension('dossier', this.resizeStartValue - delta);
+      }
+    },
+    currentLayoutDimension(target: Exclude<ResizeTarget, undefined>): number {
+      const selector = target === 'bottom' ? '.tm-bottom-tray' :
+        target === 'activity' ? '.tm-activity-rail' :
+        target === 'dossier' ? '.tm-player-dossier-log' : '.tm-player-rail';
+      const element = (this.$el as HTMLElement | undefined)?.querySelector<HTMLElement>(selector);
+      const measured = target === 'bottom' ? element?.getBoundingClientRect().height : element?.getBoundingClientRect().width;
+      if (measured !== undefined && measured > 0) {
+        return measured;
+      }
+      if (target === 'bottom') return this.bottomTrayHeight ?? 380;
+      if (target === 'activity') return this.activityRailWidth ?? 310;
+      if (target === 'dossier') return this.playerDossierLogWidth ?? 420;
+      return this.playerRailWidth ?? 360;
+    },
+    layoutBounds(target: Exclude<ResizeTarget, undefined>): {min: number, max: number} {
+      if (target === 'dossier') {
+        const dossier = (this.$el as HTMLElement | undefined)?.querySelector<HTMLElement>('.tm-player-dossier');
+        const dossierWidth = dossier?.getBoundingClientRect().width ?? Math.min(1400, window.innerWidth - 96);
+        return {min: 280, max: Math.max(280, dossierWidth - 480)};
+      }
+
+      const root = this.$el as HTMLElement | undefined;
+      const rect = root?.getBoundingClientRect();
+      if (target === 'bottom') {
+        const tableHeight = Math.max(720, rect?.height ?? 0, window.innerHeight);
+        return {min: 150, max: Math.min(560, Math.max(150, tableHeight - 420))};
+      }
+
+      const tableWidth = Math.max(1280, rect?.width ?? 0, window.innerWidth);
+      const boardFloor = tableWidth < 1440 ? 450 : 560;
+      const shellAllowance = 40;
+      if (target === 'activity') {
+        const playerWidth = this.playerRailWidth ?? 360;
+        return {
+          min: 200,
+          max: Math.min(760, Math.max(200, tableWidth - boardFloor - shellAllowance - playerWidth)),
+        };
+      }
+
+      const activityWidth = this.activityRailWidth ?? 310;
+      return {
+        min: 260,
+        max: Math.min(720, Math.max(240, tableWidth - boardFloor - shellAllowance - activityWidth)),
+      };
+    },
+    setLayoutDimension(target: Exclude<ResizeTarget, undefined>, value: number): void {
+      const bounds = this.layoutBounds(target);
+      const clamped = this.clampLayoutValue(value, bounds.min, bounds.max);
+      if (target === 'bottom') this.bottomTrayHeight = clamped;
+      if (target === 'activity') this.activityRailWidth = clamped;
+      if (target === 'player') this.playerRailWidth = clamped;
+      if (target === 'dossier') this.playerDossierLogWidth = clamped;
+    },
+    normalizeLayoutDimensions(): void {
+      if (this.bottomTrayHeight !== undefined) this.setLayoutDimension('bottom', this.bottomTrayHeight);
+      if (this.activityRailWidth !== undefined) this.setLayoutDimension('activity', this.activityRailWidth);
+      if (this.playerRailWidth !== undefined) this.setLayoutDimension('player', this.playerRailWidth);
+      if (this.playerDossierLogWidth !== undefined) this.setLayoutDimension('dossier', this.playerDossierLogWidth);
+    },
+    resizeFromKeyboard(target: Exclude<ResizeTarget, undefined>, event: KeyboardEvent): void {
+      let delta = 0;
+      if (target === 'player') {
+        if (event.key === 'ArrowRight') delta = 16;
+        if (event.key === 'ArrowLeft') delta = -16;
+      } else if (target === 'activity' || target === 'dossier') {
+        if (event.key === 'ArrowLeft') delta = 16;
+        if (event.key === 'ArrowRight') delta = -16;
+      } else {
+        if (event.key === 'ArrowUp') delta = 16;
+        if (event.key === 'ArrowDown') delta = -16;
+      }
+      if (delta === 0) return;
+      event.preventDefault();
+      this.setLayoutDimension(target, this.currentLayoutDimension(target) + delta);
+      if (target === 'bottom') storeLayoutDimension(layoutStorageKeys.bottomTrayHeight, this.bottomTrayHeight);
+      if (target === 'activity') storeLayoutDimension(layoutStorageKeys.activityRailWidth, this.activityRailWidth);
+      if (target === 'player') storeLayoutDimension(layoutStorageKeys.playerRailWidth, this.playerRailWidth);
+      if (target === 'dossier') storeLayoutDimension(layoutStorageKeys.playerDossierLogWidth, this.playerDossierLogWidth);
     },
     stopLayoutResize(): void {
       const target = this.resizeTarget;
@@ -1044,12 +1259,18 @@ export default defineComponent({
       if (target === 'player') {
         storeLayoutDimension(layoutStorageKeys.playerRailWidth, this.playerRailWidth);
       }
+      if (target === 'dossier') {
+        storeLayoutDimension(layoutStorageKeys.playerDossierLogWidth, this.playerDossierLogWidth);
+      }
       this.resizeTarget = undefined;
+      this.resizeStartCoordinate = undefined;
+      this.resizeStartValue = undefined;
       this.removeLayoutResizeListeners();
     },
     removeLayoutResizeListeners(): void {
       window.removeEventListener('pointermove', this.updateLayoutResize);
       window.removeEventListener('pointerup', this.stopLayoutResize);
+      window.removeEventListener('pointercancel', this.stopLayoutResize);
     },
     handleGlobalKeydown(event: KeyboardEvent): void {
       if (event.key !== 'Escape') {
@@ -1082,6 +1303,15 @@ export default defineComponent({
       if (overlay === 'cards') {
         this.cardOverlayFocus = 'hand';
       }
+    },
+    closeBoardBlockingLayers(): void {
+      this.closeOverlay();
+      this.isColonyPanelOpen = false;
+      this.activeExtensionPanel = undefined;
+      this.$nextTick(() => {
+        const board = this.$refs.tableBoard as {closePanels?: () => void} | undefined;
+        board?.closePanels?.();
+      });
     },
     openCardsOverlay(): void {
       this.cardOverlayFocus = 'hand';

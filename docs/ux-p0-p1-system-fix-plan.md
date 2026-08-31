@@ -296,11 +296,11 @@ Acceptance:
 5. Normalize card rails, filters, overlays, and log previews.
 6. Normalize module docking and table tools.
 7. Clean setup/endgame leaks.
-8. Build, run scenario screenshots, inspect, and iterate.
+8. Build, run named golden/detail evidence, inspect at full resolution, and iterate.
 
 ## Verification Plan
 
-Use the scenario lab rather than manual happy-path clicking only.
+Use the named visual test cases rather than manual happy-path clicking only.
 
 Build:
 
@@ -311,7 +311,9 @@ npm run build
 Run server on an available local port, then capture at least:
 
 ```bash
-TM_BASE_URL=http://localhost:8081 TM_SCENARIOS=all TM_VIEWPORTS=1600x900,1440x900 npm run visual:scenarios
+TM_BASE_URL=http://localhost:8081 npm run visual:golden
+TM_BASE_URL=http://localhost:8081 TM_TEST_PASS=detail TM_TEST_AREAS=actions npm run visual:test-cases
+TM_BASE_URL=http://localhost:8081 npm run visual:continuous
 ```
 
 Minimum review targets:
@@ -328,7 +330,7 @@ Minimum review targets:
 - `board-variants-ma`: unfamiliar milestone/award labels.
 - `endgame-all-scoring`: endgame visual continuity.
 
-For each scenario, inspect screenshots for:
+For each named visual test case, inspect screenshots for:
 
 - no clipped text, icons, or cards;
 - no accidental duplicate UI;
@@ -345,7 +347,7 @@ For each scenario, inspect screenshots for:
 - No replacement of the card renderer.
 - No new design framework dependency unless already present and necessary.
 - No attempt to make every expansion perfect beyond the P0/P1 layout and
-  discoverability failures identified by the scenario pass.
+  discoverability failures identified by the named evidence pass.
 
 ## Final Continuation Audit
 
@@ -369,7 +371,7 @@ Fixes added:
 
 Current verification:
 
-- Full scenario lab rerun with all 15 available scenario presets.
+- Full Priority-0 golden pass, affected detail cases, and continuous journey.
 - Desktop viewports: `1440x900` and `1600x1000`.
 - Screenshots generated: 566.
 - Skipped screenshots: 0.

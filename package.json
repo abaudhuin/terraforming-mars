@@ -89,8 +89,10 @@
     "dev:client": "vite build --watch --mode development",
     "dev:server": "cross-env NODE_ENV=development tsx watch --clear-screen=false src/server/server.ts",
     "visual:install": "playwright install chromium",
-    "visual:smoke": "node scripts/visual-smoke.mjs",
-    "visual:scenarios": "node scripts/visual-scenarios.mjs"
+    "visual:list": "TM_LIST_TEST_CASES=1 node scripts/visual-test-cases.mjs",
+    "visual:test-cases": "node scripts/visual-test-cases.mjs",
+    "visual:golden": "TM_TEST_PASS=golden node scripts/visual-test-cases.mjs",
+    "visual:continuous": "node scripts/visual-continuous-flow.mjs"
   },
   "repository": {
     "type": "git",

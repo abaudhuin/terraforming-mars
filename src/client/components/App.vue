@@ -3,7 +3,7 @@
     <section>
       <dialog id="alert-dialog" class="alert-dialog">
         <form method="dialog">
-          <p id="alert-title" class="title" v-i18n>Error with input</p>
+          <p id="alert-dialog-title" class="title" v-i18n>Error with input</p>
           <p id="alert-dialog-message"></p>
           <menu class="dialog-menu centered-content">
             <button id="alert-dialog-button" class="btn btn-lg btn-primary">OK</button>
@@ -44,7 +44,7 @@
       <LoginHome v-else-if="screen === 'login-home'"/>
       <Help v-else-if="screen === 'help'"/>
     </div>
-    <div class="notice" v-i18n>
+    <div v-if="screen === 'start-screen' || screen === 'the-end'" class="notice" v-i18n>
       Not affiliated with FryxGames, Asmodee Digital or Steam in any way.
     </div>
   </div>
@@ -156,17 +156,24 @@ export default defineComponent({
       const buttonElement: HTMLElement | null = document.getElementById('alert-dialog-button');
       const messageElement: HTMLElement | null = document.getElementById('alert-dialog-message');
       const titleElement: HTMLElement | null = document.getElementById('alert-dialog-title');
-      if (buttonElement !== null && titleElement !== null && messageElement !== null && dialogElement !== null && hasShowModal(dialogElement)) {
+      if (buttonElement !== null && titleElement !== null && messageElement !== null && dialogElement !== null) {
         messageElement.innerHTML = $t(message);
         titleElement.textContent = $t(title);
         const handler = () => {
           buttonElement.removeEventListener('click', handler);
+          dialogElement.classList.remove('alert-dialog--fallback-open');
+          dialogElement.removeAttribute('open');
           cb();
         };
         buttonElement.addEventListener('click', handler);
-        showModal(dialogElement);
+        if (hasShowModal(dialogElement)) {
+          showModal(dialogElement);
+        } else {
+          dialogElement.setAttribute('open', '');
+          dialogElement.classList.add('alert-dialog--fallback-open');
+        }
       } else {
-        alert(message);
+        console.error(`Unable to render application alert: ${title}: ${message}`);
         cb();
       }
     },
@@ -243,8 +250,9 @@ export default defineComponent({
   },
   mounted() {
     setDocumentTitle();
-    if (!windowHasHTMLDialogElement()) {
-      dialogPolyfill.registerDialog(document.getElementById('alert-dialog') as HTMLDialogElement);
+    const alertDialog = document.getElementById('alert-dialog') as HTMLDialogElement;
+    if (!windowHasHTMLDialogElement() || !hasShowModal(alertDialog)) {
+      dialogPolyfill.registerDialog(alertDialog);
     }
     const currentPathname = getLastPathSegment();
     const app = this as unknown as MainAppData & {updatePlayer(): void; updateSpectator(): void};

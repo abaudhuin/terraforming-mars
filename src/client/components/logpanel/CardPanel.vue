@@ -1,7 +1,13 @@
 <template>
   <div class="card-panel" :class="{'card-panel--embedded': !showClose}" v-if="message !== undefined && show">
     <AppButton v-if="showClose" size="big" type="close" :disableOnServerBusy="false" @click="hideMe" align="right"/>
-    <div class="log-panel-card cardbox" v-for="name in cards" :key="name">
+    <div
+      class="log-panel-card cardbox"
+      :class="cardOutcomeClass(index)"
+      :data-card-outcome="cardOutcomes[index]?.toLowerCase()"
+      v-for="(name, index) in cards"
+      :key="name">
+      <span v-if="cardOutcomes[index]" class="tm-card-outcome">{{ cardOutcomes[index] }}</span>
       <Card :card="{name, isSelfReplicatingRobotsCard: isSelfReplicatingRobotsCard(name), resources: getResourcesOnCard(name)}"/>
     </div>
     <div class="log-panel-card cardbox" v-for="name in globalEvents" :key="name">
@@ -44,6 +50,11 @@ export default defineComponent({
       required: false,
       default: true,
     },
+    cardOutcomes: {
+      type: Array as () => Array<string>,
+      required: false,
+      default: () => [],
+    },
   },
   components: {
     AppButton,
@@ -68,6 +79,13 @@ export default defineComponent({
     },
   },
   methods: {
+    cardOutcomeClass(index: number): Record<string, boolean> {
+      const outcome = this.cardOutcomes[index]?.toLowerCase();
+      return {
+        'log-panel-card--labeled': outcome !== undefined,
+        [`log-panel-card--${outcome}`]: outcome !== undefined,
+      };
+    },
     hideMe() {
       this.$emit('hide');
     },

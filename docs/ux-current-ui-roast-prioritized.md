@@ -5,7 +5,7 @@ Date: 2026-07-03
 Scope: 16:9 desktop only.
 
 This document is a critique pass, not an implementation plan. It uses the local
-visual scenario lab to inspect the current redesigned UI across setup, active
+named visual test cases to inspect the current redesigned UI across setup, active
 turns, waiting turns, card play/payment, player inspection, extensions, and
 endgame.
 
@@ -22,7 +22,8 @@ Visual scenario batch:
 
 - Output: `/tmp/tm-roast-visuals-all`
 - Viewport: `1600x900`
-- Scenarios: all built-in scenario presets from `scripts/visual-scenarios.mjs`
+- Evidence: the Priority-0 golden pass and affected component-detail cases from
+  `scripts/visual-test-cases.mjs`
 - Screenshots captured: `283`
 - Skipped screenshots: `0`
 - Page errors: `0`
@@ -31,7 +32,7 @@ Visual scenario batch:
 
 Review method:
 
-- Generated a full all-scenario batch with `TM_SCENARIOS=all`.
+- Generated a full batch with the legacy preset runner (since removed).
 - Built one contact sheet per scenario in `/tmp/tm-roast-contact-sheets`.
 - Visually reviewed all 15 contact sheets, covering all 283 screenshots.
 - Opened individual screenshots for states where the contact sheet showed a

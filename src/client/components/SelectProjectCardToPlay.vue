@@ -5,11 +5,13 @@
   <div class="tm-project-card-chooser" :class="{'tm-project-card-chooser--single': cards.length === 1}">
     <label
       v-for="availableCard in cards"
-      class="payments_cards tm-project-card-option"
+      class="payments_cards tm-project-card-option tm-selectable-card"
       :class="{
         'tm-project-card-option--selected': availableCard.name === cardName,
         'tm-project-card-option--disabled': availableCard.isDisabled === true,
         'tm-project-card-option--standard': availableCard.standardProjectCanPayWith !== undefined,
+        'tm-selectable-card--selected': availableCard.name === cardName,
+        'tm-selectable-card--disabled': availableCard.isDisabled === true,
       }"
       :key="availableCard.name">
       <input v-if="!availableCard.isDisabled" class="hidden" type="radio" v-model="cardName" :value="availableCard.name" >
@@ -19,8 +21,14 @@
 
   <section v-if="card !== undefined" class="tm-project-payment-side">
     <header class="tm-project-payment-heading">
-      <span v-i18n>Payment</span>
-      <strong>{{ cost }} M€</strong>
+      <span>
+        <small v-i18n>Selected project</small>
+        <strong>{{ $t(card.name) }}</strong>
+      </span>
+      <span>
+        <small v-i18n>Cost</small>
+        <strong>{{ cost }} M€</strong>
+      </span>
     </header>
 
     <div class="tm-project-payment-warnings">
@@ -49,7 +57,7 @@
       :order="order"
       :ledger="ledger"
       :showsave="showsave"
-      :buttonLabel="playerinput.buttonLabel"
+      :buttonLabel="commitLabel"
       @change="(p) => payment = p"
       @save="doSave"/>
   </section>
@@ -124,6 +132,12 @@ export default defineComponent({
     showPaymentSection(): boolean {
       return this.card !== undefined && this.card.isDisabled !== true;
     },
+    commitLabel(): string {
+      if (this.card?.standardProjectCanPayWith !== undefined) {
+        return 'Launch standard project';
+      }
+      return 'Play selected card';
+    },
   },
   watch: {
     // Vue runs watchers before re-rendering the component that owns them, so
@@ -141,22 +155,20 @@ export default defineComponent({
     },
   },
   data() {
-    let card: CardModel | undefined;
     let cards: ReadonlyArray<CardModel> = [];
     if ((this.playerinput?.cards?.length ?? 0) > 0) {
       cards = CardOrderStorage.getOrdered(
         CardOrderStorage.getCardOrder(this.playerView.id),
         this.playerinput.cards,
       );
-      card = cards[0];
     }
     return {
-      cardName: card?.name,
-      card: card,
-      reserveUnits: card?.reserveUnits ?? Units.EMPTY,
+      cardName: undefined,
+      card: undefined as CardModel | undefined,
+      reserveUnits: Units.EMPTY,
       cards: cards,
-      cost: card?.calculatedCost ?? 0,
-      tags: card !== undefined ? getCardOrThrow(card.name).tags : [],
+      cost: 0,
+      tags: [] as Array<Tag>,
       available: Units.of({}),
     };
   },
@@ -166,10 +178,9 @@ export default defineComponent({
     WarningsComponent,
   },
   created() {
-    if (this.cards.length === 0) {
-      return;
-    }
-    this.updateAvailableUnits();
+    // Deliberately wait for the player to select a card. Showing a payment
+    // allocation for the first card would imply intent that the player has not
+    // expressed yet.
   },
   methods: {
     getCard() {

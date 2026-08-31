@@ -1,0 +1,57 @@
+// Bottom-tray frame density.
+#player-home.tm-player-table:not(.tm-player-table--setup) {
+
+  .tm-bottom-tray {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .tm-bottom-tray:has(.tm-action-workbench .wf-component--select-card) {
+    grid-template-columns: minmax(0, 1fr);
+
+    .tm-card-desk {
+      display: none;
+    }
+  }
+
+  .tm-bottom-tray > section {
+    padding: 7px;
+  }
+
+  .tm-panel-heading {
+    min-height: 22px;
+    margin-bottom: 5px;
+    font-size: 15px;
+  }
+
+  &.tm-player-table--passive {
+    .tm-action-workbench {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      align-content: stretch;
+      align-items: stretch;
+    }
+
+    .tm-action-workbench > div:not(.tm-panel-heading) {
+      min-height: 0;
+      height: 100%;
+      display: grid;
+      align-items: center;
+    }
+
+    .tm-passive-waiting-message {
+      min-height: 86px;
+      border-radius: 7px;
+      border: 1px solid var(--tm-border-soft);
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.045);
+      color: var(--tm-muted);
+      font-family: Prototype, sans-serif;
+      font-size: 22px;
+      line-height: 1.1;
+      text-align: center;
+    }
+  }
+}

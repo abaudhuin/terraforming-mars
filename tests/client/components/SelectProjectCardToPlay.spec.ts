@@ -746,6 +746,13 @@ describe('SelectProjectCardToPlay', () => {
 
     const vm = wrapper.vm as any;
     const tester = new PaymentTester(wrapper);
+    expect(vm.cardName).to.eq(undefined);
+
+    // A project must be chosen before its payment form is created.
+    vm.cardName = CardName.BIRDS;
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.$nextTick();
+
     expect(vm.cardName).to.eq(CardName.BIRDS);
     tester.expectValue('megacredits', 10);
 
@@ -803,7 +810,7 @@ describe('SelectProjectCardToPlay', () => {
       playerInput.cards![0].standardProjectCanPayWith = options.canPayWith;
     }
 
-    return mount(SelectProjectCardToPlay, {
+    const wrapper = mount(SelectProjectCardToPlay, {
       ...globalConfig,
       props: {
         playerView: playerView,
@@ -815,5 +822,10 @@ describe('SelectProjectCardToPlay', () => {
         showtitle: true,
       },
     });
+
+    // Purchase-focused tests begin after the player has explicitly chosen the
+    // only card. Neutral-state behavior is covered separately above.
+    (wrapper.vm as any).cardName = cardName;
+    return wrapper;
   };
 });

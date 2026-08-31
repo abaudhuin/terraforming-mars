@@ -68,10 +68,17 @@ export default defineComponent({
       required: false,
       default: 'Victory Points',
     },
+    showXAxisTitle: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
   },
   methods: {
     getLabels: function(): Array<number> {
-      return Array.from({length: this.generation}, (_, index) => index + 1);
+      const recordedGenerations = Math.max(0, ...this.datasets.map((dataset) => dataset.data.length));
+      const visibleGenerations = recordedGenerations > 0 ? recordedGenerations : Math.max(1, this.generation);
+      return Array.from({length: visibleGenerations}, (_, index) => index + 1);
     },
     getAllPlayerDataSet: function(): Array<ChartDataSet> {
       return this.datasets.map((dataset) => {
@@ -124,7 +131,7 @@ export default defineComponent({
                 },
               },
               x: {
-                title: {text: translateText('Generation'), display: true},
+                title: {text: translateText('Generation'), display: this.showXAxisTitle},
                 offset: true,
               },
             },

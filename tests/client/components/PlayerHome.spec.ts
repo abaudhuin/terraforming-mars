@@ -118,7 +118,7 @@ describe('PlayerHome', () => {
     expect(wrapper.find('.tm-action-workbench').exists()).to.be.true;
   });
 
-  it('uses a Focus/History activity rail and clamps available colony fleets', () => {
+  it('uses a stable Focus/History activity rail and clamps available colony fleets', async () => {
     const thisPlayer = fakePublicPlayerModel({
       tableau: [{name: CardName.ACQUIRED_COMPANY}],
       fleetSize: 2,
@@ -138,9 +138,19 @@ describe('PlayerHome', () => {
     });
 
     expect(wrapper.findComponent({name: 'ActionSpotlight'}).exists()).to.be.true;
-    expect(wrapper.findComponent({name: 'LogPanel'}).props('headerTitle')).to.eq('History');
+    const history = wrapper.findComponent({name: 'LogPanel'});
+    expect(history.props('headerTitle')).to.eq('History');
+    expect(history.props('recentHistory')).to.be.false;
+    expect(history.props('messageLimit')).to.eq(0);
     expect(wrapper.findAll('.tm-activity-mode-tabs button').map((button) => button.text())).to.deep.eq(['Focus', 'History']);
     expect((wrapper.vm as any).getAvailableFleetCount(thisPlayer)).to.eq(0);
+
+    await wrapper.findAll('.tm-activity-mode-tabs button')[1].trigger('click');
+    expect((wrapper.vm as any).activityMode).to.eq('history');
+    expect(wrapper.findComponent({name: 'ActionSpotlight'}).exists()).to.be.false;
+
+    await wrapper.findAll('.tm-activity-mode-tabs button')[0].trigger('click');
+    expect(wrapper.findComponent({name: 'ActionSpotlight'}).exists()).to.be.true;
   });
 
   it('persists independently collapsible and resizable table panels', async () => {
@@ -171,6 +181,151 @@ describe('PlayerHome', () => {
     (wrapper.vm as any).resizeTarget = 'player';
     (wrapper.vm as any).stopLayoutResize();
     expect(localStorage.getItem('tm-player-table-player-rail-width')).to.eq('418');
+  });
+
+  it('resizes from the grab-time width without jumping on pointer-down', () => {
+    const thisPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}]});
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {
+        methods: {
+          getVisibilityState: () => true,
+          setVisibilityState: () => {},
+        },
+      } as any,
+      props: {
+        playerView: fakePlayerViewModel({thisPlayer, players: [thisPlayer]}),
+      },
+    });
+    const vm = wrapper.vm as any;
+    vm.playerRailWidth = 360;
+    const previousInnerWidth = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', {configurable: true, value: 1600});
+
+    vm.beginLayoutResize('player', {
+      preventDefault: () => {},
+      currentTarget: null,
+      pointerId: 1,
+      clientX: 320,
+      clientY: 0,
+    });
+    expect(vm.playerRailWidth).to.eq(360);
+
+    vm.updateLayoutResize({clientX: 352, clientY: 0});
+    expect(vm.playerRailWidth).to.eq(392);
+    vm.stopLayoutResize();
+    expect(localStorage.getItem('tm-player-table-player-rail-width')).to.eq('392');
+
+    Object.defineProperty(window, 'innerWidth', {configurable: true, value: previousInnerWidth});
+  });
+
+  it('offers useful side-panel and tray ranges at the minimum table size', () => {
+    const thisPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}]});
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {
+        methods: {getVisibilityState: () => true, setVisibilityState: () => {}},
+      } as any,
+      props: {playerView: fakePlayerViewModel({thisPlayer, players: [thisPlayer]})},
+    });
+    const vm = wrapper.vm as any;
+    const previousWidth = window.innerWidth;
+    const previousHeight = window.innerHeight;
+    Object.defineProperty(window, 'innerWidth', {configurable: true, value: 1280});
+    Object.defineProperty(window, 'innerHeight', {configurable: true, value: 720});
+
+    try {
+      vm.setLayoutDimension('player', -1000);
+      expect(vm.playerRailWidth).to.eq(260);
+      vm.setLayoutDimension('player', 1000);
+      expect(vm.playerRailWidth).to.be.at.least(470);
+
+      vm.playerRailWidth = 360;
+      vm.setLayoutDimension('activity', -1000);
+      expect(vm.activityRailWidth).to.eq(200);
+      vm.setLayoutDimension('activity', 1000);
+      expect(vm.activityRailWidth).to.be.at.least(420);
+
+      vm.setLayoutDimension('bottom', -1000);
+      expect(vm.bottomTrayHeight).to.eq(150);
+      vm.setLayoutDimension('bottom', 1000);
+      expect(vm.bottomTrayHeight).to.eq(300);
+    } finally {
+      Object.defineProperty(window, 'innerWidth', {configurable: true, value: previousWidth});
+      Object.defineProperty(window, 'innerHeight', {configurable: true, value: previousHeight});
+      wrapper.unmount();
+    }
+  });
+
+  it('closes board-blocking review layers when space placement starts', async () => {
+    const thisPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}]});
+    const initialView = fakePlayerViewModel({
+      thisPlayer,
+      players: [thisPlayer],
+      waitingFor: {type: 'option', title: 'Choose', buttonLabel: 'Continue'},
+    });
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {
+        methods: {getVisibilityState: () => true, setVisibilityState: () => {}},
+      } as any,
+      props: {playerView: initialView},
+    });
+    const vm = wrapper.vm as any;
+    vm.activeOverlay = 'cards';
+    vm.isColonyPanelOpen = true;
+    vm.activeExtensionPanel = 'turmoil';
+
+    await wrapper.setProps({
+      playerView: {
+        ...initialView,
+        waitingFor: {type: 'space', title: 'Place greenery', spaces: ['01']},
+      },
+    });
+    await wrapper.vm.$nextTick();
+
+    expect(vm.activeOverlay).to.eq('none');
+    expect(vm.isColonyPanelOpen).to.be.false;
+    expect(vm.activeExtensionPanel).to.eq(undefined);
+    wrapper.unmount();
+  });
+
+  it('resizes and persists the dossier split from its grab-time width', async () => {
+    const thisPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}]});
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {
+        methods: {
+          getVisibilityState: () => true,
+          setVisibilityState: () => {},
+        },
+      } as any,
+      props: {
+        playerView: fakePlayerViewModel({thisPlayer, players: [thisPlayer]}),
+      },
+    });
+    const vm = wrapper.vm as any;
+    vm.playerDossierLogWidth = 420;
+    const previousInnerWidth = window.innerWidth;
+    Object.defineProperty(window, 'innerWidth', {configurable: true, value: 1600});
+
+    vm.beginLayoutResize('dossier', {
+      preventDefault: () => {},
+      currentTarget: null,
+      pointerId: 1,
+      clientX: 900,
+      clientY: 0,
+    });
+    expect(vm.playerDossierLogWidth).to.eq(420);
+
+    vm.updateLayoutResize({clientX: 868, clientY: 0});
+    expect(vm.playerDossierLogWidth).to.eq(452);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.attributes('style')).to.contain('--tm-dossier-log-width: 452px');
+
+    vm.stopLayoutResize();
+    expect(localStorage.getItem('tm-player-table-dossier-log-width')).to.eq('452');
+    Object.defineProperty(window, 'innerWidth', {configurable: true, value: previousInnerWidth});
   });
 
   it('preserves an open overlay when a refreshed player model arrives', async () => {
@@ -244,6 +399,68 @@ describe('PlayerHome', () => {
       amount: 5,
       production: 0,
     });
+    wrapper.unmount();
+  });
+
+  it('clears prior feedback on the next state change without surface deltas', () => {
+    const playerView = fakePlayerViewModel();
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {
+        methods: {getVisibilityState: () => true, setVisibilityState: () => {}},
+      } as any,
+      props: {playerView},
+    });
+    const vm = wrapper.vm as any;
+    vm.resourceDeltas = [{
+      playerColor: playerView.thisPlayer.color,
+      playerName: playerView.thisPlayer.name,
+      resource: Resource.MEGACREDITS,
+      amount: 1,
+      production: 0,
+    }];
+    vm.globalDeltas = [{parameter: 'temperature', amount: 2}];
+
+    vm.applyActionFeedback({resources: [], globals: [], spaces: [], colonies: []});
+
+    expect(vm.resourceDeltas).to.deep.eq([]);
+    expect(vm.globalDeltas).to.deep.eq([]);
+    expect(vm.feedbackSpaces).to.deep.eq([]);
+    expect(vm.feedbackColonies).to.deep.eq([]);
+    wrapper.unmount();
+  });
+
+  it('clears prior feedback when the active seat changes without a new game age', async () => {
+    const alice = fakePublicPlayerModel({color: 'red', isActive: true});
+    const bob = fakePublicPlayerModel({color: 'green', isActive: false});
+    const initialView = fakePlayerViewModel({thisPlayer: alice, players: [alice, bob]});
+    const wrapper = shallowMount(PlayerHome, {
+      ...globalConfig,
+      parentComponent: {
+        methods: {getVisibilityState: () => true, setVisibilityState: () => {}},
+      } as any,
+      props: {playerView: initialView},
+    });
+    const vm = wrapper.vm as any;
+    vm.resourceDeltas = [{
+      playerColor: alice.color,
+      playerName: alice.name,
+      resource: Resource.MEGACREDITS,
+      amount: 1,
+      production: 0,
+    }];
+
+    await wrapper.setProps({
+      playerView: {
+        ...initialView,
+        players: [
+          {...alice, isActive: false},
+          {...bob, isActive: true},
+        ],
+      },
+    });
+
+    expect(vm.resourceDeltas).to.deep.eq([]);
     wrapper.unmount();
   });
 });

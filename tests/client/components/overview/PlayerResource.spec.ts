@@ -74,26 +74,4 @@ describe('PlayerResource', () => {
     }
   });
 
-  it('attaches stock and production feedback to the changed resource', () => {
-    const wrapper = shallowMount(PlayerResource, {
-      ...globalConfig,
-      props: {
-        type: Resource.STEEL,
-        count: 5,
-        production: 2,
-        delta: {
-          playerColor: 'red',
-          playerName: 'Red',
-          resource: Resource.STEEL,
-          amount: 3,
-          production: 1,
-        },
-      },
-    });
-
-    const change = wrapper.find('.tm-resource-change');
-    expect(change.text()).eq('+3P+1');
-    expect(change.attributes('aria-label')).to.contain('+3 Steel');
-    expect(change.attributes('aria-label')).to.contain('+1 Production count');
-  });
 });

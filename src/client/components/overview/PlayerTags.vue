@@ -1,17 +1,5 @@
 <template>
     <div class="player-tags">
-        <div class="player-tags-main">
-            <TagCount tag="vp" :count="hideVpCount ? '?' : player.victoryPointsBreakdown.total" :size="'big'" :type="'main'" />
-            <div v-if="isEscapeVelocityOn" :class="tooltipCss" :data-tooltip="$t('Escape Velocity penalty')">
-              <TagCount tag="escape" :count="escapeVelocityPenalty" :size="'big'" :type="'main'" :showWhenZero="true"/>
-            </div>
-            <TagCount tag="tr" :count="player.terraformRating" :size="'big'" :type="'main'"/>
-            <TagCount v-if="player.handicap !== undefined" :tag="'handicap'" :count="player.handicap" :size="'big'" :type="'main'" :showWhenZero="true"/>
-            <div class="tag-and-discount">
-              <PlayerTagDiscount v-if="all.discount" :amount="all.discount" :color="player.color"  :data-test="'discount-all'"/>
-              <TagCount tag="cards" :count="cardsInHandCount" :size="'big'" :type="'main'"/>
-            </div>
-        </div>
         <div class="player-tags-secondary">
           <div class="tag-count-container" v-for="tagDetail of tags" :key="tagDetail.name">
             <template v-if="tagDetail.name === SpecialTags.UNDERGROUND_TOKEN_COUNT">
@@ -22,11 +10,24 @@
             <div v-else-if="tagDetail.name === 'separator'" class="tag-separator"></div>
             <template v-else-if="tagDetail.name === 'all'"></template>
             <div v-else class="tag-and-discount">
-              <PlayerTagDiscount v-if="tagDetail.discount > 0" :color="player.color" :amount="tagDetail.discount" :data-test="'discount-' + tagDetail.name"/>
-              <PointsPerTag :points="tagDetail"/>
+              <PlayerTagDiscount v-if="showDiscounts && tagDetail.discount > 0" :color="player.color" :amount="tagDetail.discount" :data-test="'discount-' + tagDetail.name"/>
+              <PointsPerTag v-if="showPoints" :points="tagDetail" :showLabel="labelPoints"/>
               <TagCount :tag="tagDetail.name" :count="tagDetail.count" :size="'big'" :type="'secondary'"/>
             </div>
           </div>
+        </div>
+        <span v-if="showMainSummary && tags.length > 0" class="player-tags-summary-divider" aria-hidden="true"></span>
+        <div v-if="showMainSummary" class="player-tags-main">
+            <TagCount tag="vp" :count="hideVpCount ? '?' : player.victoryPointsBreakdown.total" :size="'big'" :type="'main'" />
+            <div v-if="isEscapeVelocityOn" :class="tooltipCss" :data-tooltip="$t('Escape Velocity penalty')">
+              <TagCount tag="escape" :count="escapeVelocityPenalty" :size="'big'" :type="'main'" :showWhenZero="true"/>
+            </div>
+            <TagCount tag="tr" :count="player.terraformRating" :size="'big'" :type="'main'"/>
+            <TagCount v-if="player.handicap !== undefined" :tag="'handicap'" :count="player.handicap" :size="'big'" :type="'main'" :showWhenZero="true"/>
+            <div class="tag-and-discount">
+              <PlayerTagDiscount v-if="showDiscounts && all.discount" :amount="all.discount" :color="player.color"  :data-test="'discount-all'"/>
+              <TagCount tag="cards" :count="cardsInHandCount" :size="'big'" :type="'main'"/>
+            </div>
         </div>
     </div>
 </template>
@@ -135,6 +136,69 @@ const getTagCount = (tagName: InterfaceTagsType, player: PublicPlayerModel): num
   }
 };
 
+const buildTagDetails = (player: PublicPlayerModel, playerView: ViewModel): DataModel => {
+  type TagDetails = Record<InterfaceTagsType | 'all', TagDetail>;
+
+  // Rebuild these details from the latest player model. PlayerTags remains
+  // mounted while polling replaces its props, so storing this calculation in
+  // data() leaves the compact player summary frozen at its initial counts.
+  const interim = ORDER.map((key) => [
+    key,
+    {name: key, discount: 0, points: 0, count: getTagCount(key, player), halfPoints: 0, asterisk: false},
+  ]);
+  const details: TagDetails = Object.fromEntries(interim);
+
+  details['all'] = {
+    name: 'all',
+    discount: player.cardDiscount ?? 0,
+    points: 0,
+    count: 0,
+    halfPoints: 0,
+    asterisk: false,
+  };
+
+  for (const card of player.tableau) {
+    for (const discount of card.discount ?? []) {
+      const tag = discount.tag ?? 'all';
+      details[tag].discount += discount.amount;
+    }
+
+    // See https://github.com/terraforming-mars/terraforming-mars/issues/5236
+    if (card.name === CardName.CULTIVATION_OF_VENUS || card.name === CardName.VENERA_BASE) {
+      details[Tag.VENUS].halfPoints++;
+    } else {
+      const vps = getCard(card.name)?.victoryPoints;
+      if (vps !== undefined && typeof(vps) !== 'number' && vps !== 'special') {
+        const asterisk = vps.nextToThis !== undefined;
+        if (vps.tag !== undefined) {
+          if (!asterisk) {
+            details[vps.tag].points += ((vps.each ?? 1) / (vps.per ?? 1));
+          } else {
+            details[vps.tag].asterisk = true;
+          }
+        }
+        if (vps.cities !== undefined) {
+          if (!asterisk) {
+            details['city-count'].points += ((vps.each ?? 1) / (vps.per ?? 1));
+          } else {
+            details['city-count'].asterisk = true;
+          }
+        }
+      }
+    }
+  }
+
+  if (playerView.game.turmoil?.ruling === PartyName.UNITY &&
+    playerView.game.turmoil.politicalAgendas?.unity.policyId === 'up04') {
+    details[Tag.SPACE].discount += 2;
+  }
+
+  return {
+    all: details['all'],
+    tagsInOrder: ORDER.map((tag) => details[tag]),
+  };
+};
+
 export default defineComponent({
   name: 'PlayerTags',
   props: {
@@ -158,86 +222,38 @@ export default defineComponent({
       required: false,
       default: true,
     },
+    showDiscounts: {
+      type: Boolean,
+      default: true,
+    },
+    showMainSummary: {
+      type: Boolean,
+      default: true,
+    },
+    showPoints: {
+      type: Boolean,
+      default: true,
+    },
+    labelPoints: {
+      type: Boolean,
+      default: false,
+    },
   },
-  data(): DataModel {
-    type TagDetails = Record<InterfaceTagsType | 'all', TagDetail>;
-
-    // Start by giving every entry a default value
-    const interim = ORDER.map((key) => [
-      key,
-      {name: key, discount: 0, points: 0, count: getTagCount(key, this.player), halfPoints: 0, asterisk: false},
-    ]);
-    const details: TagDetails = Object.fromEntries(interim);
-
-    // Initialize all's card discount.
-    details['all'] = {
-      name: 'all',
-      discount: this.player?.cardDiscount ?? 0,
-      points: 0,
-      count: 0,
-      halfPoints: 0,
-      asterisk: false,
-    };
-
-    // For each card
-    for (const card of this.player.tableau) {
-      // Calculate discount
-      for (const discount of card.discount ?? []) {
-        const tag = discount.tag ?? 'all';
-        details[tag].discount += discount.amount;
-      }
-
-      // See https://github.com/terraforming-mars/terraforming-mars/issues/5236
-      if (card.name === CardName.CULTIVATION_OF_VENUS || card.name === CardName.VENERA_BASE) {
-        details[Tag.VENUS].halfPoints++;
-      } else {
-        const vps = getCard(card.name)?.victoryPoints;
-        if (vps !== undefined && typeof(vps) !== 'number' && vps !== 'special') {
-          // Special case Commercial District etc.
-          const asterisk = vps.nextToThis !== undefined;
-          if (vps.tag !== undefined) {
-            if (!asterisk) {
-              details[vps.tag].points += ((vps.each ?? 1) / (vps.per ?? 1));
-            } else {
-              details[vps.tag].asterisk = true;
-            }
-          }
-          if (vps.cities !== undefined) {
-            if (!asterisk) {
-              details['city-count'].points += ((vps.each ?? 1) / (vps.per ?? 1));
-            } else {
-              details['city-count'].asterisk = true;
-            }
-          }
-        }
-      }
-    }
-
-    // Other modifiers
-    if (this.playerView.game.turmoil?.ruling === PartyName.UNITY &&
-      this.playerView.game.turmoil.politicalAgendas?.unity.policyId === 'up04') {
-      details[Tag.SPACE].discount += 2;
-    }
-
-    // Put them in order.
-    const tagsInOrder = [];
-    for (const tag of ORDER) {
-      const entry = details[tag];
-      tagsInOrder.push(entry);
-    }
-
-    return {
-      all: details['all'],
-      tagsInOrder,
-    };
-  },
-
   components: {
     TagCount,
     PlayerTagDiscount,
     PointsPerTag,
   },
   computed: {
+    tagDetails(): DataModel {
+      return buildTagDetails(this.player, this.playerView);
+    },
+    all(): TagDetail {
+      return this.tagDetails.all;
+    },
+    tagsInOrder(): Array<TagDetail> {
+      return this.tagDetails.tagsInOrder;
+    },
     isThisPlayer(): boolean {
       return this.player.color === this.playerView.thisPlayer?.color;
     },
@@ -264,8 +280,9 @@ export default defineComponent({
           return false;
         }
 
-        if (entry.count === 0 && entry.discount === 0) {
-          if (this.hideZeroTags || concise) {
+        const visibleDiscount = this.showDiscounts ? entry.discount : 0;
+        if (entry.count === 0 && visibleDiscount === 0) {
+          if (!this.showDiscounts || this.hideZeroTags || concise) {
             return false;
           }
         }

@@ -1,0 +1,122 @@
+// Action-workspace density.
+#player-home.tm-player-table:not(.tm-player-table--setup) {
+
+  .tm-action-workbench {
+    overflow: auto;
+
+    .wf-root,
+    .wf-options,
+    .wf-component {
+      max-height: none;
+    }
+
+    .wf-command-grid {
+      grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+      gap: 5px;
+    }
+
+    .wf-command-tile {
+      min-height: 48px;
+      padding: 5px;
+      grid-template-columns: 30px minmax(0, 1fr) auto;
+    }
+
+    .wf-command-tile:has(.wf-command-inline-submit) {
+      grid-column: span 2;
+      min-height: 64px;
+    }
+
+    .wf-command-icon {
+      width: 30px;
+      height: 30px;
+      background-size: 24px;
+    }
+
+    .wf-command-detail {
+      max-height: 250px;
+      overflow: auto;
+    }
+
+    .wf-command-option-title {
+      font-size: 13px;
+    }
+
+    .wf-component--select-card {
+      display: flex;
+      flex-flow: row wrap;
+      align-content: flex-start;
+      align-items: flex-start;
+      height: 100%;
+      max-height: none;
+      gap: 6px;
+      overflow: auto;
+      padding-right: 4px;
+
+      &::after {
+        content: "";
+        flex: 1 0 100%;
+        height: 0;
+        order: 0;
+      }
+
+      > .wf-component-title {
+        flex: 1 1 auto;
+        min-width: 260px;
+        order: 0;
+        margin: 0 8px 2px 0;
+      }
+
+      > label.cardbox {
+        flex: 0 0 176px;
+        width: 176px;
+        height: 260px;
+        margin: 0;
+        overflow: visible;
+        transform: none;
+        zoom: 1;
+        order: 1;
+
+        > input {
+          position: absolute;
+          z-index: 3;
+          top: 3px;
+          left: 3px;
+          margin: 0;
+        }
+
+        > input[type="checkbox"] + .filterDiv.card-container,
+        > input[type="radio"] + .filterDiv.card-container,
+        > .filterDiv.card-container {
+          margin: 0;
+          transform: scale(0.72);
+          transform-origin: top left;
+        }
+      }
+
+      > .wf-component-actions {
+        flex: 1 0 100%;
+        position: sticky;
+        bottom: 0;
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        justify-content: flex-end;
+        order: 3;
+        margin: auto 0 0;
+        padding: 8px 0 2px;
+        background: linear-gradient(transparent, rgba(12, 13, 14, 0.98) 28%);
+
+        .btn-submit {
+          min-width: 166px;
+          height: 42px;
+          margin: 0;
+          font-size: 18px;
+        }
+      }
+    }
+
+    .payments_cont {
+      max-height: none;
+    }
+  }
+}

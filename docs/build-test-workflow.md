@@ -161,24 +161,34 @@ Single client test file:
 vitest run --project client tests/client/components/Board.spec.ts
 ```
 
-## Visual Smoke
+## Visual Acceptance
 
-Build the app, start the built server, then run the browser smoke test against
-that server:
+Build the app, start the exact built server, then run the named static evidence
+and the continuous engine-driven journey against that server:
 
 ```bash
 npm run clean
 npm run build
 PORT=8092 node build/src/server/server.js
-TM_BASE_URL=http://localhost:8092 TM_VISUAL_OUT=/tmp/tm-smoke npm run visual:smoke
+TM_BASE_URL=http://localhost:8092 TM_VISUAL_OUT=/tmp/tm-golden npm run visual:golden
+TM_BASE_URL=http://localhost:8092 TM_VISUAL_OUT=/tmp/tm-continuous npm run visual:continuous
 ```
 
-Stop the server after the smoke run. Visual artifacts should stay outside the
-repository unless they are intentionally being reviewed.
+Stop the server after verification. Visual artifacts stay outside the
+repository.
 
-The smoke script creates a two-player game through the UI, submits setup for both
-players, exercises a first-generation action/pass flow, and verifies that the
-game reaches generation 2 without page or console errors.
+The static runner creates named Priority-0 golden or component-detail evidence.
+The continuous flow creates a two-player game through the UI, completes both
+setups, commits a real action and verifies its resource delta, observes live
+seat handoffs in already-open DOMs without navigation, proves a resized layout
+and open inspection survive polling, passes both players, and reaches generation
+2.
+
+Both runners write PNG screenshots only. Neither grants visual approval. Open
+every selected image at full resolution, then give the exact raw screenshot
+paths, selected case IDs, contract, and diff to the independent adversarial
+reviewer required by [../AGENTS.md](../AGENTS.md). The complete catalog and
+selection commands are in [visual-test-cases.md](visual-test-cases.md).
 
 ## Generated Outputs
 

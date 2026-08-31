@@ -1,36 +1,55 @@
 <template>
-  <div class="wf-options wf-options--command-board" :class="{'wf-options--simple-choices': isSimpleChoiceList, 'wf-options--has-selected-submit': hasSelectedOptionSubmit}">
+  <div class="wf-options wf-options--command-board" :class="{'wf-options--simple-choices': isSimpleChoiceList, 'wf-options--has-selected-submit': hasSelectedOptionSubmit, 'wf-options--has-direct-pass': directPassEntry !== undefined}">
     <div v-if="showtitle" class="wf-command-title">{{ $t(playerinput.title) }}</div>
     <div v-if="playerinput.warning !== undefined" class="card-warning wf-command-warning">({{ $t(playerinput.warning) }})</div>
+    <div v-if="isMAChoiceMenu" class="wf-context-strip">
+      <span v-i18n>Compare standings and funded slots before committing.</span>
+      <button type="button" @click.stop.prevent="openMilestonesAndAwards" v-i18n>Inspect standings</button>
+    </div>
 
     <div class="wf-command-grid">
       <label
-        v-for="(option, idx) in displayedOptions"
-        :key="idx"
+        v-for="entry in commandOptions"
+        :key="entry.displayedIdx"
         ref="optionLabels"
         class="form-radio wf-command-tile"
-        :class="getCommandTileClass(option, idx)"
-        @click="selectOption(option, idx)">
-        <input v-model="selectedOption" class="wf-command-radio" type="radio" :value="option" :disabled="isDisabledOption(option)">
-        <span class="wf-command-icon" :class="getCommandIconClass(option)"></span>
+        :class="getCommandTileClass(entry.option, entry.displayedIdx)"
+        @click="selectOption(entry.option, entry.displayedIdx)">
+        <input v-model="selectedOption" class="wf-command-radio" type="radio" :value="entry.option" :disabled="isDisabledOption(entry.option)">
+        <span class="wf-command-icon" :class="getCommandIconClass(entry.option)"></span>
         <span class="wf-command-copy">
-          <span class="wf-command-option-title">{{ $t(option.title) }}</span>
-          <span v-if="getCommandMeta(option)" class="wf-command-option-meta">{{ getCommandMeta(option) }}</span>
+          <span class="wf-command-option-title">{{ $t(entry.option.title) }}</span>
+          <span v-if="getCommandMeta(entry.option)" class="wf-command-option-meta">{{ getCommandMeta(entry.option) }}</span>
         </span>
       </label>
     </div>
 
-    <div v-if="hasSelectedOptionSubmit" class="wf-command-submit wf-command-submit--selected-option">
+    <button
+      v-if="directPassEntry !== undefined"
+      type="button"
+      class="wf-command-pass-action"
+      @click.stop.prevent="saveDirectPass">
+      <span class="wf-command-icon wf-command-icon--pass" aria-hidden="true"></span>
+      <span class="wf-command-copy">
+        <span class="wf-command-option-title" v-i18n>Pass for this generation</span>
+        <span class="wf-command-option-meta" v-i18n>Ends your generation</span>
+      </span>
+    </button>
+
+    <div
+      v-if="showsave"
+      class="wf-command-submit"
+      :class="{
+        'wf-command-submit--selected-option': hasSelectedOptionSubmit || shouldShowChoiceSubmit(),
+        'wf-command-submit--empty': !hasSelectedOptionSubmit && !shouldShowChoiceSubmit(),
+      }">
       <button
+        v-if="hasSelectedOptionSubmit || shouldShowChoiceSubmit()"
         type="button"
-        class="wf-command-inline-submit"
+        :class="selectedSubmitClass"
         @click.stop.prevent="saveSelectedOption">
         {{ $t(selectedChoiceSubmitLabel) }}
       </button>
-    </div>
-
-    <div v-if="shouldShowChoiceSubmit()" class="wf-command-submit">
-      <AppButton type="submit" :title="selectedChoiceSubmitLabel" @click="saveSelectedOption" />
     </div>
 
     <div v-if="selectedOption && hasMeaningfulChildUi(selectedOption)" class="wf-command-detail">
@@ -48,7 +67,6 @@
 
 import {defineComponent} from 'vue';
 import {isHTMLElement} from '@/client/utils/vueUtils';
-import AppButton from '@/client/components/common/AppButton.vue';
 import {PlayerViewModel} from '@/common/models/PlayerModel';
 import {OrOptionsModel, PlayerInputModel} from '@/common/models/PlayerInputModel';
 import {getPreferences} from '@/client/utils/PreferencesManager';
@@ -57,6 +75,11 @@ import {InputResponse, OrOptionsResponse} from '@/common/inputs/InputResponse';
 type DisplayedOption = {
   option: PlayerInputModel;
   originalIndex: number;
+}
+
+type CommandOption = {
+  option: PlayerInputModel;
+  displayedIdx: number;
 }
 
 function optionTitle(option: PlayerInputModel): string {
@@ -81,9 +104,6 @@ function reorderDisplayedOptions(entries: Array<DisplayedOption>): Array<Display
 
 export default defineComponent({
   name: 'OrOptions',
-  components: {
-    AppButton,
-  },
   props: {
     playerView: {
       type: Object as () => PlayerViewModel,
@@ -116,25 +136,22 @@ export default defineComponent({
     reorderDisplayedOptions(entries);
     const displayedOptions = entries.map((entry) => entry.option);
     const originalIndices = entries.map((entry) => entry.originalIndex);
-    const initialIdx = this.playerinput.initialIdx ?? 0;
-    const displayedInitialIdx = Math.max(0, originalIndices.indexOf(initialIdx));
-    // Special case: If the first recommended displayed option is SelectProjectCardToPlay, and none of them are enabled, skip it.
-    let selectedIdx = displayedInitialIdx;
-    if (displayedOptions.length > 1 &&
-      displayedOptions[displayedInitialIdx].type === 'projectCard' &&
-      !displayedOptions[displayedInitialIdx].cards.some((card) => card.isDisabled !== true)) {
-      selectedIdx = displayedInitialIdx + 1;
-    }
+    // Standalone choices begin neutral and wait for player intent. A single
+    // nested choice inside a compound action is not a decision of its own,
+    // though: the parent confirmation is the consequential click. Selecting
+    // that sole prerequisite keeps actions such as paid colony trades usable
+    // without manufacturing a redundant "choose the only payment" step.
+    const selectedIdx = this.showsave === false && displayedOptions.length === 1 ? 0 : -1;
     return {
       displayedOptions,
       originalIndices,
-      selectedOption: displayedOptions[selectedIdx],
+      selectedOption: selectedIdx === -1 ? undefined : displayedOptions[selectedIdx],
       selectedIdx,
     };
   },
   watch: {
-    selectedOption(newOption: PlayerInputModel) {
-      this.selectedIdx = this.displayedOptions.indexOf(newOption);
+    selectedOption(newOption: PlayerInputModel | undefined) {
+      this.selectedIdx = newOption === undefined ? -1 : this.displayedOptions.indexOf(newOption);
       // Clicking the option can shift elements on the page.
       // This preserves the location of the option button the user just clicked by
       // tracking where it was on the screen, where it moved, and then repositioning it.
@@ -154,6 +171,21 @@ export default defineComponent({
     isSimpleChoiceList(): boolean {
       return this.displayedOptions.every((option: PlayerInputModel) => option.type === 'option');
     },
+    directPassEntry(): CommandOption | undefined {
+      if (this.showsave !== true) {
+        return undefined;
+      }
+      const displayedIdx = this.displayedOptions.findIndex((option) => this.isPassOption(option));
+      if (displayedIdx === -1) {
+        return undefined;
+      }
+      return {option: this.displayedOptions[displayedIdx], displayedIdx};
+    },
+    commandOptions(): Array<CommandOption> {
+      return this.displayedOptions
+        .map((option, displayedIdx) => ({option, displayedIdx}))
+        .filter((entry) => entry.displayedIdx !== this.directPassEntry?.displayedIdx);
+    },
     selectedChoiceSubmitLabel(): string {
       if (this.selectedOption === undefined) {
         return '';
@@ -166,6 +198,19 @@ export default defineComponent({
         this.selectedOption !== undefined &&
         !this.isDisabledOption(this.selectedOption) &&
         !this.hasMeaningfulChildUi(this.selectedOption);
+    },
+    isMAChoiceMenu(): boolean {
+      const title = this.optionTitle(this.playerinput);
+      return title.includes('milestone') || title.includes('award');
+    },
+    selectedSubmitClass(): Record<string, boolean> {
+      return {
+        'wf-command-inline-submit': !this.isSelectedPassOption,
+        'wf-command-danger-submit': this.isSelectedPassOption,
+      };
+    },
+    isSelectedPassOption(): boolean {
+      return this.selectedOption !== undefined && this.isPassOption(this.selectedOption);
     },
   },
   methods: {
@@ -180,7 +225,11 @@ export default defineComponent({
         return undefined;
       }
 
-      const val = Array.isArray(optionLabels) ? optionLabels[idx] : optionLabels;
+      const renderedIdx = this.commandOptions.findIndex((entry) => entry.displayedIdx === idx);
+      if (renderedIdx === -1) {
+        return undefined;
+      }
+      const val = Array.isArray(optionLabels) ? optionLabels[renderedIdx] : optionLabels;
       return isHTMLElement(val) ? val : undefined;
     },
     playerFactorySaved(displayedIdx: number) {
@@ -200,6 +249,10 @@ export default defineComponent({
       this.selectedOption = option;
       this.selectedIdx = idx;
     },
+    openMilestonesAndAwards() {
+      const summary = document.querySelector<HTMLElement>('.tm-ma-panel-summary');
+      summary?.click();
+    },
     hasMeaningfulChildUi(option: PlayerInputModel): boolean {
       return option.type !== 'option';
     },
@@ -211,8 +264,14 @@ export default defineComponent({
         !this.hasMeaningfulChildUi(this.selectedOption);
     },
     inlineSubmitLabel(option: PlayerInputModel): string {
+      if (this.isPassOption(option)) {
+        return 'Pass for this generation';
+      }
       if (this.optionTitle(this.playerinput).includes('award')) {
-        return 'Fund';
+        return 'Fund award';
+      }
+      if (this.optionTitle(this.playerinput).includes('milestone')) {
+        return 'Claim milestone';
       }
       return option.buttonLabel;
     },
@@ -221,6 +280,18 @@ export default defineComponent({
         return;
       }
       this.saveOption(this.selectedOption, this.selectedIdx);
+    },
+    saveDirectPass() {
+      const entry = this.directPassEntry;
+      if (entry === undefined) {
+        return;
+      }
+      const idx = this.originalIndices[entry.displayedIdx];
+      this.onsave({
+        type: 'or',
+        index: idx,
+        response: {type: 'option'},
+      });
     },
     saveOption(option: PlayerInputModel, displayedIdx: number) {
       if (this.isDisabledOption(option) || option.type !== 'option') {
@@ -339,15 +410,31 @@ export default defineComponent({
       return optionTitle(option);
     },
     saveData() {
-      if (this.selectedOption !== undefined && !this.hasMeaningfulChildUi(this.selectedOption)) {
+      if (!this.canSave() || this.selectedOption === undefined) {
+        return;
+      }
+      if (!this.hasMeaningfulChildUi(this.selectedOption)) {
         this.saveSelectedOption();
         return;
       }
-      let ref = this.$refs['inputfactory'] as {saveData: () => void} | Array<{saveData: () => void}>;
+      let ref = this.$refs['inputfactory'] as {saveData: () => void} | Array<{saveData: () => void}> | undefined;
       if (Array.isArray(ref)) {
         ref = ref[0];
       }
-      ref.saveData();
+      ref?.saveData();
+    },
+    canSave(): boolean {
+      if (this.selectedOption === undefined || this.isDisabledOption(this.selectedOption)) {
+        return false;
+      }
+      if (!this.hasMeaningfulChildUi(this.selectedOption)) {
+        return true;
+      }
+      let ref = this.$refs['inputfactory'] as {canSave?: () => boolean} | Array<{canSave?: () => boolean}> | undefined;
+      if (Array.isArray(ref)) {
+        ref = ref[0];
+      }
+      return ref !== undefined && (ref.canSave?.() ?? true);
     },
   },
 });

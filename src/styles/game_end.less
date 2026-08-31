@@ -329,7 +329,7 @@ body {
 
     a {
       min-height: 34px;
-      padding: 0 12px 0 6px;
+      padding: 0 12px;
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -342,6 +342,15 @@ body {
       transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
     }
 
+    a::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-left: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(45deg);
+    }
+
     a:hover,
     a:focus {
       border-color: rgba(255, 204, 100, 0.52);
@@ -350,15 +359,6 @@ body {
       outline: none;
     }
 
-    button {
-      width: 28px;
-      height: 28px;
-      min-width: 28px;
-      margin: 0;
-      padding: 0;
-      border-radius: 6px;
-      box-shadow: none;
-    }
   }
 
   .game-end-winer-announcement,
@@ -401,6 +401,22 @@ body {
       color: #d9d0c2;
     }
 
+    .game-end-header-label {
+      min-width: 62px;
+      font-family: Prototype, sans-serif;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    tbody tr {
+      background: rgba(255, 255, 255, 0.045) !important;
+    }
+
+    tbody tr td:first-child {
+      box-shadow: inset 4px 0 rgba(255, 204, 100, 0.56);
+    }
+
     td,
     th {
       padding: 8px 10px;
@@ -412,8 +428,7 @@ body {
     a {
       font-size: 22px;
       line-height: 1.05;
-      text-decoration-thickness: 1px;
-      text-underline-offset: 3px;
+      text-decoration: none;
     }
 
     .column-corporation {
@@ -503,6 +518,13 @@ body {
 
   .game-end-final-sections .game_end_block--board {
     overflow: auto hidden;
+  }
+
+  .game-end-global-progress {
+    min-width: 720px;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 204, 100, 0.18);
   }
 
   .game-end-final-sections .game_end_block--log {

@@ -1,5 +1,6 @@
 import {expect} from 'chai';
 import fs from 'fs';
+import path from 'path';
 import {FileAPI, ServeAsset} from '../../src/server/routes/ServeAsset';
 import {MockResponse} from './HttpMocks';
 import {RouteTestScaffolding} from './RouteTestScaffolding';
@@ -208,6 +209,15 @@ describe('ServeAsset', () => {
     await scaffolding.get(instance, res);
     expect(res.content).contains('data: ');
     expect(res.headers.get('Cache-Control')).eq('public, max-age=14400, s-maxage=86400');
+  });
+
+  it('serves static SVG image assets with the correct content type', async () => {
+    instance = new ServeAsset(undefined, false, fileApi);
+    scaffolding.url = '/assets/ui/trade_colony.svg';
+    scaffolding.req.headers['accept-encoding'] = '';
+    await scaffolding.get(instance, res);
+    expect(res.content).eq('data: ' + path.resolve('assets/ui/trade_colony.svg'));
+    expect(res.headers.get('Content-Type')).eq('image/svg+xml');
   });
 
   it('serves generated Vite assets before static assets', async () => {

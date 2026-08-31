@@ -162,6 +162,30 @@ describe('SelectInitialCards', () => {
     await mulliganButtons[1].trigger('click');
     expect(savedData).to.deep.eq({type: 'initialCardsMulligan', category: 'project'});
   });
+
+  it('clears only the redrawn pool and preserves unrelated setup choices', async () => {
+    const component = createComponent(
+      [CardName.ECOLINE, CardName.HELION],
+      [CardName.ANTS, CardName.COMET_AIMING, CardName.DIRIGIBLES],
+      [CardName.ALLIED_BANK, CardName.SUPPLY_DROP],
+      [CardName.FLOYD, CardName.HAL9000],
+      ['project']);
+    const selectCards = component.findAllComponents({name: 'select-card'});
+
+    selectCards[0].vm.$emit('cardschanged', [CardName.ECOLINE]);
+    selectCards[1].vm.$emit('cardschanged', [CardName.ALLIED_BANK, CardName.SUPPLY_DROP]);
+    selectCards[2].vm.$emit('cardschanged', [CardName.FLOYD]);
+    selectCards[3].vm.$emit('cardschanged', [CardName.ANTS]);
+    await component.vm.$nextTick();
+
+    await component.find('.initial-card-mulligan__button').trigger('click');
+
+    expect(component.vm.selectedCorporations).to.deep.eq([CardName.ECOLINE]);
+    expect(component.vm.selectedPreludes).to.deep.eq([CardName.ALLIED_BANK, CardName.SUPPLY_DROP]);
+    expect(component.vm.selectedCeos).to.deep.eq([CardName.FLOYD]);
+    expect(component.vm.selectedCards).to.deep.eq([]);
+    expect(savedData).to.deep.eq({type: 'initialCardsMulligan', category: 'project'});
+  });
 });
 
 function getButton(component: VueWrapper<InstanceType<typeof SelectInitialCards>>) {

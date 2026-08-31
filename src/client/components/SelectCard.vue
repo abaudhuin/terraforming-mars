@@ -17,9 +17,18 @@
         <div v-if="hasCardWarning()" class="card-warning" v-i18n>{{ warning }}</div>
         <WarningsComponent :warnings="warnings"/>
         <div v-if="showsave === true" class="nofloat wf-component-actions">
+            <span v-if="isCardPurchase" class="wf-card-purchase-summary">
+              <strong>{{ purchaseCost }} M€</strong>
+              <span>{{ playerView.thisPlayer.megacredits }} → {{ remainingMegacredits }} M€</span>
+            </span>
             <AppButton v-if="showSelectAll" @click="toggleSelectAll" type="submit" :title="allSelected ? $t('Deselect All') : $t('Select All')" />
-            <AppButton :disabled="isOptionalToManyCards && cardsSelected() === 0" type="submit" @click="saveData" :title="buttonLabel()" />
-            <AppButton :disabled="isOptionalToManyCards && cardsSelected() > 0" v-if="isOptionalToManyCards" @click="saveData" type="submit" :title="$t('Skip this action')" />
+            <AppButton :disabled="!canSave()" type="submit" @click="saveData" :title="buttonLabel()" />
+            <AppButton
+              v-if="isOptionalToManyCards && !isCardPurchase"
+              :disabled="cardsSelected() > 0"
+              @click="saveData"
+              type="submit"
+              :title="$t('Skip this action')" />
         </div>
     </div>
 </template>
@@ -149,22 +158,22 @@ export default defineComponent({
 
     canSave() {
       const len = this.getData().length;
-      if (len > this.playerinput.min) {
-        return false;
-      }
-      if (len < this.playerinput.max) {
-        return false;
-      }
-      return true;
+      return len >= this.playerinput.min && len <= this.playerinput.max;
     },
     saveData() {
       this.onsave({type: 'card', cards: this.getData()});
     },
     getCardBoxClass(card: CardModel): string {
+      const classes = [
+        'cardbox',
+        'tm-selectable-card',
+        this.isSelectedCard(card) ? 'tm-selectable-card--selected' : '',
+        card.isDisabled === true ? 'tm-selectable-card--disabled' : '',
+      ];
       if (this.playerinput.showOwner && this.getOwner(card) !== undefined) {
-        return 'cardbox cardbox-with-owner-label';
+        classes.push('cardbox-with-owner-label');
       }
-      return 'cardbox';
+      return classes.filter(Boolean).join(' ');
     },
     findOwner(card: CardModel): Owner | undefined {
       for (const player of this.playerView.players) {
@@ -192,6 +201,9 @@ export default defineComponent({
     },
     buttonLabel(): string | Message {
       if (this.selectOnlyOneCard) {
+        if (this.playerinput.selectBlueCardAction) {
+          return 'Use selected card action';
+        }
         return this.playerinput.buttonLabel;
       }
       return {
@@ -221,6 +233,15 @@ export default defineComponent({
       return this.playerinput.max !== undefined &&
              this.playerinput.max > 1 &&
              this.playerinput.min === 0;
+    },
+    isCardPurchase(): boolean {
+      return this.playerinput.buttonLabel === 'Buy' && this.playerView.thisPlayer !== undefined;
+    },
+    purchaseCost(): number {
+      return this.cardsSelected() * (this.playerView.thisPlayer?.cardCost ?? 0);
+    },
+    remainingMegacredits(): number {
+      return Math.max(0, (this.playerView.thisPlayer?.megacredits ?? 0) - this.purchaseCost);
     },
     selectableCards(): Array<CardModel> {
       return this.playerinput.cards.filter((card) => !card.isDisabled);

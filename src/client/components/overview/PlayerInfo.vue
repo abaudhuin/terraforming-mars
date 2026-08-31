@@ -5,12 +5,15 @@
           <div class="player-info-details">
             <div class="tm-player-identity-copy">
               <div class="player-info-name">{{ player.name }}</div>
-              <span v-for="(corporationName, index) in getCorporationName()" :key="index" v-i18n>
-                <div class="player-info-corp" :title="$t(corporationName)">
-                  {{ corporationName }}
-                </div>
-              </span>
+              <div class="tm-player-identity-meta">
+                <span v-for="(corporationName, index) in getCorporationName()" :key="index" v-i18n>
+                  <div class="player-info-corp">
+                    {{ corporationName }}
+                  </div>
+                </span>
+              </div>
             </div>
+            <PlayerResourceChanges :deltas="resourceDeltas"/>
             <button type="button" class="tm-player-view-button tm-icon-control tm-icon-control--eye" @click.stop="togglePlayerDetails" :aria-label="$t('View player details')">
               <span aria-hidden="true"></span>
             </button>
@@ -19,22 +22,24 @@
             <PlayerStatus :timer="player.timer" :showTimer="playerView.game.gameOptions.showTimers" :liveTimer="playerView.game.phase !== Phase.END" v-trim-whitespace :actionLabel="actionLabel"/>
           </div>
           </div>
-          <PlayerResources :player="player" :resourceDeltas="resourceDeltas" v-trim-whitespace />
-          <div class="tm-rail-player-summary">
-            <div class="tm-rail-stat tm-rail-stat--vp" title="VP">
-              <span class="tm-rail-stat-icon tm-rail-stat-icon--vp" aria-hidden="true"></span>
-              <span class="tm-rail-stat-label">VP</span>
-              <strong>{{ player.victoryPointsBreakdown.total }}</strong>
-            </div>
-            <div class="tm-rail-stat tm-rail-stat--tr" title="TR">
-              <span class="tm-rail-stat-icon tm-rail-stat-icon--tr" aria-hidden="true"></span>
-              <span class="tm-rail-stat-label">TR</span>
-              <strong>{{ player.terraformRating }}</strong>
-            </div>
-            <div class="tm-rail-stat tm-rail-stat--cards" :title="$t('Cards')">
-              <span class="tm-rail-stat-icon tm-rail-stat-icon--cards" aria-hidden="true"></span>
-              <span class="tm-rail-stat-label" v-i18n>Cards</span>
-              <strong>{{ player.cardsInHandNbr }}</strong>
+          <div class="tm-player-economy-row">
+            <PlayerResources :player="player" v-trim-whitespace />
+            <div class="tm-rail-player-summary" :aria-label="$t('Player summary')">
+              <div class="tm-rail-stat tm-rail-stat--vp">
+                <span class="tm-rail-stat-icon tm-rail-stat-icon--vp" aria-hidden="true"></span>
+                <span class="tm-rail-stat-label">VP</span>
+                <strong>{{ player.victoryPointsBreakdown.total }}</strong>
+              </div>
+              <div class="tm-rail-stat tm-rail-stat--tr">
+                <span class="tm-rail-stat-icon tm-rail-stat-icon--tr" aria-hidden="true"></span>
+                <span class="tm-rail-stat-label">TR</span>
+                <strong>{{ player.terraformRating }}</strong>
+              </div>
+              <div class="tm-rail-stat tm-rail-stat--cards">
+                <span class="tm-rail-stat-icon tm-rail-stat-icon--cards" aria-hidden="true"></span>
+                <span class="tm-rail-stat-label" v-i18n>Cards</span>
+                <strong>{{ player.cardsInHandNbr }}</strong>
+              </div>
             </div>
           </div>
           <div class="player-played-cards">
@@ -56,7 +61,7 @@
             <span class="tag-count-display">{{ availableBlueActionCount() }}</span>
           </div>
         </div>
-        <PlayerTags :player="player" :playerView="playerView" :hideZeroTags="hideZeroTags" :isTopBar="isTopBar" />
+        <PlayerTags :player="player" :playerView="playerView" :hideZeroTags="hideZeroTags" :isTopBar="isTopBar" :showDiscounts="false" :showMainSummary="false" :showPoints="false" />
         <PlayerAlliedParty :player="player"/>
       </div>
 </template>
@@ -65,6 +70,7 @@
 import {defineComponent} from 'vue';
 import {ViewModel, PublicPlayerModel} from '@/common/models/PlayerModel';
 import PlayerResources from '@/client/components/overview/PlayerResources.vue';
+import PlayerResourceChanges from '@/client/components/overview/PlayerResourceChanges.vue';
 import PlayerTags from '@/client/components/overview/PlayerTags.vue';
 import PlayerAlliedParty from '@/client/components/overview/PlayerAlliedParty.vue';
 import PlayerStatus from '@/client/components/overview/PlayerStatus.vue';
@@ -116,6 +122,7 @@ export default defineComponent({
   components: {
     AppButton,
     PlayerResources,
+    PlayerResourceChanges,
     PlayerTags,
     PlayerAlliedParty,
     PlayerStatus,

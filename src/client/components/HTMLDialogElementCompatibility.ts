@@ -3,7 +3,9 @@
 //
 
 export function windowHasHTMLDialogElement(): boolean {
-  return (window as any).HTMLDialogElement !== undefined;
+  const dialogConstructor = (window as any).HTMLDialogElement;
+  return dialogConstructor !== undefined &&
+    typeof dialogConstructor.prototype?.showModal === 'function';
 }
 
 export function hasShowModal(dialogElement: HTMLElement) {

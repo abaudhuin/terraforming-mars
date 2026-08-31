@@ -54,7 +54,7 @@ export default defineComponent({
   },
   computed: {
     outerClass(): string {
-      const classes = ['tag-display'];
+      const classes = ['tag-display', `tag-display--${this.tag}`];
       if (this.count === 0 && this.showWhenZero === false) {
         classes.push('tag-no-show');
       }
@@ -78,4 +78,3 @@ export default defineComponent({
   },
 });
 </script>
-

@@ -6,6 +6,9 @@ This document maps the current repository architecture with a UI/UX remake in
 mind. It focuses on the visual layer, the shared JSON contracts, and the places
 where the frontend interacts with server-side game logic.
 
+CSS source ownership and the player-table module map are documented separately
+in [css-architecture.md](css-architecture.md).
+
 ## Executive Summary
 
 The application is a Vue 3 and TypeScript frontend served by a custom Node HTTP
@@ -46,7 +49,7 @@ Runtime and build:
 Important scripts from `package.json`:
 
 See [Build And Test Workflow](build-test-workflow.md) for the complete local
-build, development, lint, test, and visual smoke flow.
+build, development, lint, test, named visual-evidence, and continuous journey flow.
 
 | Script | Purpose |
 | --- | --- |

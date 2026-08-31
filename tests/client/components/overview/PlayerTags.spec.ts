@@ -120,8 +120,6 @@ describe('PlayerTags', () => {
         conciseTagsViewDefaultValue: false,
       },
     });
-    // For tests.
-    wrapper.vm.$data.conciseView = false;
   });
 
   function elem(tag: Tag | 'all'): DOMWrapper<Element> {
@@ -152,5 +150,55 @@ describe('PlayerTags', () => {
     const cityCount = wrapper.vm.tagsInOrder.find((t: any) => t.name === SpecialTags.CITY_COUNT);
     expect(cityCount.points).to.eq(0);
     expect(cityCount.asterisk).to.eq(true);
+  });
+
+  it('updates tag counts when a polling response replaces the player model', async () => {
+    const player = wrapper.props('player');
+    const displayedMicrobeCount = () => wrapper
+      .findAllComponents({name: 'TagCount'})
+      .find((component) => component.props('tag') === Tag.MICROBE)
+      ?.props('count');
+    expect(displayedMicrobeCount()).to.eq(0);
+
+    await wrapper.setProps({
+      player: {
+        ...player,
+        tags: {
+          ...player.tags,
+          [Tag.MICROBE]: 2,
+        },
+      },
+    });
+
+    expect(displayedMicrobeCount()).to.eq(2);
+  });
+
+  it('places active tags before the separated VP, TR, and card summary', () => {
+    const rootChildren = wrapper.find('.player-tags').element.children;
+    expect(rootChildren[0].classList.contains('player-tags-secondary')).to.eq(true);
+    expect(rootChildren[1].classList.contains('player-tags-summary-divider')).to.eq(true);
+    expect(rootChildren[2].classList.contains('player-tags-main')).to.eq(true);
+  });
+
+  it('keeps discounts in the detailed view by default', () => {
+    expect(elem(Tag.MICROBE).exists()).to.eq(true);
+    expect(elem('all').exists()).to.eq(true);
+  });
+
+  it('hides discount badges and discount-only tags in the compact view', async () => {
+    await wrapper.setProps({showDiscounts: false});
+
+    expect(wrapper.find('[data-test^="discount-"]').exists()).to.eq(false);
+    const displayedTags = wrapper.findAllComponents({name: 'TagCount'}).map((tag) => tag.props('tag'));
+    expect(displayedTags).not.to.include(Tag.MICROBE);
+    expect(displayedTags).not.to.include(Tag.VENUS);
+  });
+
+  it('can leave VP, TR, and cards to the compact rail summary', async () => {
+    await wrapper.setProps({showMainSummary: false});
+
+    expect(wrapper.find('.player-tags-summary-divider').exists()).to.eq(false);
+    expect(wrapper.find('.player-tags-main').exists()).to.eq(false);
+    expect(wrapper.find('.player-tags-secondary').exists()).to.eq(true);
   });
 });

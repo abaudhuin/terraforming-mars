@@ -7,6 +7,7 @@ import {SpaceModel} from '@/common/models/SpaceModel';
 import {SpaceType} from '@/common/boards/SpaceType';
 import {DEFAULT_EXPANSIONS} from '@/common/cards/GameModule';
 import {BoardName} from '@/common/boards/BoardName';
+import {GlobalParameter} from '@/common/GlobalParameter';
 
 const spaces: SpaceModel[] = [
   {
@@ -109,5 +110,34 @@ describe('Board', () => {
     });
 
     expect(wrapper.find('[data-test=hide-tiles-button]').text()).to.be.eq('hide tiles');
+  });
+
+  it('anchors feedback on each changed global parameter', () => {
+    const expansions = {...DEFAULT_EXPANSIONS, venus: true};
+    const wrapper = shallowMount(Board, {
+      ...globalConfig,
+      props: {
+        spaces,
+        expansions,
+        venusScaleLevel: 12,
+        oxygen_level: 8,
+        temperature: -10,
+        oceans_count: 5,
+        boardName: BoardName.THARSIS,
+        globalDeltas: [
+          {parameter: GlobalParameter.TEMPERATURE, amount: 2},
+          {parameter: GlobalParameter.OXYGEN, amount: 1},
+          {parameter: GlobalParameter.OCEANS, amount: 1},
+          {parameter: GlobalParameter.VENUS, amount: 2},
+        ],
+      },
+    });
+
+    const changes = wrapper.findAll('.tm-global-change');
+    expect(changes).to.have.length(4);
+    expect(wrapper.find('.global-numbers-temperature .val-is-active .tm-global-change').text()).to.eq('+2');
+    expect(wrapper.find('.global-numbers-oxygen .val-is-active .tm-global-change').text()).to.eq('+1');
+    expect(wrapper.find('.global-numbers-venus .val-is-active .tm-global-change').text()).to.eq('+2');
+    expect(wrapper.find('.global-numbers-oceans .tm-global-change').text()).to.eq('+1');
   });
 });

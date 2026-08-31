@@ -50,17 +50,26 @@ export function latestActivityGroup(messages: ReadonlyArray<LogMessage>): Array<
     return recent;
   }
 
-  const playedIndex = lastIndexMatching(recent, /\bplayed\b/i);
-  if (playedIndex >= 0) {
-    return recent.slice(includeImmediateLeadIn(recent, playedIndex));
-  }
-
   const actionIndex = lastIndexMatching(
     recent,
     /\b(drew|used|traded|claimed|funded|sold|passed|converted|placed|selected|kept|revealed)\b/i,
   );
   if (actionIndex >= 0) {
-    return recent.slice(includeImmediateLeadIn(recent, actionIndex));
+    // A played card can produce later placement, draw, or conversion messages.
+    // Only treat it as the anchor when it is temporally adjacent to the latest
+    // action; an unrelated older play must not swallow newer actions.
+    const actionTimestamp = recent[actionIndex].timestamp;
+    let anchorIndex = actionIndex;
+    for (let index = actionIndex; index >= 0; index--) {
+      if (actionTimestamp - recent[index].timestamp > 1500) {
+        break;
+      }
+      if (/\bplayed\b/i.test(recent[index].message)) {
+        anchorIndex = index;
+        break;
+      }
+    }
+    return recent.slice(includeImmediateLeadIn(recent, anchorIndex));
   }
 
   const latestTimestamp = recent[recent.length - 1]?.timestamp;

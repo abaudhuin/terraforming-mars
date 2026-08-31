@@ -1,0 +1,146 @@
+/* Action workbench frame, workspace sizing, and non-decision shell behavior. */
+
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div:not(.tm-panel-heading),
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-root {
+  min-height: 0;
+  height: 100%;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-container .card-content .bottom-padding-long {
+  padding-bottom: 16px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-container .card-content .bottom-padding-short {
+  padding-bottom: 8px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-root {
+  min-height: 0;
+  height: 100%;
+}
+@container action-workbench (max-height: 370px) {
+  #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > * {
+    --tm-action-card-scale: 0.76;
+    --tm-action-card-width: 186px;
+    --tm-action-card-height: 285px;
+    --tm-project-card-scale: 0.78;
+    --tm-project-card-width: 200px;
+    --tm-project-card-height: 242px;
+  }
+}
+@container action-workbench (max-height: 310px) {
+  #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > * {
+    --tm-action-card-scale: 0.63;
+    --tm-action-card-width: 154px;
+    --tm-action-card-height: 236px;
+    --tm-project-card-scale: 0.65;
+    --tm-project-card-width: 166px;
+    --tm-project-card-height: 202px;
+  }
+}
+@container action-workbench (max-height: 260px) {
+  #player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > * {
+    --tm-action-card-scale: 0.52;
+    --tm-action-card-width: 128px;
+    --tm-action-card-height: 195px;
+    --tm-project-card-scale: 0.54;
+    --tm-project-card-width: 138px;
+    --tm-project-card-height: 168px;
+  }
+}
+#player-home.tm-player-table .tm-action-workbench {
+  overflow: hidden auto;
+}
+#player-home.tm-player-table .tm-action-workbench > .player_home_anchor {
+  display: none;
+}
+#player-home.tm-player-table .tm-action-workbench .wf-root {
+  position: relative;
+}
+#player-home.tm-player-table .tm-action-workbench .wf-utility-menu {
+  position: absolute;
+  z-index: 9;
+  top: -30px;
+  right: 0;
+  min-width: 132px;
+  border-radius: 6px;
+  border: 1px solid var(--tm-border-soft);
+  background: rgba(12, 13, 14, 0.96);
+  color: var(--tm-muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+#player-home.tm-player-table .tm-action-workbench .wf-utility-menu summary {
+  min-height: 24px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-family: Prototype, sans-serif;
+  text-transform: uppercase;
+}
+#player-home.tm-player-table .tm-action-workbench .wf-utility-menu[open] {
+  min-width: 236px;
+  padding-bottom: 8px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+#player-home.tm-player-table .tm-action-workbench .wf-suspend-control {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+}
+#player-home.tm-player-table .tm-action-workbench .wf-refresh-button {
+  margin: 0 8px;
+  min-height: 26px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--tm-border-soft);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--tm-text);
+  cursor: pointer;
+}
+#player-home.tm-player-table .tm-action-workbench .wf-root,
+#player-home.tm-player-table .tm-action-workbench .wf-options,
+#player-home.tm-player-table .tm-action-workbench .wf-component {
+  height: auto;
+  max-height: 286px;
+}
+#player-home.tm-player-table.tm-player-table--acting .tm-action-workbench {
+  overflow: hidden;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component-amount-row {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 7px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > .tm-panel-heading {
+  position: relative;
+  z-index: 14;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-action-workbench {
+  overflow: hidden;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-action-workbench.tm-region-pulse {
+  box-shadow: 0 0 0 2px rgba(255, 204, 100, 0.75), 0 0 30px rgba(255, 204, 100, 0.22);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-action-workbench > div:not(.tm-panel-heading),
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-action-workbench .wf-root {
+  min-height: 0;
+  height: 100%;
+  padding: 7px 2px 5px;
+  box-sizing: border-box;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-component--select-option:empty {
+  display: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench {
+  --tm-action-card-scale: 0.87;
+  --tm-action-card-width: 212px;
+  --tm-action-card-height: 326px;
+  --tm-project-card-scale: 0.9;
+  --tm-project-card-width: 230px;
+  --tm-project-card-height: 278px;
+  container: action-workbench / size;
+  background: rgba(10, 12, 13, 0.96);
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+}

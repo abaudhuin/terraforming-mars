@@ -22,15 +22,42 @@
 
         <div class="global-numbers">
             <div class="global-numbers-temperature">
-                <div :class="getScaleCSS(lvl)" v-for="(lvl, idx) in getValuesForParameter('temperature')" :key="idx">{{ lvl.strValue }}</div>
+                <div :class="getScaleCSS(lvl)" v-for="(lvl, idx) in getValuesForParameter('temperature')" :key="idx">
+                  {{ lvl.strValue }}
+                  <span
+                    v-if="lvl.isActive && globalDeltaAmount(GlobalParameter.TEMPERATURE) !== undefined"
+                    class="tm-global-change tm-global-change--temperature"
+                    role="status"
+                    :aria-label="globalDeltaLabel(GlobalParameter.TEMPERATURE)">
+                    {{ signed(globalDeltaAmount(GlobalParameter.TEMPERATURE) ?? 0) }}
+                  </span>
+                </div>
             </div>
 
             <div class="global-numbers-oxygen">
-                <div :class="getScaleCSS(lvl)" v-for="(lvl, idx) in getValuesForParameter('oxygen')" :key="idx">{{ lvl.strValue }}</div>
+                <div :class="getScaleCSS(lvl)" v-for="(lvl, idx) in getValuesForParameter('oxygen')" :key="idx">
+                  {{ lvl.strValue }}
+                  <span
+                    v-if="lvl.isActive && globalDeltaAmount(GlobalParameter.OXYGEN) !== undefined"
+                    class="tm-global-change tm-global-change--oxygen"
+                    role="status"
+                    :aria-label="globalDeltaLabel(GlobalParameter.OXYGEN)">
+                    {{ signed(globalDeltaAmount(GlobalParameter.OXYGEN) ?? 0) }}
+                  </span>
+                </div>
             </div>
 
             <div class="global-numbers-venus" v-if="expansions.venus">
-                <div :class="getScaleCSS(lvl)" v-for="(lvl, idx) in getValuesForParameter('venus')" :key="idx">{{ lvl.strValue }}</div>
+                <div :class="getScaleCSS(lvl)" v-for="(lvl, idx) in getValuesForParameter('venus')" :key="idx">
+                  {{ lvl.strValue }}
+                  <span
+                    v-if="lvl.isActive && globalDeltaAmount(GlobalParameter.VENUS) !== undefined"
+                    class="tm-global-change tm-global-change--venus"
+                    role="status"
+                    :aria-label="globalDeltaLabel(GlobalParameter.VENUS)">
+                    {{ signed(globalDeltaAmount(GlobalParameter.VENUS) ?? 0) }}
+                  </span>
+                </div>
             </div>
 
             <div class="global-numbers-oceans">
@@ -39,6 +66,13 @@
               </span>
               <span v-else>
                 {{oceans_count}}/{{constants.MAX_OCEAN_TILES}}
+              </span>
+              <span
+                v-if="globalDeltaAmount(GlobalParameter.OCEANS) !== undefined"
+                class="tm-global-change tm-global-change--oceans"
+                role="status"
+                :aria-label="globalDeltaLabel(GlobalParameter.OCEANS)">
+                {{ signed(globalDeltaAmount(GlobalParameter.OCEANS) ?? 0) }}
               </span>
             </div>
 
@@ -363,6 +397,8 @@ import {BoardName} from '@/common/boards/BoardName';
 import {LEGENDS} from '@/client/components/Legends';
 import {Expansion} from '@/common/cards/GameModule';
 import {SpaceName} from '@/common/boards/SpaceName';
+import {GlobalParameter} from '@/common/GlobalParameter';
+import {GlobalDelta} from '@/client/utils/ActionFeedback';
 
 class GlobalParamLevel {
   constructor(public value: number, public isActive: boolean, public strValue: string) {
@@ -398,6 +434,11 @@ export default defineComponent({
     temperature: {
       type: Number,
       default: constants.MIN_TEMPERATURE,
+    },
+    globalDeltas: {
+      type: Array as () => ReadonlyArray<GlobalDelta>,
+      required: false,
+      default: () => [],
     },
     expansions: {
       type: Object as () => Record<Expansion, boolean>,
@@ -492,6 +533,31 @@ export default defineComponent({
       }
       return css;
     },
+    globalDeltaFor(parameter: GlobalParameter): GlobalDelta | undefined {
+      return this.globalDeltas.find((delta) => delta.parameter === parameter);
+    },
+    globalDeltaAmount(parameter: GlobalParameter): number | undefined {
+      return this.globalDeltaFor(parameter)?.amount;
+    },
+    signed(value: number): string {
+      return value > 0 ? `+${value}` : String(value);
+    },
+    globalDeltaLabel(parameter: GlobalParameter): string {
+      const delta = this.globalDeltaFor(parameter);
+      if (delta === undefined) {
+        return '';
+      }
+      const labels: Record<GlobalParameter, string> = {
+        [GlobalParameter.TEMPERATURE]: this.$t('Temperature'),
+        [GlobalParameter.OXYGEN]: this.$t('Oxygen'),
+        [GlobalParameter.OCEANS]: this.$t('Oceans'),
+        [GlobalParameter.VENUS]: this.$t('Venus'),
+        [GlobalParameter.MOON_HABITAT_RATE]: this.$t('Habitat rate'),
+        [GlobalParameter.MOON_MINING_RATE]: this.$t('Mining rate'),
+        [GlobalParameter.MOON_LOGISTIC_RATE]: this.$t('Logistics rate'),
+      };
+      return `${labels[parameter]} ${this.signed(delta.amount)}`;
+    },
     oceansValue() {
       const oceans_count = this.oceans_count || 0;
       const leftover = constants.MAX_OCEAN_TILES - oceans_count;
@@ -514,6 +580,9 @@ export default defineComponent({
     },
     SpaceName(): typeof SpaceName {
       return SpaceName;
+    },
+    GlobalParameter(): typeof GlobalParameter {
+      return GlobalParameter;
     },
   },
 });

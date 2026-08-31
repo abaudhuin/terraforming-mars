@@ -3,13 +3,14 @@ import {globalConfig} from './getLocalVue';
 import {expect} from 'chai';
 import PlayerInputFactory from '@/client/components/PlayerInputFactory.vue';
 import {CardModel} from '@/common/models/CardModel';
-import {PlayerInputModel, SelectCardModel} from '@/common/models/PlayerInputModel';
+import {PlayerInputModel, SelectCardModel, SelectInitialCardsModel} from '@/common/models/PlayerInputModel';
 import {Units} from '@/common/Units';
 import {CardName} from '@/common/cards/CardName';
 import {SELECT_CORPORATION_TITLE, SELECT_PROJECTS_TITLE} from '@/common/inputs/SelectInitialCards';
 import {PlayerViewModel, PublicPlayerModel} from '@/common/models/PlayerModel';
 import {PartyName} from '@/common/turmoil/PartyName';
 import {RecursivePartial} from '@/common/utils/utils';
+import SelectInitialCards from '@/client/components/SelectInitialCards.vue';
 
 describe('PlayerInputFactory', () => {
   it('AndOptions', async () => {
@@ -74,6 +75,52 @@ describe('PlayerInputFactory', () => {
         {type: 'card', title: SELECT_PROJECTS_TITLE} as SelectCardModel,
       ],
     });
+  });
+
+  it('preserves the initial-card component across a mulligan model refresh', async () => {
+    const playerView = {
+      id: 'p-player-id',
+      dealtCorporationCards: [],
+      thisPlayer: {steel: 0, titanium: 0, tableau: [], actionsThisGeneration: []},
+      game: {turmoil: {}},
+    } as unknown as PlayerViewModel;
+    const initialInput: SelectInitialCardsModel = {
+      type: 'initialCards',
+      title: ' ',
+      buttonLabel: 'Start',
+      mulliganCategories: ['project'],
+      options: [
+        cardInput(SELECT_CORPORATION_TITLE, [CardName.ECOLINE, CardName.HELION], 1),
+        cardInput(SELECT_PROJECTS_TITLE, [CardName.ANTS, CardName.COMET_AIMING], 2),
+      ],
+    };
+    const wrapper = mount(PlayerInputFactory, {
+      ...globalConfig,
+      props: {
+        playerView,
+        playerinput: initialInput,
+        onsave: () => {},
+        showsave: true,
+        showtitle: true,
+      },
+    });
+    const before = wrapper.getComponent(SelectInitialCards);
+    before.vm.selectedCorporations = [CardName.ECOLINE];
+
+    await wrapper.setProps({
+      playerinput: {
+        ...initialInput,
+        mulliganCategories: [],
+        options: [
+          initialInput.options[0],
+          cardInput(SELECT_PROJECTS_TITLE, [CardName.DIRIGIBLES], 1),
+        ],
+      },
+    });
+
+    const after = wrapper.getComponent(SelectInitialCards);
+    expect(after.vm).to.equal(before.vm);
+    expect(after.vm.selectedCorporations).to.deep.equal([CardName.ECOLINE]);
   });
 
   it('SelectSpace', async () => {
@@ -241,4 +288,19 @@ function runTest(playerInput: Partial<PlayerInputModel>) {
   });
   expect(component).not.is.undefined;
   expect((component.vm as any).$refs.childInput.saveData).not.is.undefined;
+}
+
+function cardInput(title: string, names: Array<CardName>, max: number): SelectCardModel {
+  return {
+    type: 'card',
+    title,
+    buttonLabel: 'Save',
+    cards: names.map((name) => ({name}) as CardModel),
+    min: 0,
+    max,
+    showOnlyInLearnerMode: false,
+    selectBlueCardAction: false,
+    showOwner: false,
+    showSelectAll: false,
+  };
 }

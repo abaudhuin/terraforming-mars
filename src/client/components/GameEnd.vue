@@ -37,15 +37,8 @@
           </div>
           <div class="game_end_navigation">
             <div>
-              <a href="new-game">
-                  <AppButton size="big" type="back" />
-                  <span v-i18n>Create New Game</span>
-              </a>
-
-              <a href=".">
-                  <AppButton size="big" type="back" />
-                  <span v-i18n>Go to main page</span>
-              </a>
+              <a href="new-game"><span v-i18n>Create New Game</span></a>
+              <a href="."><span v-i18n>Go to main page</span></a>
             </div>
           </div>
           <div v-if="!isSoloGame || game.isSoloModeWin" class="game-end-winer-announcement">
@@ -67,10 +60,10 @@
                           <th v-if="game.moon !== undefined"><div class="table-moon-mine-tile"></div></th>
                           <th v-if="game.pathfinders !== undefined"><div class="table-planetary-track"></div></th>
                           <th><div class="vp">VP</div></th>
-                          <th v-if="game.gameOptions.escapeVelocity" class="clock-icon tooltip tooltip-top" :data-tooltip="$t('Escape Velocity penalty')">&#x23F3;</th>
+                          <th v-if="game.gameOptions.escapeVelocity" class="game-end-header-label tooltip tooltip-top" :data-tooltip="$t('Escape Velocity penalty')" v-i18n>Penalty</th>
                           <th class="game-end-total"><div class="game-end-total-column">Total</div></th>
                           <th><div class="mc-icon"></div></th>
-                          <th v-if="game.gameOptions.showTimers" class="clock-icon">&#x1F551;</th>
+                          <th v-if="game.gameOptions.showTimers" class="game-end-header-label" v-i18n>Time</th>
                           <th><div class="table-red-arrow tooltip tooltip-top" :data-tooltip="$t('Actions taken this game')"></div></th>
                       </tr>
                   </thead>
@@ -179,13 +172,6 @@
           </div>
           <div class="game-end-flexrow game-end-final-sections">
           <div class="game_end_block--board game-end-column">
-              <VictoryPointChart
-                :datasets="globalsDataset"
-                :generation="game.generation"
-                :animation="true"
-                :id="'global-parameter-chart'"
-                :yAxisLabel="'% completed'"
-              />
               <h2 v-i18n>Final situation on the board</h2>
               <Board
                   :spaces="game.spaces"
@@ -201,6 +187,16 @@
               <PlanetaryTracks :tracks="game.pathfinders" :gameOptions="game.gameOptions"/>
             </div>
             <DeltaProjectBoard v-if="game.gameOptions.expansions.deltaProject" :players="players"/>
+            <section class="game-end-global-progress">
+              <h2 v-i18n>Global progress by generation</h2>
+              <VictoryPointChart
+                :datasets="globalsDataset"
+                :generation="game.generation"
+                :animation="true"
+                :id="'global-parameter-chart'"
+                :yAxisLabel="'% completed'"
+              />
+            </section>
           </div>
           <div class="game_end_block--log game-end-column">
             <LogPanel :color="color" :viewModel="viewModel"/>
@@ -226,7 +222,6 @@ import MoonBoard from '@/client/components/moon/MoonBoard.vue';
 import PlanetaryTracks from '@/client/components/pathfinders/PlanetaryTracks.vue';
 import DeltaProjectBoard from '@/client/components/delta/DeltaProjectBoard.vue';
 import LogPanel from '@/client/components/logpanel/LogPanel.vue';
-import AppButton from '@/client/components/common/AppButton.vue';
 import VictoryPointChart, {DataSet} from '@/client/components/gameend/VictoryPointChart.vue';
 import {playerColorClass} from '@/common/utils/utils';
 import {Timer} from '@/common/Timer';
@@ -390,7 +385,6 @@ export default defineComponent({
   components: {
     Board,
     LogPanel,
-    AppButton,
     MoonBoard,
     PlanetaryTracks,
     DeltaProjectBoard,

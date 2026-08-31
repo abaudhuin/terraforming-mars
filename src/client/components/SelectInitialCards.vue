@@ -62,9 +62,6 @@
       <div><span v-i18n>Starting Megacredits:</span> <div class="megacredits">{{getStartingMegacredits()}}</div></div>
       <div v-if="hasPrelude"><span v-i18n>After Preludes:</span> <div class="megacredits">{{getStartingMegacredits() + getAfterPreludes()}}</div></div>
     </template>
-    <div v-if="warning !== undefined" class="tm-warning">
-      <label class="label label-error">{{ $t(warning) }}</label>
-    </div>
   </div>
 </template>
 
@@ -156,10 +153,20 @@ export default defineComponent({
       return (this.playerinput.mulliganCategories ?? []).includes(category);
     },
     mulligan(category: MulliganCategory) {
-      this.selectedCards = [];
-      this.selectedCeos = [];
-      this.selectedCorporations = [];
-      this.selectedPreludes = [];
+      switch (category) {
+      case 'project':
+        this.selectedCards = [];
+        break;
+      case 'corporation':
+        this.selectedCorporations = [];
+        break;
+      case 'prelude':
+        this.selectedPreludes = [];
+        break;
+      case 'ceo':
+        this.selectedCeos = [];
+        break;
+      }
       this.validate();
       this.onsave({type: 'initialCardsMulligan', category});
     },

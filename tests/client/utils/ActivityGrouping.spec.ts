@@ -53,4 +53,24 @@ describe('ActivityGrouping', () => {
 
     expect(latestActivityGroup(logs)).to.deep.eq([logs[1]]);
   });
+
+  it('does not let an unrelated older played card swallow the latest draw', () => {
+    const logs = [
+      message('${0} played ${1}', 100, CardName.STRIP_MINE),
+      message('${0} gained 2 steel', 101),
+      message('${0} drew ${1}', 2000, CardName.ALGAE),
+    ];
+
+    expect(latestActivityGroup(logs)).to.deep.eq([logs[2]]);
+  });
+
+  it('keeps a played card with an immediately following placement', () => {
+    const logs = [
+      message('older action', 10),
+      message('${0} played ${1}', 2000, CardName.ARTIFICIAL_LAKE),
+      message('${0} placed an ocean tile', 2001),
+    ];
+
+    expect(latestActivityGroup(logs)).to.deep.eq([logs[1], logs[2]]);
+  });
 });

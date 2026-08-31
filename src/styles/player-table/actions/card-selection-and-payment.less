@@ -1,0 +1,1135 @@
+/* Card selection, project previews, amounts, warnings, and payment composition. */
+
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail .tm-project-card-chooser {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  min-width: 0;
+  min-height: 0;
+  gap: 10px;
+  overflow: auto hidden;
+  padding: 2px 6px 10px 2px;
+  scrollbar-gutter: stable;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail .tm-project-card-chooser--single {
+  justify-content: center;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail .tm-project-card-option {
+  flex: 0 0 230px;
+  width: 230px;
+  height: 278px;
+  min-height: 278px;
+  padding: 6px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail .tm-project-card-option--standard {
+  flex-basis: 184px;
+  width: 184px;
+  height: 118px;
+  min-height: 118px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail .tm-project-card-option > .cardbox.card-container {
+  width: 240px;
+  height: auto;
+  margin: 0;
+  transform: none !important;
+  transform-origin: top left;
+  zoom: var(--tm-project-card-scale, 0.9);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail .tm-project-card-option--standard > .cardbox.card-container {
+  zoom: 0.76;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-project-card-option {
+  width: 202px;
+  height: auto;
+  min-height: 0;
+  align-self: start;
+  overflow: visible;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-project-card-option > .card-container {
+  margin: 0;
+  transform: none !important;
+  transform-origin: top left;
+  zoom: 0.78;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-project-card-option--standard {
+  min-height: 0;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-component--select-card > label.cardbox {
+  width: 196px;
+  height: 286px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-component--select-card > label.cardbox > input[type="checkbox"] + .filterDiv.card-container,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-component--select-card > label.cardbox > input[type="radio"] + .filterDiv.card-container,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-component--select-card > label.cardbox > .filterDiv.card-container {
+  transform: scale(0.78);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .btn-submit:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .btn-action:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-submit .btn:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-inline-submit:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-component-actions .btn:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .payments_save .btn:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .select-initial-cards__summary .btn:disabled {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--tm-muted) !important;
+  box-shadow: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-bottom-tray:has(.tm-action-workbench .wf-options--command-board),
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-bottom-tray:has(.tm-action-workbench .wf-component--select-card),
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-bottom-tray:has(.tm-action-workbench .tm-project-payment) {
+  grid-template-columns: minmax(0, 1fr);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-bottom-tray:has(.tm-action-workbench .wf-options--command-board) .tm-card-desk,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-bottom-tray:has(.tm-action-workbench .wf-component--select-card) .tm-card-desk,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-bottom-tray:has(.tm-action-workbench .tm-project-payment) .tm-card-desk {
+  display: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-command-detail .payments_cont.tm-project-payment {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 10px;
+  overflow: hidden;
+  isolation: isolate;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: flex-start;
+  gap: 10px;
+  overflow: auto hidden;
+  padding: 2px 34px 14px 2px;
+  scroll-padding-inline: 18px 34px;
+  scrollbar-gutter: stable;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser--single {
+  justify-content: center;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option {
+  flex: 0 0 var(--tm-project-card-width);
+  width: var(--tm-project-card-width);
+  height: var(--tm-project-card-height);
+  min-height: var(--tm-project-card-height);
+  padding: 5px;
+  overflow: visible;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option--standard {
+  flex-basis: 186px;
+  width: 186px;
+  height: 128px;
+  min-height: 128px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option > .cardbox.card-container {
+  width: 240px;
+  height: auto;
+  margin: 0;
+  transform: none !important;
+  transform-origin: top left !important;
+  zoom: var(--tm-project-card-scale);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option--standard > .cardbox.card-container {
+  transform: scale(0.76) !important;
+  transform-origin: top left !important;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option:not(.tm-project-card-option--standard) > .cardbox.card-container:hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option:not(.tm-project-card-option--standard):focus-within > .cardbox.card-container {
+  transform: none !important;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option--standard > .cardbox.card-container:hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option--standard:focus-within > .cardbox.card-container {
+  transform: none !important;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option--standard .card-content {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option--standard .card-effect-box .card-effect-box-content,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option--standard .card-item-container {
+  margin-left: 0;
+  margin-right: 0;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option--standard .card-red-arrow {
+  width: 23px;
+  height: 23px;
+  background-size: 23px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-option--standard .card-venus-global-requirement {
+  width: 44px;
+  height: 27px;
+  background-size: 44px 27px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-payment-side {
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden auto;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-payment-side .payments_type {
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  gap: 2px 6px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-payment-side .tm-payment-resource-button {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+  width: 32px;
+  height: 32px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-payment-side .tm-payment-resource-copy {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-payment-side .tm-payment-stepper {
+  grid-column: 3;
+  grid-row: 1;
+  grid-template-columns: 30px 46px 30px 42px;
+  gap: 3px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-payment-side .tm-payment-stepper .btn {
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-payment-side .tm-payment-stepper .btn-max {
+  width: 42px;
+  min-width: 42px;
+  padding: 0 4px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-payment-side .payments_input {
+  width: 46px !important;
+  min-width: 46px !important;
+  max-width: 46px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-payment-side .tm-payment-resource-subtotal {
+  grid-column: 3;
+  grid-row: 2;
+  min-width: 0;
+  padding-right: 0;
+  font-size: 12px;
+  text-align: right;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-supercapacitors .card-content {
+  padding-top: 7px;
+  line-height: 18px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-supercapacitors .card-content > .card-rows:first-child {
+  margin-top: 0;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-supercapacitors .card-content .card-text-size--M {
+  font-size: 14px;
+  line-height: 17px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-supercapacitors .card-content .card-production-box {
+  margin-top: -2px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-supercapacitors .card-content > .card-description {
+  margin-top: 4px;
+  font-size: 10px;
+  line-height: 11px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-atmo-collectors .card-content > .card-rows:nth-of-type(2) > .card-row:first-child .card-item-container {
+  margin: 0 1px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-atmo-collectors .card-content > .card-rows:nth-of-type(2) > .card-row:first-child .card-resource {
+  width: 27px;
+  height: 27px;
+  line-height: 27px;
+  background-size: 27px;
+  margin-left: 1px;
+  margin-right: 1px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-atmo-collectors .card-content > .card-rows:nth-of-type(2) > .card-row:first-child .card-res-amount {
+  font-size: 18px;
+  margin-right: 0;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-atmo-collectors .card-content > .card-rows:nth-of-type(2) > .card-row:first-child .card-red-arrow {
+  width: 25px;
+  height: 25px;
+  background-size: 25px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-atmo-collectors .card-content > .card-rows:nth-of-type(2) > .card-row:first-child .card-slash--small {
+  margin-left: 0;
+  margin-right: 0;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-atmo-collectors .card-content > .card-rows:nth-of-type(2) {
+  margin-top: 4px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-atmo-collectors .card-content > .card-description {
+  margin-top: 4px;
+  font-size: 10px;
+  line-height: 11px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser .card-pets .card-content,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser .card-fish .card-content {
+  padding-top: 6px;
+  line-height: 17px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser .card-pets .card-rows,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser .card-fish .card-rows {
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser .card-pets .card-row,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser .card-fish .card-row {
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser .card-pets .card-description,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser .card-fish .card-description {
+  font-size: 10px;
+  line-height: 11px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser .card-pets .card-description-align--left,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .tm-project-card-chooser .card-fish .card-description-align--left {
+  margin-top: 2px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-neptunian-power-consultants .card-title .card-title {
+  font-size: 12px !important;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-neptunian-power-consultants .card-content > .card-rows,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-floating-refinery .card-content > .card-rows {
+  margin-top: 4px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-neptunian-power-consultants .card-content .card-row,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-floating-refinery .card-content .card-row {
+  margin: 2px 0;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-neptunian-power-consultants .card-text-size--S,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-floating-refinery .card-text-size--S {
+  font-size: 9px;
+  line-height: 10px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-neptunian-power-consultants .card-content > .card-description,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-floating-refinery .card-content > .card-description {
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 11px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .card-floating-refinery .card-content .card-item-container {
+  margin: 0 2px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-component--select-card {
+  position: relative;
+  height: 100%;
+  max-height: none;
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: row wrap;
+  align-content: flex-start;
+  align-items: flex-start;
+  gap: 8px 10px;
+  overflow: auto;
+  padding: 0 6px 8px 0;
+  background: transparent;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-component--select-card::after {
+  display: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > .wf-component-title.nofloat,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > .wf-component-title {
+  position: static;
+  flex: 1 1 auto;
+  min-width: 260px;
+  order: 0;
+  margin: 0;
+  padding: 7px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--tm-border-soft);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--tm-text);
+  font-size: 18px;
+  line-height: 1.1;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > .wf-component-actions.nofloat,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > .wf-component-actions {
+  position: static;
+  flex: 0 0 auto;
+  order: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component > .warnings-component,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component > .card-warning {
+  flex: 0 0 100%;
+  order: 0;
+  max-width: min(760px, 100%);
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 204, 100, 0.28);
+  border-left: 3px solid rgba(255, 204, 100, 0.72);
+  border-radius: 6px;
+  background: rgba(255, 204, 100, 0.08);
+  color: #ffdd92;
+  font-family: Ubuntu, sans-serif;
+  font-size: 13px;
+  line-height: 1.25;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .warnings-component {
+  display: grid;
+  gap: 4px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .warnings-component .card-warning {
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > label.cardbox {
+  flex: 0 0 212px;
+  width: 212px;
+  height: 312px;
+  order: 1;
+  margin: 0;
+  padding-top: 0;
+  overflow: visible;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > label.cardbox > input {
+  position: absolute;
+  z-index: 2;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > label.cardbox > input[type="checkbox"] + .filterDiv.card-container,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > label.cardbox > input[type="radio"] + .filterDiv.card-container,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > label.cardbox > .filterDiv.card-container {
+  margin: 0;
+  transform: scale(var(--tm-action-card-scale));
+  transform-origin: top left;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > label.cardbox > input[type="checkbox"]:checked + .filterDiv.card-container,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > label.cardbox > input[type="radio"]:checked + .filterDiv.card-container {
+  filter: brightness(1.05) saturate(1.06);
+  box-shadow: var(--tm-card-selected-ring);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > label.cardbox > input[type="checkbox"]:checked + .filterDiv.card-container::after,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-card > label.cardbox > input[type="radio"]:checked + .filterDiv.card-container::after {
+  content: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment > .tm-project-card-chooser {
+  grid-column: 1;
+  grid-row: 1;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment:not(:has(> .tm-project-payment-side)) > .tm-project-card-chooser {
+  grid-column: 1 / -1;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment > .tm-project-payment-side {
+  grid-column: 2;
+  grid-row: 1;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment:has(> .tm-project-payment-title) {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment > .tm-project-payment-title {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment:has(> .tm-project-payment-title) > .tm-project-card-chooser,
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment:has(> .tm-project-payment-title) > .tm-project-payment-side {
+  grid-row: 2;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment-heading {
+  min-height: 56px;
+  padding: 0;
+  border: 1px solid var(--tm-line);
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.045);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment-heading > span {
+  min-width: 0;
+  padding: 8px 10px;
+  display: grid;
+  align-content: center;
+  gap: 3px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment-heading > span + span {
+  border-left: 1px solid var(--tm-line);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment-heading small {
+  color: var(--tm-ink-muted);
+  font-family: Ubuntu, sans-serif;
+  font-size: 9px;
+  font-weight: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-payment-heading strong {
+  overflow: hidden;
+  color: var(--tm-ink-strong);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#player-home.tm-player-table.tm-player-table--acting:not(.tm-player-table--setup):has(.tm-action-workbench :is(.wf-command-detail, .wf-component--select-card, .tm-project-payment, .wf-component--blue-card-action)) {
+  --tm-bottom-height: clamp(328px, 38vh, 378px);
+}
+#player-home.tm-player-table.tm-player-table--acting:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) {
+  --tm-bottom-height: clamp(390px, 44vh, 430px);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card {
+  justify-content: flex-start;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card > .wf-component-title.nofloat,
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card > .wf-component-title {
+  // The heading participates in the scrollable flow. A sticky overlay covered
+  // card headers whenever focus management scrolled a tall card into view.
+  position: static;
+  z-index: 5;
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 100%;
+  padding: 5px 0 7px;
+  background: rgba(10, 12, 13, 0.98);
+  box-sizing: border-box;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card > .wf-component-actions.nofloat,
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card > .wf-component-actions {
+  position: sticky;
+  z-index: 4;
+  bottom: 0;
+  flex: 0 0 100%;
+  height: 42px;
+  min-height: 42px;
+  order: 2;
+  margin: -42px 0 0;
+  padding: 8px 0 1px;
+  align-items: center;
+  justify-content: flex-end;
+  background: transparent;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card > .wf-component-actions > * {
+  pointer-events: auto;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card > .wf-component-actions > .wf-card-purchase-summary,
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card > .wf-component-actions > .btn {
+  height: 36px;
+  min-height: 36px;
+  box-sizing: border-box;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-card-purchase-summary {
+  padding: 4px 10px;
+  border: 1px solid rgba(232, 166, 58, 0.34);
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(232, 166, 58, 0.08);
+  color: var(--tm-ink-muted);
+  font-family: Ubuntu, sans-serif;
+  font-size: 12px;
+  line-height: 1;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-card-purchase-summary strong {
+  color: var(--tm-focus);
+  font-family: Prototype, sans-serif;
+  font-size: 15px;
+  font-weight: normal;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--select-card) .tm-action-workbench .wf-component--select-card > label.cardbox {
+  width: var(--tm-action-card-width);
+  height: var(--tm-action-card-height);
+  min-height: var(--tm-action-card-height);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .tm-project-payment) {
+  --tm-bottom-height: clamp(328px, 38vh, 378px);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) {
+  --tm-bottom-height: clamp(328px, 38vh, 378px) !important;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  display: flex;
+  flex-flow: row wrap;
+  align-content: flex-start;
+  align-items: flex-start;
+  gap: 8px 10px;
+  overflow: auto;
+  padding: 0 6px 8px 0;
+  background: transparent;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action::after,
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action > .wf-component-title {
+  content: none;
+  display: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action > label.cardbox {
+  flex: 0 0 var(--tm-action-card-width);
+  width: var(--tm-action-card-width);
+  height: var(--tm-action-card-height);
+  max-height: none;
+  min-height: var(--tm-action-card-height);
+  order: 1;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action > label.cardbox > input[type="checkbox"] + .filterDiv.card-container,
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action > label.cardbox > input[type="radio"] + .filterDiv.card-container,
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action > label.cardbox > .filterDiv.card-container {
+  margin: 0;
+  transform: scale(var(--tm-action-card-scale));
+  transform-origin: top left;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action .card-content-corporation {
+  width: 236px !important;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action > .wf-component-actions.nofloat,
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action > .wf-component-actions {
+  position: sticky;
+  z-index: 5;
+  bottom: 0;
+  flex: 0 0 100%;
+  width: 100%;
+  order: 2;
+  margin: auto 0 0;
+  padding: 8px 0 1px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  background: transparent;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action > .wf-component-actions .btn-submit,
+#player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action > .wf-component-actions .btn {
+  min-width: 148px;
+  min-height: 34px;
+  height: 34px;
+  font-size: 16px;
+}
+@media (max-height: 820px) {
+  #player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) {
+    --tm-bottom-height: 318px !important;
+  }
+  #player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action {
+    gap: 8px;
+    padding-right: 6px;
+  }
+  #player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action > .wf-component-actions .btn-submit,
+  #player-home.tm-player-table:not(.tm-player-table--setup):has(.tm-action-workbench .wf-component--blue-card-action) .tm-action-workbench .wf-component--blue-card-action > .wf-component-actions .btn {
+    min-width: 136px;
+    min-height: 31px;
+    height: 31px;
+    font-size: 15px;
+  }
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--two-row-actions:has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-card-chooser,
+.preferences_magnify_cards #player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--two-row-actions:has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-card-chooser {
+  box-sizing: border-box;
+  width: min(100%, 1240px);
+  max-height: 584px;
+  flex-flow: row wrap;
+  align-content: flex-start;
+  overflow: auto;
+  padding-right: 18px;
+  padding-bottom: 16px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--two-row-actions:has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-card-option,
+.preferences_magnify_cards #player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--two-row-actions:has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-card-option {
+  flex: 0 0 var(--tm-project-card-width);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--two-row-actions:has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-card-chooser:has(.tm-project-card-option--standard),
+.preferences_magnify_cards #player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--two-row-actions:has(.tm-action-workbench .tm-project-payment) .tm-action-workbench .tm-project-card-chooser:has(.tm-project-card-option--standard) {
+  width: min(100%, 1010px);
+  max-height: 284px;
+}
+#player-home.tm-player-table .tm-payment-warning {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-left: 3px solid #e88753;
+  border-radius: 0 5px 5px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(208, 99, 82, 0.12);
+  color: #f2c5b8;
+  font-size: 13px;
+  line-height: 1.2;
+}
+#player-home.tm-player-table .tm-payment-warning-icon {
+  width: 17px;
+  height: 17px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  font-family: Prototype, sans-serif;
+  font-size: 11px;
+  line-height: 1;
+}
+#player-home.tm-player-table .tm-action-workbench .wf-component--select-card {
+  display: flex;
+  flex-flow: row wrap;
+  align-content: flex-start;
+  gap: 6px;
+  max-height: 284px;
+  overflow: auto;
+  padding-right: 4px;
+}
+#player-home.tm-player-table .tm-action-workbench .wf-component--select-card .wf-component-title {
+  flex: 0 0 100%;
+  order: 0;
+}
+#player-home.tm-player-table .tm-action-workbench .wf-component--select-card > label.cardbox {
+  flex: 0 0 176px;
+  width: 176px;
+  height: 260px;
+  margin: 0;
+  overflow: visible;
+  transform: none;
+  order: 2;
+}
+#player-home.tm-player-table .tm-action-workbench .wf-component--select-card > label.cardbox > input[type="checkbox"] + .filterDiv.card-container,
+#player-home.tm-player-table .tm-action-workbench .wf-component--select-card > label.cardbox > input[type="radio"] + .filterDiv.card-container,
+#player-home.tm-player-table .tm-action-workbench .wf-component--select-card > label.cardbox > .filterDiv.card-container {
+  margin: 0;
+  transform: scale(0.72);
+  transform-origin: top left;
+}
+#player-home.tm-player-table .tm-action-workbench .wf-component--select-card > .wf-component-title.nofloat {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  flex: 0 0 100%;
+  order: 0;
+  margin: 0;
+  padding: 2px 0 8px;
+  background: linear-gradient(rgba(12, 13, 14, 0.98) 82%, transparent);
+}
+#player-home.tm-player-table .tm-action-workbench .wf-component--select-card > .wf-component-actions.nofloat {
+  position: sticky;
+  z-index: 2;
+  bottom: 0;
+  flex: 0 0 100%;
+  order: 3;
+  margin: auto 0 0;
+  padding: 8px 0 2px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  background: linear-gradient(transparent, rgba(12, 13, 14, 0.98) 28%);
+}
+#player-home.tm-player-table .tm-action-workbench .payments_cont {
+  max-height: 284px;
+  overflow: auto;
+}
+#player-home.tm-player-table .tm-action-workbench .payments_cont .payments_cards {
+  display: inline-block;
+  width: 176px;
+  height: 260px;
+  margin: 0;
+  transform: none;
+  transform-origin: top left;
+}
+#player-home.tm-player-table.tm-player-table--acting .wf-command-detail > .wf-options--command-board,
+#player-home.tm-player-table.tm-player-table--acting .wf-command-detail > .wf-component,
+#player-home.tm-player-table.tm-player-table--acting .wf-command-detail > .payments_cont {
+  height: 100%;
+  max-height: none;
+}
+#player-home.tm-player-table.tm-player-table--acting .wf-component--select-card {
+  overflow: auto;
+}
+#player-home.tm-player-table.tm-player-table--acting .wf-command-detail .wf-component--select-card {
+  height: 100%;
+}
+#player-home.tm-player-table.tm-player-table--acting .wf-command-detail .payments_cont.tm-project-payment {
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
+  overflow: hidden;
+}
+#player-home.tm-player-table.tm-player-table--acting .wf-command-detail .tm-project-card-chooser {
+  overflow: auto;
+  padding: 2px 6px 2px 2px;
+}
+#player-home.tm-player-table.tm-player-table--acting .wf-command-detail .tm-project-payment > .tm-project-payment-side {
+  min-height: 0;
+  overflow: hidden;
+}
+#player-home.tm-player-table.tm-player-table--acting .tm-payment-form {
+  min-height: 0;
+}
+#player-home.tm-player-table.tm-player-table--acting .tm-payment-resource-list {
+  overflow: auto;
+}
+#player-home.tm-player-table .tm-project-card-chooser {
+  grid-template-columns: repeat(auto-fill, minmax(204px, 1fr));
+}
+#player-home.tm-player-table .tm-project-card-chooser--single {
+  grid-template-columns: 204px;
+}
+#player-home.tm-player-table .tm-project-card-option {
+  width: 204px;
+  min-height: 292px;
+  padding: 7px;
+}
+#player-home.tm-player-table .tm-project-card-option .cardbox {
+  width: 190px;
+  height: 274px;
+}
+#player-home.tm-player-table .tm-project-card-option .card-container {
+  transform: scale(0.79);
+  transform-origin: top left;
+}
+#player-home.tm-player-table .tm-project-card-option--standard {
+  min-height: 126px;
+}
+#player-home.tm-player-table .tm-project-card-option--standard .cardbox {
+  height: 112px;
+}
+#player-home.tm-player-table .tm-project-payment-heading {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  padding: 0 2px;
+}
+#player-home.tm-player-table .tm-project-payment-heading strong {
+  min-height: 28px;
+  padding: 6px 10px;
+  border: 1px solid var(--tm-border);
+  border-radius: 6px;
+  background: rgba(255, 204, 100, 0.14);
+  color: var(--tm-text);
+  font-family: Prototype, sans-serif;
+  font-size: 17px;
+  line-height: 1;
+  font-weight: normal;
+  white-space: nowrap;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .btn-submit,
+#player-home.tm-player-table:not(.tm-player-table--setup) .btn-action,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-submit .btn,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-inline-submit,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-action .btn,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-amount .btn,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-production-to-lose .btn,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .btn-primary,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-component-actions .btn,
+#player-home.tm-player-table:not(.tm-player-table--setup) .payments_save .btn,
+#player-home.tm-player-table:not(.tm-player-table--setup) .select-initial-cards__summary .btn {
+  min-width: 116px;
+  min-height: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 204, 100, 0.38) !important;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 15, 16, 0.96) !important;
+  color: var(--tm-text) !important;
+  font-family: Prototype, sans-serif;
+  font-size: 14px;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow: none;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .btn-submit:not(:disabled):hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .btn-submit:not(:disabled):focus,
+#player-home.tm-player-table:not(.tm-player-table--setup) .btn-action:not(:disabled):hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .btn-action:not(:disabled):focus,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-submit .btn:not(:disabled):hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-submit .btn:not(:disabled):focus,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-inline-submit:not(:disabled):hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-inline-submit:not(:disabled):focus,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-action .btn:not(:disabled):hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-action .btn:not(:disabled):focus,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-amount .btn:not(:disabled):hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-amount .btn:not(:disabled):focus,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-production-to-lose .btn:not(:disabled):hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-production-to-lose .btn:not(:disabled):focus,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .btn-primary:not(:disabled):hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .btn-primary:not(:disabled):focus,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-component-actions .btn:not(:disabled):hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-component-actions .btn:not(:disabled):focus,
+#player-home.tm-player-table:not(.tm-player-table--setup) .payments_save .btn:not(:disabled):hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .payments_save .btn:not(:disabled):focus,
+#player-home.tm-player-table:not(.tm-player-table--setup) .select-initial-cards__summary .btn:not(:disabled):hover,
+#player-home.tm-player-table:not(.tm-player-table--setup) .select-initial-cards__summary .btn:not(:disabled):focus {
+  border-color: rgba(255, 204, 100, 0.56) !important;
+  background: rgba(255, 204, 100, 0.1) !important;
+  color: #ffe2a1 !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 204, 100, 0.12);
+  outline: none;
+  transform: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .btn-submit:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .btn-action:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-submit .btn:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-command-inline-submit:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-action .btn:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-amount .btn:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-production-to-lose .btn:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .btn-primary:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .wf-component-actions .btn:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .payments_save .btn:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup) .select-initial-cards__summary .btn:disabled {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: var(--tm-muted) !important;
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-amount {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  align-content: start;
+  gap: 10px;
+  overflow: hidden;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-amount > .wf-component-title {
+  max-width: 36ch;
+  margin: 0;
+  color: var(--tm-text);
+  font-size: clamp(19px, 1.3vw, 24px);
+  line-height: 1.28;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-amount .nes-input {
+  width: 64px;
+  height: 38px;
+  min-height: 38px;
+  margin: 0;
+  padding: 0 6px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 4px;
+  background: rgba(246, 239, 227, 0.96);
+  color: #15110b;
+  font-family: Prototype, sans-serif;
+  font-size: 22px;
+  line-height: 38px;
+  box-shadow: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-amount .btn {
+  min-width: 62px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 15px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup) .tm-action-workbench .wf-component--select-amount .btn-max {
+  margin-left: 0;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail:has(.tm-project-payment) {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-inline-submit,
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-submit .btn-submit,
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-component-actions .btn-submit,
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .payments_save .btn {
+  min-width: 152px;
+  height: 38px;
+  margin: 0;
+  border-color: rgba(255, 204, 100, 0.46) !important;
+  background: rgba(255, 204, 100, 0.1) !important;
+  color: #ffe2a1 !important;
+  font-size: 15px;
+  font-family: Prototype, sans-serif;
+  text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px rgba(255, 204, 100, 0.1);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-inline-submit:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-submit .btn-submit:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-component-actions .btn-submit:disabled,
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .payments_save .btn:disabled {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: var(--tm-muted) !important;
+  box-shadow: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-component--select-card {
+  height: 100%;
+  max-height: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .payments_cont {
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  grid-auto-rows: min-content;
+  align-content: start;
+  gap: 8px;
+  overflow: auto;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .payments_cont > .tm-project-payment-title {
+  grid-column: 1 / -1;
+  color: var(--tm-text);
+  font-family: Prototype, sans-serif;
+  font-size: 18px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .payments_cards {
+  width: 176px;
+  height: 260px;
+  margin: 0;
+  transform: none;
+  zoom: 1;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .payments_cards .cardbox {
+  margin: 0;
+  transform: scale(0.72);
+  transform-origin: top left;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .payments_cont > section {
+  grid-column: 2;
+  grid-row: 2 / span 5;
+  align-self: start;
+  padding: 8px;
+  border-radius: 7px;
+  border: 1px solid var(--tm-border-soft);
+  background: rgba(0, 0, 0, 0.28);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail .payments_cont {
+  grid-template-columns: repeat(auto-fill, minmax(176px, 176px)) minmax(300px, 1fr);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail .payments_cont > section {
+  grid-column: -2 / -1;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail .payments_cards:has(.card-standard-project) {
+  height: 102px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail .payments_cont.tm-project-payment {
+  position: relative;
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-payment-title {
+  grid-column: 1;
+  grid-row: 1;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-chooser {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: flex-start;
+  gap: 10px;
+  overflow: auto hidden;
+  padding: 2px 8px 12px 2px;
+  box-sizing: border-box;
+  scrollbar-gutter: stable;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-chooser--single {
+  width: 100%;
+  justify-content: center;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-payment:has(> .tm-project-payment-side) > .tm-project-card-chooser:not(.tm-project-card-chooser--single) {
+  width: calc(100% - clamp(320px, 31%, 400px) - 10px);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 3px;
+  cursor: pointer;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option:hover,
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option:focus-within {
+  border-color: transparent;
+  background: transparent;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option--selected {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option:hover > .cardbox.card-container,
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option:focus-within > .cardbox.card-container {
+  filter: brightness(1.07) saturate(1.04);
+  box-shadow: var(--tm-card-hover-ring);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option--selected > .cardbox.card-container,
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option--selected:hover > .cardbox.card-container,
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option--selected:focus-within > .cardbox.card-container {
+  filter: brightness(1.05) saturate(1.06);
+  box-shadow: var(--tm-card-selected-ring);
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option--selected > .cardbox.card-container::after {
+  content: none;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option--disabled {
+  opacity: 0.46;
+  cursor: not-allowed;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-card-option--standard {
+  height: 112px;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .wf-command-detail .tm-project-payment > .tm-project-payment-side {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: clamp(320px, 31%, 400px);
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--tm-border-soft);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-payment-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  padding: 0 2px;
+  color: var(--tm-accent);
+  font-family: Prototype, sans-serif;
+  text-transform: uppercase;
+}
+#player-home.tm-player-table:not(.tm-player-table--setup).tm-player-table--acting .tm-project-payment-warnings {
+  display: grid;
+  gap: 5px;
+}

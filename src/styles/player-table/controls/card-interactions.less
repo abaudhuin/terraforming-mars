@@ -1,0 +1,192 @@
+#player-home.tm-player-table:not(.tm-player-table--setup) {
+  // These are the deliberate card/list scroll roots. Keep their identity and
+  // scrollbar allocation stable while descendants hover or receive focus.
+  .tm-card-desk,
+  .tm-card-strip,
+  .tm-action-workbench,
+  .tm-action-workbench .wf-component--select-card,
+  .tm-action-workbench .tm-project-card-chooser,
+  .tm-log-preview-desk .card-panel,
+  .tm-player-log-preview .card-panel,
+  .tm-modal-body,
+  .tm-modal .tm-card-gallery {
+    overflow-anchor: none;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .tm-card-gallery,
+  .tm-card-strip,
+  .tm-project-card-chooser,
+  .tm-colony-card-strip {
+    scrollbar-color: var(--tm-scrollbar-thumb) var(--tm-scrollbar-track);
+    scrollbar-width: thin;
+  }
+
+  // Selectable cards share one physical-object interaction language across
+  // project play, blue-card actions, research, purchases, and setup choices.
+  // The border treatment changes; the card's scale and layout slot never do.
+  .tm-selectable-card {
+    --tm-card-hover-ring: 0 0 0 2px rgba(255, 210, 112, 0.78), 0 8px 18px rgba(0, 0, 0, 0.36);
+    --tm-card-selected-ring:
+      0 0 0 1px rgba(8, 8, 7, 0.96),
+      0 0 0 4px #e7a63a,
+      0 0 18px 5px rgba(231, 166, 58, 0.38);
+    position: relative;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .tm-selectable-card > .card-container {
+    transition: filter 130ms ease, box-shadow 130ms ease;
+  }
+
+  .tm-selectable-card:hover > .card-container,
+  .tm-selectable-card:focus-within > .card-container {
+    filter: brightness(1.07) saturate(1.04);
+    box-shadow: var(--tm-card-hover-ring);
+  }
+
+  .tm-selectable-card:focus-within > .card-container {
+    box-shadow:
+      0 0 0 1px #111,
+      0 0 0 4px rgba(255, 231, 174, 0.96),
+      0 8px 18px rgba(0, 0, 0, 0.36);
+  }
+
+  .tm-selectable-card--selected > .card-container,
+  .tm-selectable-card--selected:hover > .card-container,
+  .tm-selectable-card--selected:focus-within > .card-container {
+    filter: brightness(1.05) saturate(1.06);
+    box-shadow: var(--tm-card-selected-ring);
+  }
+
+  .tm-selectable-card--disabled {
+    cursor: not-allowed;
+    opacity: 0.48;
+  }
+
+  .tm-selectable-card--disabled:hover > .card-container {
+    filter: none;
+    box-shadow: none;
+  }
+
+  // Tall-card expansion is useful in a full gallery, but in compact/action
+  // surfaces it changes layout beneath the pointer and can move the scroll
+  // anchor. Keep long content inside the card's existing content viewport.
+  .tm-card-strip .card-container.card-hover-tall:not(.card-standard-project):hover .card-content:not(.global-event-card-content):not(.card-content-corporation),
+  .tm-action-workbench .card-container.card-hover-tall:not(.card-standard-project):hover .card-content:not(.global-event-card-content):not(.card-content-corporation),
+  .tm-log-preview-desk .card-container.card-hover-tall:not(.card-standard-project):hover .card-content:not(.global-event-card-content):not(.card-content-corporation),
+  .tm-player-log-preview .card-container.card-hover-tall:not(.card-standard-project):hover .card-content:not(.global-event-card-content):not(.card-content-corporation) {
+    height: 226px !important;
+    min-height: 0;
+    overflow: hidden auto !important;
+    padding-bottom: 0;
+  }
+}
+
+#player-home.tm-player-table.tm-player-table--magnify-cards,
+.preferences_magnify_cards #player-home.tm-player-table {
+  .cardbox,
+  .tm-project-card-option {
+    position: relative;
+  }
+
+  .filterDiv.card-container {
+    transition: filter 140ms ease, box-shadow 140ms ease;
+    transform-origin: center top;
+  }
+
+  .cardbox > .card-container,
+  .tm-project-card-option > .cardbox.card-container {
+    transform-origin: center top !important;
+  }
+
+  .cardbox:hover,
+  .cardbox:focus-within,
+  .tm-project-card-option:hover,
+  .tm-project-card-option:focus-within {
+    z-index: 520;
+  }
+
+  .filterDiv.card-container:hover,
+  .filterDiv.card-container:focus-within {
+    filter: brightness(1.035);
+  }
+
+  .tm-action-workbench .tm-project-card-chooser {
+    overflow: auto hidden;
+  }
+
+  .tm-action-workbench .tm-project-card-option:hover,
+  .tm-action-workbench .tm-project-card-option:focus-within {
+    z-index: 2;
+  }
+
+  .tm-action-workbench .tm-project-payment-side {
+    z-index: 3;
+  }
+
+  // Compact trays keep their resting geometry. Magnification here used to
+  // invalidate Chrome's live scroll container and could anchor-scroll a waiting
+  // player to a different card simply by moving the pointer.
+  .tm-card-strip:not(.tm-card-strip--drawer) > .cardbox:hover > .card-container,
+  .tm-card-strip:not(.tm-card-strip--drawer) > .cardbox:focus-within > .card-container,
+  .tm-card-strip:not(.tm-card-strip--drawer) .sortable-cards .cardbox:hover > .card-container,
+  .tm-card-strip:not(.tm-card-strip--drawer) .sortable-cards .cardbox:focus-within > .card-container {
+    transform: scale(0.72) !important;
+  }
+
+  .tm-log-preview-desk .log-panel-card:hover > .card-container,
+  .tm-log-preview-desk .log-panel-card:focus-within > .card-container {
+    transform: scale(0.72) !important;
+  }
+
+  .tm-player-log-preview .log-panel-card:hover > .card-container,
+  .tm-player-log-preview .log-panel-card:focus-within > .card-container {
+    transform: scale(0.54) !important;
+  }
+
+  // Full overlays retain their resting card size as well: the old enlarged
+  // transform exceeded each gallery slot and overlapped adjacent cards.
+  .tm-modal .tm-card-gallery > .cardbox:hover > .card-container,
+  .tm-modal .tm-card-gallery > .cardbox:focus-within > .card-container {
+    transform: scale(0.72) !important;
+  }
+
+  .tm-modal .tm-player-dossier-cards .tm-card-gallery > .cardbox:hover > .card-container,
+  .tm-modal .tm-player-dossier-cards .tm-card-gallery > .cardbox:focus-within > .card-container {
+    transform: scale(0.76) !important;
+  }
+
+  .tm-modal--log .log-panel-card:hover > .card-container,
+  .tm-modal--log .log-panel-card:focus-within > .card-container {
+    transform: scale(0.66) !important;
+  }
+
+  .player_home_block--setup .wf-component--select-card > label.cardbox:hover > input[type="checkbox"] + .filterDiv.card-container,
+  .player_home_block--setup .wf-component--select-card > label.cardbox:focus-within > input[type="checkbox"] + .filterDiv.card-container,
+  .player_home_block--setup .wf-component--select-card > label.cardbox:hover > input[type="radio"] + .filterDiv.card-container,
+  .player_home_block--setup .wf-component--select-card > label.cardbox:focus-within > input[type="radio"] + .filterDiv.card-container,
+  .player_home_block--setup .wf-component--select-card > label.cardbox:hover > .filterDiv.card-container,
+  .player_home_block--setup .wf-component--select-card > label.cardbox:focus-within > .filterDiv.card-container {
+    transform: scale(0.92) !important;
+  }
+
+  .tm-action-workbench .wf-component--select-card:not(.wf-component--blue-card-action) > label.cardbox:hover > .filterDiv.card-container,
+  .tm-action-workbench .wf-component--select-card:not(.wf-component--blue-card-action) > label.cardbox:focus-within > .filterDiv.card-container {
+    transform: scale(var(--tm-action-card-scale)) !important;
+  }
+
+  .tm-action-workbench .wf-component--blue-card-action > label.cardbox:hover > .filterDiv.card-container,
+  .tm-action-workbench .wf-component--blue-card-action > label.cardbox:focus-within > .filterDiv.card-container {
+    transform: scale(var(--tm-action-card-scale)) !important;
+  }
+
+  @media (min-width: 1800px) and (min-height: 1000px) {
+    .tm-modal--log .log-panel-card:hover > .card-container,
+    .tm-modal--log .log-panel-card:focus-within > .card-container {
+      transform: scale(0.78) !important;
+    }
+  }
+}
