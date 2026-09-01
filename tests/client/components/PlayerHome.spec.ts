@@ -153,7 +153,7 @@ describe('PlayerHome', () => {
     expect(wrapper.findComponent({name: 'ActionSpotlight'}).exists()).to.be.true;
   });
 
-  it('persists independently collapsible and resizable table panels', async () => {
+  it('keeps the bottom workbench present while persisting resizable table panels', () => {
     const thisPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}]});
     const wrapper = shallowMount(PlayerHome, {
       ...globalConfig,
@@ -169,13 +169,9 @@ describe('PlayerHome', () => {
     });
 
     expect(wrapper.find('.tm-layout-resize-handle--player').exists()).to.be.true;
-    expect(wrapper.find('.tm-bottom-tray-toggle').attributes('aria-expanded')).to.eq('true');
-
-    await wrapper.find('.tm-bottom-tray-toggle').trigger('click');
-
-    expect(wrapper.classes()).to.include('tm-player-table--bottom-collapsed');
-    expect(wrapper.find('.tm-bottom-tray-toggle').attributes('aria-expanded')).to.eq('false');
-    expect(localStorage.getItem('tm-player-table-bottom-tray-collapsed')).to.eq('true');
+    expect(wrapper.find('.tm-layout-resize-handle--bottom').exists()).to.be.true;
+    expect(wrapper.find('.tm-bottom-tray-toggle').exists()).to.be.false;
+    expect(wrapper.classes()).not.to.include('tm-player-table--bottom-collapsed');
 
     (wrapper.vm as any).playerRailWidth = 418;
     (wrapper.vm as any).resizeTarget = 'player';
@@ -288,7 +284,7 @@ describe('PlayerHome', () => {
     wrapper.unmount();
   });
 
-  it('keeps a mandatory decision visible without overwriting the stored collapsed preference', async () => {
+  it('ignores the retired bottom-collapse preference and keeps mandatory decisions visible', async () => {
     localStorage.setItem('tm-player-table-bottom-tray-collapsed', 'true');
     const thisPlayer = fakePublicPlayerModel({tableau: [{name: CardName.ACQUIRED_COMPANY}]});
     const waitingView = fakePlayerViewModel({thisPlayer, players: [thisPlayer], waitingFor: undefined});
@@ -298,17 +294,17 @@ describe('PlayerHome', () => {
       props: {playerView: waitingView},
     });
 
-    expect(wrapper.classes()).to.include('tm-player-table--bottom-collapsed');
+    expect(wrapper.classes()).not.to.include('tm-player-table--bottom-collapsed');
+    expect(wrapper.find('.tm-bottom-tray-toggle').exists()).to.be.false;
     await wrapper.setProps({
       playerView: {...waitingView, waitingFor: {type: 'option', title: 'Choose', buttonLabel: 'Continue'}},
     });
     expect(wrapper.classes()).not.to.include('tm-player-table--bottom-collapsed');
     expect(wrapper.find('.tm-action-workbench').exists()).to.eq(true);
-    expect(wrapper.find('.tm-bottom-tray-toggle').attributes()).to.have.property('disabled');
     expect(localStorage.getItem('tm-player-table-bottom-tray-collapsed')).to.eq('true');
 
     await wrapper.setProps({playerView: waitingView});
-    expect(wrapper.classes()).to.include('tm-player-table--bottom-collapsed');
+    expect(wrapper.classes()).not.to.include('tm-player-table--bottom-collapsed');
   });
 
   it('uses one utility dock and one controlled module overlay', async () => {
@@ -321,10 +317,12 @@ describe('PlayerHome', () => {
     });
 
     expect(wrapper.findAll('.tm-top-tools > .tm-utility-control').length).to.eq(3);
-    expect(wrapper.find('.tm-top-tools .tm-utility-menu').exists()).to.eq(true);
+    expect(wrapper.find('.tm-top-tools .tm-utility-menu').exists()).to.eq(false);
+    expect(wrapper.find('.tm-turn-context > .tm-utility-menu--hud-leading').exists()).to.eq(true);
     expect(wrapper.find('.tm-control--board').exists()).to.eq(false);
     expect(wrapper.find('.tm-board-expand-button').exists()).to.eq(false);
     expect(wrapper.findAll('.tm-module-dock-button').length).to.eq(1);
+    expect(wrapper.find('.tm-module-dock-button--ma').text()).to.eq('Milestones');
 
     await wrapper.find('.tm-module-dock-button--ma').trigger('click');
     expect((wrapper.vm as any).activeOverlay).to.eq('module');

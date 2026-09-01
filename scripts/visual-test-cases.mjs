@@ -342,12 +342,11 @@ const builtInTestCases = [
   detail('layout/primary-dense-4p', 'layout', 'Normal primary midgame table and default panel proportions.', 'table-active'),
   detail('layout/dense-5p', 'layout', 'Five-player density with every opponent reachable.', 'table-active', {fixture: 'dense-mid-5p'}),
   detail('layout/bottom-tray-compressed', 'layout', 'Compressed action tray preserves the pending decision.', 'bottom-tray-compressed'),
-  detail('layout/bottom-tray-collapsed', 'layout', 'The waiting-state tray collapse control remains inside the tray edge and the collapsed tray returns its space to the board.', 'bottom-tray-collapsed', {perspective: 'waiting', detailSelector: '#player-home'}),
   detail('layout/activity-collapsed', 'layout', 'Collapsed activity rail restores board space without orphan chrome.', 'activity-rail-collapsed'),
   detail('layout/primary-wide', 'layout', 'Wide desktop uses extra space intentionally without stretching decisions.', 'table-active', {viewport: 'desktop-wide'}),
   detail('layout/resize-handles-hover', 'layout', 'Horizontal and vertical resize handles remain visible and untinted on hover without moving their panels.', 'resize-handles-hover', {detailSelector: '#player-home'}),
   detail('layout/resize-minimums-1280', 'layout', 'At the minimum supported desktop size, both side rails and the bottom tray can contract enough to return useful space to the board.', 'resized-layout-minimums', {viewport: 'desktop-minimum', detailSelector: '#player-home'}),
-  detail('layout/utility-dock-open', 'layout', 'The consolidated top-right utility controls stay aligned while the icon-only tools menu is open.', 'tools-open', {detailSelector: '.tm-table-hud'}),
+  detail('layout/utility-dock-open', 'layout', 'The leading Tools control and right-aligned review controls stay aligned while the compact tools menu is open.', 'tools-open', {detailSelector: '.tm-table-hud'}),
   detail('layout/hud-long-turn-context-1280', 'layout', 'Long active-turn context stays fully inside the table HUD at the minimum supported desktop size.', 'hud-long-turn-context', {viewport: 'desktop-minimum', detailSelector: '.tm-table-hud'}),
   detail('layout/module-dock-dense', 'layout', 'Every available inspectable table module fits in one narrow board-bottom dock without covering Mars targets.', 'module-dock-dense', {fixture: 'all-modules-mid-4p', viewport: 'desktop-minimum', detailSelector: '.tm-board-stage'}),
   detail('layout/player-rail-enlarged-1280', 'layout', 'At the minimum supported desktop size, the player rail has a materially useful enlargement range while the board remains reachable.', 'player-rail-enlarged', {viewport: 'desktop-minimum', detailSelector: '#player-home'}),
@@ -356,6 +355,7 @@ const builtInTestCases = [
 
   detail('actions/top-level-neutral', 'actions', 'All ordinary action families visible with none implied as selected.', 'action-neutral-contract', {fixture: 'action-inputs-2p'}),
   detail('actions/top-level-density-1280', 'actions', 'The compact action picker exposes several complete choices plus the fixed aligned Pass control at the minimum desktop size.', 'action-neutral-contract', {fixture: 'action-inputs-2p', viewport: 'desktop-minimum', detailSelector: '.tm-action-workbench'}),
+  detail('actions/top-level-scroll-end-1280', 'actions', 'The final ordinary action scrolls fully above the fixed Pass control at the minimum desktop size.', 'action-scroll-end-contract', {fixture: 'action-inputs-2p', viewport: 'desktop-minimum', detailSelector: '.tm-action-workbench'}),
   detail('actions/top-level-keyboard-focus', 'actions', 'Keyboard focus is visible without changing layout.', 'action-keyboard-focus', {fixture: 'action-inputs-2p'}),
   detail('actions/colony-trade-keyboard-focus', 'actions', 'Colony trade keeps its transport symbol legible under keyboard focus.', 'action-colony-trade-keyboard-focus', {fixture: 'action-inputs-2p'}),
   detail('actions/colony-trade-hover', 'actions', 'Colony trade keeps its transport symbol legible under pointer hover.', 'action-colony-trade-hover', {fixture: 'action-inputs-2p'}),
@@ -365,6 +365,7 @@ const builtInTestCases = [
   detail('actions/project-card-single-selected', 'actions', 'A lone centered project card does not move when its right-side payment review opens.', 'action-play-card-single-selected', {fixture: 'action-inputs-2p', fixturePatch: 'action-single-project', detailSelector: '.tm-project-payment'}),
   detail('actions/payment-partial', 'actions', 'Incomplete payment makes its unresolved cost legible beside the commit control.', 'action-play-card-payment-partial', {fixture: 'action-inputs-2p'}),
   detail('actions/payment-exact', 'actions', 'Exact mixed-resource payment exposes an enabled, specific commit.', 'action-play-card-payment-mixed-exact', {fixture: 'action-inputs-2p', detailSelector: '.tm-project-payment-side'}),
+  detail('actions/payment-exact-1280', 'actions', 'Compact mixed-resource payment keeps every stepper and the specific commit visible at the minimum supported desktop height.', 'action-play-card-payment-mixed-exact', {fixture: 'action-inputs-2p', viewport: 'desktop-minimum', detailSelector: '.tm-project-payment-side'}),
   detail('actions/blue-card-options', 'actions', 'Played-card actions are visible as an uncommitted nested choice.', 'action-blue-card', {fixture: 'action-inputs-2p'}),
   detail('actions/blue-card-hover', 'actions', 'Played-card action hover uses the same card-bound treatment as project and purchase choices.', 'action-blue-card-hover', {fixture: 'action-inputs-2p'}),
   detail('actions/blue-card-selected', 'actions', 'A chosen played-card action uses the shared selected treatment before commitment.', 'action-blue-card-selected', {fixture: 'action-inputs-2p'}),
@@ -2465,7 +2466,7 @@ async function scrollSelector(page, selector, direction = 'bottom') {
 
 async function scrollColoniesWithWheel(page) {
   if (!await openModuleOverlay(page, 'Colonies')) return false;
-  return scrollSelector(page, '.tm-module-overlay--colonies:visible', 'bottom');
+  return scrollSelector(page, '.tm-module-colony-list:visible', 'right');
 }
 
 async function resizeLayout(page) {
@@ -2739,6 +2740,34 @@ async function verifyNeutralActionContract(page) {
   const visibleDetails = await page.locator('.tm-action-workbench .wf-command-detail:visible').count();
   if (selectedChoices !== 0 || visibleDetails !== 0) {
     throw new Error(`neutral action contract failed: ${selectedChoices} selected choice(s), ${visibleDetails} visible detail region(s)`);
+  }
+  return true;
+}
+
+async function verifyActionScrollEndContract(page) {
+  const actionSpine = page.locator(
+    '.tm-action-workbench > div:not(.tm-panel-heading) > .wf-root > .wf-options--command-board',
+  ).first();
+  const actionGrid = actionSpine.locator(':scope > .wf-command-grid');
+  const pass = actionSpine.locator(':scope > .wf-command-pass-action:visible');
+  const ordinaryActions = actionGrid.locator(':scope > .wf-command-tile');
+  if (await actionGrid.count() !== 1 || await pass.count() !== 1 || await ordinaryActions.count() === 0) return false;
+
+  await actionGrid.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await page.waitForTimeout(100);
+  const lastAction = ordinaryActions.last();
+  const [gridBox, lastActionBox, passBox] = await Promise.all([
+    actionGrid.boundingBox(),
+    lastAction.boundingBox(),
+    pass.boundingBox(),
+  ]);
+  if (gridBox === null || lastActionBox === null || passBox === null ||
+      lastActionBox.y < gridBox.y - 1 ||
+      lastActionBox.y + lastActionBox.height > gridBox.y + gridBox.height + 1 ||
+      lastActionBox.y + lastActionBox.height > passBox.y - 2) {
+    throw new Error(`Last action is not fully reachable above Pass: ${JSON.stringify({gridBox, lastActionBox, passBox})}`);
   }
   return true;
 }
@@ -3122,6 +3151,7 @@ const allCaptureDefinitions = [
   ), reviewTags: ['waiting-turn', 'card-hover', 'scroll-stability', 'chromium']},
   {name: 'action-idle', seat: 'active', reviewTags: ['action-panel', 'active-idle']},
   {name: 'action-neutral-contract', seat: 'active', prepare: verifyNeutralActionContract, reviewTags: ['action-panel', 'neutral-selection', 'interaction-contract']},
+  {name: 'action-scroll-end-contract', seat: 'active', prepare: verifyActionScrollEndContract, reviewTags: ['action-panel', 'scroll-end', 'pass-action', 'reachability']},
   {name: 'action-keyboard-focus', seat: 'active', prepare: focusFirstActionChoice, reviewTags: ['action-panel', 'keyboard-focus', 'focus-visible', 'accessibility']},
   {name: 'action-colony-trade-keyboard-focus', seat: 'active', prepare: (page) => focusActionChoice(page, 'Trade with a colony tile'), reviewTags: ['action-panel', 'colony-trade', 'keyboard-focus', 'focus-visible', 'accessibility']},
   {name: 'action-colony-trade-hover', seat: 'active', prepare: (page) => hoverActionChoice(page, 'Trade with a colony tile'), reviewTags: ['action-panel', 'colony-trade', 'pointer-hover']},
@@ -3488,19 +3518,6 @@ const allCaptureDefinitions = [
   {name: 'resized-layout', seat: 'active', prepare: resizeLayout, reviewTags: ['resizing', 'activity-rail', 'cards-tray', 'layout-mechanics']},
   {name: 'bottom-tray-enlarged', seat: 'active', prepare: (page) => resizeBottomTray(page, -120), reviewTags: ['cards-tray', 'resizing']},
   {name: 'bottom-tray-compressed', seat: 'active', prepare: (page) => resizeBottomTray(page, 140), reviewTags: ['board', 'cards-tray', 'resizing', 'action-panel']},
-  {name: 'bottom-tray-collapsed', seat: 'waiting', prepare: async (page) => {
-    const toggle = page.locator('.tm-bottom-tray-toggle:visible').first();
-    if (await toggle.count() !== 1 || await toggle.isDisabled()) return false;
-    const before = await toggle.boundingBox();
-    await toggle.click();
-    await page.waitForTimeout(250);
-    const after = await toggle.boundingBox();
-    const workbench = page.locator('.tm-action-workbench:visible');
-    if (before === null || after === null || Math.abs(before.x - after.x) > 1 || await workbench.count() !== 0) {
-      throw new Error(`Bottom tray collapse did not preserve the in-tray control or hide the waiting workbench: ${JSON.stringify({before, after})}`);
-    }
-    return true;
-  }, reviewTags: ['cards-tray', 'collapsed', 'waiting-turn', 'toggle']},
   {name: 'activity-rail-enlarged', seat: 'active', prepare: (page) => resizeActivityRail(page, -120), reviewTags: ['activity-rail', 'resizing', 'log']},
   {name: 'resized-layout-minimums', seat: 'active', prepare: resizeLayoutMinimums, reviewTags: ['resizing', 'minimum-desktop', 'board-space', 'layout-extrema']},
   {name: 'player-rail-enlarged', seat: 'active', prepare: resizePlayerRailToMaximum, reviewTags: ['player-rail', 'resizing', 'minimum-desktop', 'layout-extrema']},

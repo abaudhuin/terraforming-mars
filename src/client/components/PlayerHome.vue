@@ -35,29 +35,7 @@
     <template v-else>
       <header class="tm-table-hud">
         <div class="tm-turn-context">
-          <span class="tm-status-pill" :class="{'tm-status-pill--active': isPlayerActing(playerView)}">{{ turnStatusLabel }}</span>
-          <span v-if="activePlayer" class="tm-active-player" :class="'player_bg_color_' + activePlayer.color">{{ activePlayer.name }}</span>
-          <span class="tm-hud-chip">{{ generationLabel }}</span>
-        </div>
-
-        <div class="tm-next-context">
-          <span v-if="nextPlayer" v-i18n>Next</span>
-          <strong v-if="nextPlayer" :class="'player_bg_color_' + nextPlayer.color">{{ nextPlayer.name }}</strong>
-          <span v-else>{{ actionSummary }}</span>
-        </div>
-
-        <div class="tm-top-tools">
-          <button type="button" class="tm-control tm-utility-control tm-control--review tm-control--cards" @click="openCardsOverlay()" :aria-label="$t('Cards')" :title="$t('Cards')">
-            <span class="tm-utility-control-label" v-i18n>Cards</span>
-            <small v-if="cardsInHandCount > 0" class="tm-control-badge">{{ cardsInHandCount }}</small>
-          </button>
-          <button type="button" class="tm-control tm-utility-control tm-control--review tm-control--players" @click="openPlayers" :aria-label="$t('Players')" :title="$t('Players')">
-            <span class="tm-utility-control-label" v-i18n>Players</span>
-          </button>
-          <button type="button" class="tm-control tm-utility-control tm-control--review tm-control--history" @click="openOverlay('log')" :aria-label="$t('History')" :title="$t('History')">
-            <span class="tm-utility-control-label" v-i18n>History</span>
-          </button>
-          <details class="tm-utility-menu" @toggle="handleUtilityMenuToggle">
+          <details class="tm-utility-menu tm-utility-menu--hud-leading" @toggle="handleUtilityMenuToggle">
             <summary class="tm-icon-control tm-icon-control--tools" :title="$t('Table tools')" :aria-label="$t('Table tools')">
               <span aria-hidden="true"></span>
             </summary>
@@ -85,6 +63,28 @@
               </div>
             </div>
           </details>
+          <span class="tm-status-pill" :class="{'tm-status-pill--active': isPlayerActing(playerView)}">{{ turnStatusLabel }}</span>
+          <span v-if="activePlayer" class="tm-active-player" :class="'player_bg_color_' + activePlayer.color">{{ activePlayer.name }}</span>
+          <span class="tm-hud-chip">{{ generationLabel }}</span>
+        </div>
+
+        <div class="tm-next-context">
+          <span v-if="nextPlayer" v-i18n>Next</span>
+          <strong v-if="nextPlayer" :class="'player_bg_color_' + nextPlayer.color">{{ nextPlayer.name }}</strong>
+          <span v-else>{{ actionSummary }}</span>
+        </div>
+
+        <div class="tm-top-tools">
+          <button type="button" class="tm-control tm-utility-control tm-control--review tm-control--cards" @click="openCardsOverlay()" :aria-label="$t('Cards')" :title="$t('Cards')">
+            <span class="tm-utility-control-label" v-i18n>Cards</span>
+            <small v-if="cardsInHandCount > 0" class="tm-control-badge">{{ cardsInHandCount }}</small>
+          </button>
+          <button type="button" class="tm-control tm-utility-control tm-control--review tm-control--players" @click="openPlayers" :aria-label="$t('Players')" :title="$t('Players')">
+            <span class="tm-utility-control-label" v-i18n>Players</span>
+          </button>
+          <button type="button" class="tm-control tm-utility-control tm-control--review tm-control--history" @click="openOverlay('log')" :aria-label="$t('History')" :title="$t('History')">
+            <span class="tm-utility-control-label" v-i18n>History</span>
+          </button>
         </div>
       </header>
 
@@ -121,7 +121,7 @@
               :aria-label="$t(module.label)"
               :title="$t(module.label)"
               @click="openModule(module.kind)">
-              <span aria-hidden="true"></span>
+              <span class="tm-module-dock-label">{{ $t(module.shortLabel) }}</span>
             </button>
           </nav>
         </section>
@@ -186,24 +186,12 @@
       <section class="tm-bottom-tray" :class="{'tm-bottom-tray--log-preview': showActivityLogPreview}">
         <button
           type="button"
-          class="tm-bottom-tray-toggle tm-panel-icon-button tm-icon-control"
-          :class="isBottomTrayEffectivelyCollapsed ? 'tm-icon-control--bottom-open' : 'tm-icon-control--bottom-close'"
-          @click="toggleBottomTray"
-          :disabled="hasPlayerInput"
-          :title="hasPlayerInput ? $t('Finish the current decision before hiding the action panel') : undefined"
-          :aria-expanded="!isBottomTrayEffectivelyCollapsed"
-          :aria-label="$t(isBottomTrayEffectivelyCollapsed ? 'Show bottom panel' : 'Hide bottom panel')">
-          <span aria-hidden="true"></span>
-        </button>
-        <button
-          v-if="!isBottomTrayEffectivelyCollapsed"
-          type="button"
           class="tm-layout-resize-handle tm-layout-resize-handle--bottom"
           :aria-label="$t('Resize bottom panel')"
           aria-orientation="horizontal"
           @keydown="resizeFromKeyboard('bottom', $event)"
           @pointerdown="startBottomResize"></button>
-        <section v-if="!isBottomTrayEffectivelyCollapsed && showActivityLogPreview && activityPreviewMessage" class="tm-log-preview-desk">
+        <section v-if="showActivityLogPreview && activityPreviewMessage" class="tm-log-preview-desk">
           <header class="tm-log-preview-header">
             <div>
               <span v-i18n>Log detail</span>
@@ -219,7 +207,7 @@
           <CardPanel :message="activityPreviewMessage" :players="playerView.players" :showClose="false"/>
         </section>
 
-        <template v-else-if="!isBottomTrayEffectivelyCollapsed">
+        <template v-else>
         <section v-if="hasPlayerInput" class="tm-action-workbench player_home_block--actions" tabindex="-1">
           <a name="actions" class="player_home_anchor"></a>
           <WaitingFor v-if="game.phase !== 'end'" :playerView="playerView" :waitingfor="playerView.waitingFor" @open-module="openModule"/>
@@ -621,7 +609,6 @@ type PlayerHomeModel = {
   showAutomatedCards: boolean;
   showEventCards: boolean;
   isActivityRailCollapsed: boolean;
-  isBottomTrayCollapsed: boolean;
   activeOverlay: OverlayKind;
   selectedPlayerColor: Color | undefined;
   cardOverlayFocus: CardOverlayFocus;
@@ -652,7 +639,7 @@ type PlayerHomeModel = {
 
 type OverlayKind = 'none' | 'cards' | 'log' | 'player' | 'module';
 type ModuleKind = 'colonies' | 'ma' | 'turmoil' | 'moon' | 'pathfinders' | 'underworld' | 'delta';
-type ModuleLauncher = {kind: ModuleKind, label: string};
+type ModuleLauncher = {kind: ModuleKind, label: string, shortLabel: string};
 type CardOverlayFocus = 'balanced' | 'hand' | 'played';
 type CardOverlayFilter = 'all' | 'playable' | 'affordable' | 'warnings';
 type CardOverlayGroup = 'none' | 'type' | 'tag';
@@ -670,7 +657,6 @@ const layoutStorageKeys = {
   playerRailWidth: 'tm-player-table-player-rail-width',
   playerDossierLogWidth: 'tm-player-table-dossier-log-width',
   activityRailCollapsed: 'tm-player-table-activity-rail-collapsed',
-  bottomTrayCollapsed: 'tm-player-table-bottom-tray-collapsed',
   activityMode: 'tm-player-table-activity-mode',
 } as const;
 const twoRowActionTrayHeight = 540;
@@ -729,7 +715,6 @@ export default defineComponent({
       showAutomatedCards: !preferences.hide_automated_cards,
       showEventCards: !preferences.hide_event_cards,
       isActivityRailCollapsed: readStoredLayoutBoolean(layoutStorageKeys.activityRailCollapsed),
-      isBottomTrayCollapsed: readStoredLayoutBoolean(layoutStorageKeys.bottomTrayCollapsed),
       activeOverlay: 'none',
       selectedPlayerColor: undefined,
       cardOverlayFocus: 'balanced',
@@ -838,7 +823,6 @@ export default defineComponent({
         'tm-player-table--passive': !this.isPlayerActing(this.playerView),
         'tm-player-table--magnify-cards': getPreferences().magnify_cards,
         'tm-player-table--activity-collapsed': this.isActivityRailCollapsed,
-        'tm-player-table--bottom-collapsed': this.isBottomTrayEffectivelyCollapsed,
         'tm-player-table--two-row-actions':
           this.bottomTrayHeight !== undefined && this.bottomTrayHeight >= twoRowActionTrayHeight,
         [`tm-player-table--input-${this.inputKind}`]: true,
@@ -870,9 +854,6 @@ export default defineComponent({
     },
     hasPlayerInput(): boolean {
       return this.playerView.waitingFor !== undefined;
-    },
-    isBottomTrayEffectivelyCollapsed(): boolean {
-      return this.isBottomTrayCollapsed && !this.hasPlayerInput;
     },
     activePlayer(): PublicPlayerModel | undefined {
       return this.playerView.players.find((player) => player.isActive);
@@ -929,13 +910,13 @@ export default defineComponent({
     moduleLaunchers(): Array<ModuleLauncher> {
       const expansions = this.game.gameOptions.expansions;
       const launchers: Array<ModuleLauncher> = [];
-      if (this.game.colonies.length > 0) launchers.push({kind: 'colonies', label: 'Colonies'});
-      if (this.playerView.players.length > 1) launchers.push({kind: 'ma', label: 'Milestones & Awards'});
-      if (this.game.turmoil !== undefined) launchers.push({kind: 'turmoil', label: 'Turmoil'});
-      if (this.game.moon !== undefined) launchers.push({kind: 'moon', label: 'Moon'});
-      if (expansions.pathfinders) launchers.push({kind: 'pathfinders', label: 'Tracks'});
-      if (expansions.underworld) launchers.push({kind: 'underworld', label: 'Underworld'});
-      if (expansions.deltaProject) launchers.push({kind: 'delta', label: 'Delta'});
+      if (this.game.colonies.length > 0) launchers.push({kind: 'colonies', label: 'Colonies', shortLabel: 'Colonies'});
+      if (this.playerView.players.length > 1) launchers.push({kind: 'ma', label: 'Milestones & Awards', shortLabel: 'Milestones'});
+      if (this.game.turmoil !== undefined) launchers.push({kind: 'turmoil', label: 'Turmoil', shortLabel: 'Turmoil'});
+      if (this.game.moon !== undefined) launchers.push({kind: 'moon', label: 'Moon', shortLabel: 'Moon'});
+      if (expansions.pathfinders) launchers.push({kind: 'pathfinders', label: 'Tracks', shortLabel: 'Tracks'});
+      if (expansions.underworld) launchers.push({kind: 'underworld', label: 'Underworld', shortLabel: 'Underworld'});
+      if (expansions.deltaProject) launchers.push({kind: 'delta', label: 'Delta', shortLabel: 'Delta'});
       return launchers;
     },
     phaseLabel(): string {
@@ -1434,16 +1415,6 @@ export default defineComponent({
         this.closeActivityLogPreview();
       }
       storeLayoutBoolean(layoutStorageKeys.activityRailCollapsed, this.isActivityRailCollapsed);
-    },
-    toggleBottomTray(): void {
-      if (this.hasPlayerInput) {
-        return;
-      }
-      this.isBottomTrayCollapsed = !this.isBottomTrayCollapsed;
-      if (this.isBottomTrayCollapsed) {
-        this.closeActivityLogPreview();
-      }
-      storeLayoutBoolean(layoutStorageKeys.bottomTrayCollapsed, this.isBottomTrayCollapsed);
     },
     openPlayer(color: Color): void {
       this.rememberOverlayOpener();

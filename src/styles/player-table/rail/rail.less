@@ -457,7 +457,7 @@
 
     @media (max-height: 820px) {
       .player-info--self {
-        min-height: 202px;
+        min-height: 168px;
       }
 
       .player-info {
@@ -501,7 +501,7 @@
     .player-info--self .resource_item,
     .player-info--opponent .resource_item {
       position: relative;
-      min-height: 32px;
+      min-height: 30px;
       padding: 2px 3px 1px;
       grid-template-rows: 19px 10px;
       overflow: visible;
@@ -710,7 +710,7 @@
       border-radius: 7px;
       border: 1px solid rgba(255, 255, 255, 0.08);
       min-height: 112px;
-      padding: 7px;
+      padding: 6px;
       outline: none;
       overflow: hidden;
       transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
@@ -729,8 +729,8 @@
       display: flex;
       flex-flow: column nowrap;
       align-items: stretch;
-      gap: 4px;
-      min-height: 154px;
+      gap: 2px;
+      min-height: 136px;
     }
 
     .player-info--opponent:hover {
@@ -748,7 +748,7 @@
     .player-info--self .player-status-and-res {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
-      gap: 6px;
+      gap: 3px;
       width: 100%;
     }
 
@@ -950,7 +950,7 @@
     .player-info--self .resource_items_cont {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 4px;
+      gap: 3px;
       width: 100%;
     }
 
@@ -960,7 +960,7 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       align-items: stretch;
-      gap: 3px;
+      gap: 2px;
       overflow: visible;
     }
 
@@ -969,7 +969,7 @@
       width: auto;
       min-width: 0;
       grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 4px;
+      gap: 3px;
     }
 
     .tm-player-economy-row .resource_item,
@@ -1074,7 +1074,7 @@
     .player-info--self .player-tags {
       width: 100%;
       max-width: 100%;
-      margin-top: 2px;
+      margin-top: -4px;
       overflow: hidden;
       transform: none;
       display: flex;
@@ -1141,7 +1141,7 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       align-items: stretch;
-      gap: 3px;
+      gap: 2px;
     }
 
     .player-info--self .tm-rail-player-summary {
@@ -1150,16 +1150,16 @@
 
     .tm-rail-stat {
       position: relative;
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: 21px 11px;
+      grid-template-columns: auto auto;
+      grid-template-rows: minmax(0, 1fr);
       place-items: center;
       min-width: 0;
-      min-height: 38px;
-      padding: 2px;
+      min-height: 30px;
+      padding: 3px 5px;
       border-radius: 5px;
       display: grid;
-      align-content: start;
-      gap: 0;
+      place-content: center;
+      gap: 4px;
       background: rgba(0, 0, 0, 0.28);
       color: var(--tm-muted);
 
@@ -1173,10 +1173,11 @@
       }
 
       strong {
-        grid-row: 2;
+        grid-column: 2;
+        grid-row: 1;
         color: var(--tm-text);
         font-family: Prototype, sans-serif;
-        font-size: 10px;
+        font-size: 13px;
         line-height: 1;
         font-weight: normal;
       }
@@ -1184,6 +1185,7 @@
 
     .tm-rail-stat-icon {
       --tm-rail-stat-icon-size: 19px;
+      grid-column: 1;
       grid-row: 1;
     }
 
@@ -1218,7 +1220,7 @@
   &.tm-player-table--players-5 .tm-player-rail .player-info {
     width: 100%;
     height: auto;
-    min-height: 176px;
+    min-height: 154px;
     max-height: none;
     overflow: visible;
   }
@@ -1226,14 +1228,14 @@
   &.tm-player-table--players-4 .tm-player-rail .player-info--self,
   &.tm-player-table--players-5 .tm-player-rail .player-info--self {
     order: -1;
-    min-height: 210px;
+    min-height: 176px;
   }
 
   &.tm-player-table--players-4 .tm-player-rail .player-info--opponent:hover,
   &.tm-player-table--players-4 .tm-player-rail .player-info--opponent:focus-within,
   &.tm-player-table--players-5 .tm-player-rail .player-info--opponent:hover,
   &.tm-player-table--players-5 .tm-player-rail .player-info--opponent:focus-within {
-    min-height: 176px;
+    min-height: 154px;
     border-color: var(--tm-line-strong);
   }
 
